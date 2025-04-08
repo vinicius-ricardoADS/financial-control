@@ -1,2 +1,110 @@
 // For information on how to create your own theme, please see:
 // http://ionicframework.com/docs/theming/
+
+@import 'light.scss';
+@import 'light-hc.scss';
+@import 'light-mc.scss';
+
+@import 'dark.scss';
+@import 'dark-hc.scss';
+@import 'dark-mc.scss';
+
+:root,
+:root.md,
+:root.ios {
+  // Background color of the entire app
+  --ion-background-color: var(--md-sys-color-surface-container);
+  // Color of the app Header
+  --ion-app-background-offline: var(--md-sys-color-error);
+  // Text color of the entire app
+  --ion-text-color: var(--md-sys-color-on-surface);
+  // Color of the Backdrop component
+  --ion-backdrop-color: var(--md-sys-color-shadow);
+  // Opacity of the Backdrop component
+  --ion-backdrop-opacity: 0.8;
+  // Background color of the overlays
+  --ion-overlay-background-color: #fff;
+  // Border color
+  --ion-border-color: var(--md-sys-color-outline-variant);
+  // Box shadow color
+  --ion-box-shadow-color: var(--md-sys-color-shadow);
+  // Box shadow Card icon color
+  --ion-box-shadow-color-card: var(--md-sys-color-primary-container);
+  // Background of the Tab Bar
+  --ion-tab-bar-background: var(--md-sys-color-surface-container);
+  // Height of the Tab Bar
+  --ion-tab-bar-height: 5rem;
+  // Background of the focused Tab Bar
+  --ion-tab-bar-background-focused: '';
+  // Border color of the Tab Bar
+  --ion-tab-bar-border-color: '';
+  // Color of the Tab Bar
+  --ion-tab-bar-color: '';
+  // Color of the selected Tab Button
+  --ion-tab-bar-color-selected: '';
+  // Background of the Toolbar
+  --ion-toolbar-background: '';
+  // Border color of the Toolbar
+  --ion-toolbar-border-color: '';
+  // Color of the components in the Toolbar
+  --ion-toolbar-color: '';
+  // Color of the Segment Buttons in the Toolbar
+  --ion-toolbar-segment-color: '';
+  // Color of the checked Segment Buttons in the Toolbar
+  --ion-toolbar-segment-color-checked: '';
+  // Background of the Segment Buttons in the Toolbar
+  --ion-toolbar-segment-background: '';
+  // Background of the Segment Buttons in the Toolbar
+  --ion-toolbar-segment-background-checked: '';
+  // Color of the Segment Button indicator in the Toolbar
+  --ion-toolbar-segment-indicator-color: '';
+  // Background of the Item
+  --ion-item-background: '';
+  // Border color of the Item
+  --ion-item-border-color: '';
+  // Color of the components in the Item
+  --ion-item-color: '';
+  // Background color of Card
+  --ion-background-card: var(--md-sys-color-background);
+  // Color of the placeholder in Inputs
+  --ion-placeholder-color: '';
+  // Color of the app Header
+  --ion-app-header: var(--md-sys-color-on-primary-container);
+  // Color of the app Button background
+  --ion-app-background-button-light: var(--md-sys-color-primary);
+  // Color of the text Button
+  --ion-text-color-button: var(--md-sys-color-on-primary);
+  // Color of the background Card
+  --ion-app-card-background: var(--md-sys-color-on-primary);
+  // Color of icon schedule
+  --ion-app-card-icon-schedule: var(--md-sys-color-on-surface-variant);
+  // Color of the title Card
+  --ion-app-card-title: var(--md-sys-color-on-surface);
+  // Color border checkbox
+  --ion-app-checkbox-border: var(--md-sys-color-outline);
+  // Border color
+  --ion-app-div-border: var(--md-sys-color-surface-variant);
+  // Background Button outline
+  --ion-app-background-button-outline: var(--md-sys-color-surface-container);
+  // Color of the app Header
+  --ion-app-background-offline: var(--md-sys-color-error);
+  // Color of clipboard
+  --ion-app-clipboard: var(--material-theme-dexco-sys-dark-inverse-primary);
+  // Color invalid input
+  --ion-app-invalid-input: var(--md-sys-color-error);
+  // Message completed label
+  --ion-app-label-completed-operation: var(
+    --md-schemes-label-completed-operation
+  );
+  // Custom color message success operation
+  --ion-app-message-success-operation: var(--md-schemes-message-success);
+
+  --ion-color-success: var(--md-sys-color-success);
+  --ion-color-on-success: var(--md-sys-color-on-success);
+
+  --ion-color-warning: var(--md-sys-color-warning);
+  --ion-color-on-warning: var(--md-sys-color-on-warning);
+
+  --ion-color-danger: var(--md-sys-color-danger);
+  --ion-color-on-danger: var(--md-sys-color-on-danger);
+}

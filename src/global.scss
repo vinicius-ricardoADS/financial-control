@@ -1,3 +1,43 @@
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@use '@angular/material' as mat;
+// Plus imports for other components in your app.
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat.core();
+
+// Define the theme object.
+$app-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: light,
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette
+    ),
+    typography: (
+      brand-family: 'Roboto'
+    ),
+    density: (
+      scale: 0
+    )
+  )
+);
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+:root {
+  @include mat.all-component-themes($app-theme);
+}
+
+// Comment out the line below if you want to use the pre-defined typography utility classes.
+// For more information: https://material.angular.io/guide/typography#using-typography-styles-in-your-application.
+// @include mat.typography-hierarchy($app-theme);
+
+// Comment out the line below if you want to use the deprecated `color` inputs.
+// @include mat.color-variants-backwards-compatibility($app-theme);
 /*
  * App Global CSS
  * ----------------------------------------------------------------------------
@@ -10,20 +50,20 @@
  */
 
 /* Core CSS required for Ionic components to work properly */
-@import "@ionic/angular/css/core.css";
+@import '@ionic/angular/css/core.css';
 
 /* Basic CSS for apps built with Ionic */
-@import "@ionic/angular/css/normalize.css";
-@import "@ionic/angular/css/structure.css";
-@import "@ionic/angular/css/typography.css";
-@import "@ionic/angular/css/display.css";
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/display.css';
 
 /* Optional CSS utils that can be commented out */
-@import "@ionic/angular/css/padding.css";
-@import "@ionic/angular/css/float-elements.css";
-@import "@ionic/angular/css/text-alignment.css";
-@import "@ionic/angular/css/text-transformation.css";
-@import "@ionic/angular/css/flex-utils.css";
+@import '@ionic/angular/css/padding.css';
+@import '@ionic/angular/css/float-elements.css';
+@import '@ionic/angular/css/text-alignment.css';
+@import '@ionic/angular/css/text-transformation.css';
+@import '@ionic/angular/css/flex-utils.css';
 
 /**
  * Ionic Dark Mode
@@ -34,4 +74,109 @@
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import "@ionic/angular/css/palettes/dark.system.css";
+@import '@ionic/angular/css/palettes/dark.system.css';
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Roboto, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+ion-toast.custom-toast {
+  --background: var(--md-sys-color-surface);
+  --border-radius: 1rem;
+  --color: var(--md-sys-color-on-surface);
+  --max-width: 358px;
+  &::part(container) {
+    background: var(--md-sys-color-surface);
+    border-radius: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+}
+
+.custom-popup-modal {
+  --height: 142px;
+  --width: 328px;
+  --padding: 24px 16px 24px 26px;
+  --box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.custom-popup-modal::part(backdrop) {
+  opacity: 1;
+}
+
+.custom-popup-modal::part(content) {
+  border-radius: 16px;
+}
+
+.header-default {
+  display: flex;
+  background-color: var(--ion-app-header);
+  color: var(--md-sys-color-on-primary);
+  min-width: 23.125rem;
+
+  &__toggle {
+    padding-left: 1rem;
+    padding-top: 1rem;
+
+    &--buton {
+      background: transparent;
+
+      & mat-icon[data-icon='arrow-back-ios'] {
+        margin-right: 1rem;
+        color: var(--ion-text-color-button);
+      }
+    }
+
+    mat-icon[data-icon='arrow-back-ios'] {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+  }
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 400;
+    width: 15.5rem;
+    line-height: 1.25rem;
+    letter-spacing: 0.015rem;
+    text-align: center;
+    flex: auto;
+  }
+}
+
+.title-main {
+  color: var(--ion-app-card-title);
+  font-size: 1.5rem;
+  font-style: normal;
+  text-align: left;
+  font-weight: 400;
+  line-height: 2rem;
+  margin-bottom: 1rem;
+}
+
+.error-msg {
+  color: var(--ion-app-invalid-input);
+}
+
+ion-badge {
+  &[color='success'] {
+    color: var(--ion-color-on-success);
+  }
+
+  &[color='warning'] {
+    color: var(--ion-color-on-warning);
+  }
+
+  &[color='danger'] {
+    color: var(--ion-color-on-danger);
+  }
+}
