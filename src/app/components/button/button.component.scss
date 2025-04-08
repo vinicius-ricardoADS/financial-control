@@ -1,0 +1,99 @@
+button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6.25rem;
+  padding: 1rem 1.5rem;
+  width: 100%;
+  font-weight: 400;
+  font-size: 1rem;
+  font-family: Roboto, sans-serif;
+  background-color: transparent;
+
+  ion-icon {
+    width: 20px;
+    height: 20px;
+    color: #fff;
+
+    &.disabled {
+      color: var(--md-sys-color-outline);
+    }
+  }
+
+  .spinner {
+    position: absolute;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    pointer-events: none;
+    cursor: default;
+  }
+
+  &.app-button-primary {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+
+    ion-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--md-sys-color-on-primary);
+
+      &.disabled {
+        color: var(--md-sys-color-outline);
+      }
+    }
+
+    &:disabled {
+      background-color: var(--md-sys-color-outline-variant);
+      color: var(--md-sys-color-outline);
+    }
+  }
+
+  &.app-button-primary-outline {
+    height: 3.5rem;
+    border: 2px solid;
+    border-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
+
+    ion-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--md-sys-color-primary);
+
+      &.disabled {
+        color: var(--md-sys-color-outline);
+      }
+    }
+
+    &:disabled {
+      background-color: var(--md-sys-color-outline-variant);
+      color: var(--md-sys-color-outline);
+      border-color: var(--md-sys-color-outline-variant);
+    }
+  }
+
+  &.app-button-outline {
+    border: 2px solid;
+    background-color: var(--ion-app-background-button-outline);
+    color: var(--md-sys-color-primary);
+    border-radius: 6.25rem;
+
+    ion-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--md-sys-color-primary);
+
+      &.disabled {
+        color: var(--md-sys-color-outline);
+      }
+    }
+
+    &:disabled {
+      border-color: var(--md-sys-color-outline-variant);
+      color: var(--md-sys-color-outline-variant);
+      border-color: var(--md-sys-color-outline-variant);
+    }
+  }
+}

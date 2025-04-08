@@ -1,23 +1,12 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { IonHeader } from '@ionic/angular/standalone';
-import { IonMenuToggle, IonToolbar, IonTitle } from '@ionic/angular/standalone';
-import { MatIcon } from '@angular/material/icon';
+import { HeaderComponent } from 'src/app/components/header/header.component';
 
 @Component({
+  standalone: true,
   selector: 'app-home',
   templateUrl: './home.page.html',
-  styleUrls: ['./home.page.scss'],
-  standalone: true,
-  imports: [
-    IonHeader,
-    CommonModule,
-    FormsModule,
-    IonMenuToggle,
-    MatIcon,
-    IonToolbar,
-    IonTitle,
-  ],
+  imports: [HeaderComponent],
 })
-export class HomePage {}
+export class HomePage {
+  constructor() {}
+}

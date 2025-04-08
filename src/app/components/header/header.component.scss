@@ -1,0 +1,198 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  width: min(600px, 100%);
+  margin-inline: auto;
+
+  footer {
+    flex: 1;
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    padding-bottom: 1rem;
+
+    app-button {
+      width: 100%;
+    }
+  }
+}
+
+.section-title {
+  font-family: Roboto;
+  font-size: 1.5rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 2rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.section {
+  border-radius: 0.5rem;
+  background-color: white;
+
+  button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background-color: transparent;
+
+    font-family: Roboto;
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.5rem;
+    letter-spacing: 0.03125rem;
+    color: var(--md-sys-color-on-surface);
+    overflow: hidden;
+
+    &:first-child {
+      border-top-left-radius: 0.5rem;
+      border-top-right-radius: 0.5rem;
+    }
+
+    &:last-child {
+      border-bottom-left-radius: 0.5rem;
+      border-bottom-right-radius: 0.5rem;
+    }
+  }
+
+  span {
+    display: block;
+    margin-inline: auto;
+    width: calc(100% - 0.75rem - 0.75rem);
+    height: 1px;
+    background-color: var(--md-sys-color-outline-variant);
+  }
+}
+
+.transparent {
+  background: transparent;
+
+  &.notifications {
+    padding-inline: 1rem;
+  }
+}
+
+ion-menu {
+  --min-width: 100%;
+}
+
+ion-header {
+  display: flex;
+  flex-direction: row;
+  color: var(--md-sys-color-on-primary);
+  min-width: 23.125rem;
+  height: 89px;
+
+  &.online {
+    background-color: var(--ion-app-header);
+  }
+
+  &.offline {
+    background-color: var(--ion-app-background-offline);
+  }
+}
+
+ion-img {
+  margin-right: auto;
+  margin-left: 0.875rem;
+  width: 6.625rem;
+  height: auto;
+}
+
+img {
+  height: 107px;
+  width: 136px;
+}
+
+ion-title {
+  font-size: 0.875rem;
+  font-weight: 400;
+  width: 15.5rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.015rem;
+  text-align: center;
+  flex: auto;
+}
+
+ion-buttons[slot='start'] {
+  color: var(--md-sys-color-on-primary);
+}
+
+ion-menu-toggle {
+  padding-left: 1rem;
+  padding-top: 1rem;
+}
+
+mat-icon[data-icon='notifications'] {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--ion-text-color-button);
+}
+
+mat-icon[data-icon='arrow-back-ios'] {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--ion-text-color-button);
+}
+
+.main-menu {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.heading {
+  display: flex;
+  min-width: 24.375rem;
+  width: auto;
+  padding-left: 0.3125rem;
+  padding-right: 1rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  justify-content: space-between;
+  background-color: transparent;
+  color: transparent;
+  box-shadow: none;
+}
+
+.activity {
+  color: var(--ion-app-card-title);
+  font-size: 1.5rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 2rem;
+  align-self: stretch;
+}
+
+app-button {
+  align-self: stretch;
+  margin-top: auto;
+}
+
+.text-button {
+  color: var(--md-sys-color-primary);
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.5rem;
+  letter-spacing: 0.03125rem;
+}
+
+@media (max-width: 22.5rem) {
+  .transparent {
+    &.notifications {
+      padding-inline: 2rem;
+    }
+  }
+}

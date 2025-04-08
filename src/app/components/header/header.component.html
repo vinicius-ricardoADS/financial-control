@@ -1,0 +1,63 @@
+<ion-menu contentId="main-content">
+  <ion-header [ngClass]="{ online: isOnline, offline: !isOnline }">
+    <ion-menu-toggle>
+      <button mat-icon-button class="transparent">
+        <mat-icon
+          data-icon="arrow-back-ios"
+          fontIcon="arrow_back_ios"></mat-icon>
+      </button>
+    </ion-menu-toggle>
+    <ion-toolbar>
+      <ion-title>{{ main_title }}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content class="ion-padding">
+    <aside class="container">
+      <ng-container>
+        <h1 class="section-title">Atividades</h1>
+
+        <div class="section">
+          <div>
+            <button
+              matRipple>
+              Bancos <mat-icon fontIcon="arrow_right"></mat-icon>
+            </button>
+
+            <span></span>
+          </div>
+          <div>
+            <button
+              matRipple>
+              Relatórios <mat-icon fontIcon="arrow_right"></mat-icon>
+            </button>
+
+            <span></span>
+          </div>
+        </div>
+      </ng-container>
+      <footer>
+        <app-button variant="primary-outline" (click)="logout()"
+          >Sair</app-button
+        >
+      </footer>
+    </aside>
+  </ion-content>
+</ion-menu>
+<div class="ion-page" id="main-content">
+  <ion-header [ngClass]="{ online: isOnline, offline: !isOnline }">
+    <ion-toolbar>
+      <ion-buttons slot="start">
+        <ion-menu-button (click)="toggleMenu()" />
+      </ion-buttons>
+      <ion-img [src]="dexcoLogo"></ion-img>
+    </ion-toolbar>
+    <!-- <button mat-icon-button class="transparent notifications">
+      <mat-icon
+        data-icon="notifications"
+        fontIcon="notifications_none"></mat-icon>
+    </button> -->
+  </ion-header>
+  <ion-content class="ion-padding">
+    <ng-content></ng-content>
+  </ion-content>
+</div>

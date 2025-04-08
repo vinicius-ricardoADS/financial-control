@@ -1,0 +1,14 @@
+<button
+  matRipple
+  type="{{ type }}"
+  [disabled]="disabled || loading"
+  [class.disabled]="disabled || loading"
+  class="app-button-{{ variant }}">
+  <ion-icon
+    *ngIf="icon"
+    name="search-sharp"
+    [class.disabled]="disabled || loading"></ion-icon>
+  <ng-content></ng-content>
+
+  <mat-spinner class="spinner" diameter="20" *ngIf="loading"></mat-spinner>
+</button>
