@@ -17,6 +17,7 @@ import { NgFor, LocationStrategy, NgClass, NgIf } from '@angular/common';
 import { MatRipple } from '@angular/material/core';
 import { ButtonComponent } from '../button/button.component';
 import assets from 'src/utils/images.json';
+import { NetworkStatusProvider } from 'src/providers/network-status';
 
 @Component({
   selector: 'app-header',
@@ -51,10 +52,13 @@ export class HeaderComponent implements OnInit {
     private readonly navCtrl: NavController,
     private readonly menuCtrl: MenuController,
     private readonly locationStrategy: LocationStrategy,
+    private readonly networkStatusProvider: NetworkStatusProvider,
   ) {}
 
   ngOnInit() {
-    this.isOnline = navigator.onLine;
+    this.networkStatusProvider.isOnline().subscribe((status: boolean) => {
+      this.isOnline = status;
+    });
   }
 
   toggleMenu() {
