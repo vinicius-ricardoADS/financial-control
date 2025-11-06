@@ -1,0 +1,241 @@
+// Tema de Alto Contraste para Mobile
+
+// Headers/Toolbars
+ion-header {
+  ion-toolbar {
+    --background: #3b82f6;
+    --color: white;
+    --border-width: 0;
+    --min-height: 56px;
+
+    ion-title {
+      font-weight: 800;
+      font-size: 20px;
+      color: #ffffff;
+    }
+
+    ion-button,
+    ion-back-button {
+      --color: white;
+      font-weight: 700;
+    }
+
+    // Toolbar secundária (com searchbar/segment)
+    &:not([color]) {
+      --background: white;
+      --border-color: #d1d5db;
+      border-bottom: 2px solid #d1d5db;
+
+      ion-searchbar {
+        --background: #f3f4f6;
+        --border-radius: 12px;
+        --box-shadow: none;
+        --icon-color: #000000;
+        --placeholder-color: #6b7280;
+        --color: #000000;
+        padding: 8px 12px;
+
+        .searchbar-input {
+          font-size: 16px;
+          font-weight: 600;
+          border: 2px solid #d1d5db;
+        }
+      }
+
+      ion-segment {
+        --background: #f3f4f6;
+        padding: 4px;
+        border-radius: 12px;
+        border: 2px solid #d1d5db;
+
+        ion-segment-button {
+          --indicator-color: white;
+          --indicator-box-shadow: 0 0 0 2px #3b82f6;
+          --color: #000000;
+          --color-checked: #3b82f6;
+          font-weight: 700;
+          font-size: 15px;
+          text-transform: none;
+          letter-spacing: 0;
+          min-height: 40px;
+        }
+      }
+    }
+  }
+}
+
+// Cards globais
+ion-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  margin: 12px;
+  background: white;
+  border: 2px solid #e5e7eb;
+
+  ion-card-header {
+    border-bottom: 2px solid #e5e7eb;
+
+    ion-card-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #000000;
+    }
+
+    ion-card-subtitle {
+      color: #4b5563;
+      font-weight: 600;
+      margin-top: 4px;
+      font-size: 14px;
+    }
+  }
+
+  ion-card-content {
+    color: #000000;
+  }
+}
+
+// Botões
+ion-button {
+  text-transform: none;
+  font-weight: 700;
+  letter-spacing: 0;
+  --border-radius: 12px;
+
+  &[expand="block"] {
+    --border-radius: 12px;
+    height: 52px;
+    font-size: 16px;
+    font-weight: 800;
+  }
+}
+
+// Modais
+ion-modal {
+  --border-radius: 20px 20px 0 0;
+
+  ion-header ion-toolbar {
+    --background: #3b82f6;
+    --color: white;
+
+    ion-title {
+      font-weight: 800;
+      font-size: 20px;
+      color: #ffffff;
+    }
+
+    ion-button {
+      --color: white;
+      font-weight: 700;
+    }
+  }
+
+  ion-content {
+    --background: white;
+  }
+}
+
+// Estados vazios
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 40px 20px;
+  text-align: center;
+  background: #f9fafb;
+  border-radius: 12px;
+
+  ion-icon {
+    font-size: 80px;
+    color: #9ca3af;
+    margin-bottom: 16px;
+  }
+
+  p {
+    color: #000000;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 8px 0;
+
+    &.empty-subtitle {
+      font-size: 14px;
+      color: #4b5563;
+      font-weight: 600;
+    }
+  }
+}
+
+// Itens de lista
+ion-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --min-height: 64px;
+  --background: white;
+  --color: #000000;
+  --border-color: #d1d5db;
+
+  ion-label {
+    margin: 12px 0;
+
+    h2,
+    h3 {
+      color: #000000;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    p {
+      color: #4b5563;
+      font-weight: 600;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+  }
+
+  ion-icon[slot="start"] {
+    margin-right: 16px;
+    font-size: 28px;
+  }
+
+  ion-icon[slot="end"] {
+    margin-left: 16px;
+    font-size: 24px;
+  }
+}
+
+// Tab bar
+ion-tab-bar {
+  --background: white;
+  --border: 2px solid #d1d5db;
+  border-top: 2px solid #d1d5db;
+  padding-bottom: env(safe-area-inset-bottom);
+  height: 60px;
+
+  ion-tab-button {
+    --color: #6b7280;
+    --color-selected: #3b82f6;
+    --background-focused-opacity: 0;
+
+    ion-icon {
+      font-size: 28px;
+    }
+
+    ion-label {
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+  }
+}
+
+// Content
+ion-content {
+  --background: white;
+}
+
+// Cores de fundo global
+body {
+  --ion-background-color: #ffffff;
+  --ion-text-color: #000000;
+}

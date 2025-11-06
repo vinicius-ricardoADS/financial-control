@@ -6,19 +6,38 @@ export const routes: Routes = [
   {
     path: '',
     component: HomePage,
-    canActivate: [AuthGuard], // Add your guards here if needed
+    canActivate: [AuthGuard],
     children: [
       {
         path: '',
-        redirectTo: 'home',
+        redirectTo: 'dashboard',
         pathMatch: 'full',
       },
       {
-        path: 'home',
+        path: 'dashboard',
         loadComponent: () =>
-          import('./pages/home-guard/home-guard.page').then(
-            (m) => m.HomeGuardPage,
+          import('./pages/dashboard/dashboard.page').then(
+            (m) => m.DashboardPage,
           ),
+      },
+      {
+        path: 'transactions',
+        loadComponent: () =>
+          import('./pages/transactions/transactions.page').then(
+            (m) => m.TransactionsPage,
+          ),
+      },
+      {
+        path: 'fixed-expenses',
+        loadComponent: () =>
+          import('./pages/fixed-expenses/fixed-expenses.page').then(
+            (m) => m.FixedExpensesPage,
+          ),
+      },
+      {
+        path: 'reports',
+        loadComponent: () =>
+          import('./pages/reports/reports.page').then((m) => m.ReportsPage),
       },
     ],
   },

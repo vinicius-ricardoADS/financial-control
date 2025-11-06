@@ -1,0 +1,79 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Relatórios</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="reports-container">
+    <!-- Comparação Mensal -->
+    <ion-card *ngIf="monthlyComparison">
+      <ion-card-header>
+        <ion-card-title>Comparação Mensal</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="comparison-grid">
+          <div class="comparison-item">
+            <p class="label">Receitas</p>
+            <h3 class="value income">{{ formatCurrency(monthlyComparison.currentMonth.totalIncome) }}</h3>
+            <span class="change" [class.positive]="monthlyComparison.incomeChange >= 0">
+              {{ formatPercentage(monthlyComparison.incomeChange) }}
+            </span>
+          </div>
+          <div class="comparison-item">
+            <p class="label">Despesas</p>
+            <h3 class="value expense">{{ formatCurrency(monthlyComparison.currentMonth.totalExpense) }}</h3>
+            <span class="change" [class.negative]="monthlyComparison.expenseChange >= 0">
+              {{ formatPercentage(monthlyComparison.expenseChange) }}
+            </span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Gráfico de Linha - Evolução Anual -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Evolução {{ selectedYear }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <canvas #lineChart></canvas>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Gráfico de Barras - Comparativo -->
+    <ion-card *ngIf="monthlyComparison">
+      <ion-card-header>
+        <ion-card-title>Comparativo</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <canvas #barChart></canvas>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Gráfico de Pizza - Despesas por Categoria -->
+    <ion-card *ngIf="monthlyComparison">
+      <ion-card-header>
+        <ion-card-title>Despesas por Categoria (Atual)</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <canvas #pieChartReport></canvas>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Botões de Exportação -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Exportar Relatório</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="export-buttons">
+          <ion-button expand="block" (click)="exportPDF()">
+            <ion-icon name="document" slot="start"></ion-icon>
+            Exportar PDF
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

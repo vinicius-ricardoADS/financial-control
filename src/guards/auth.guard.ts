@@ -16,10 +16,22 @@ export class AuthGuard implements CanActivate {
   async canActivate(): Promise<boolean> {
     await this.platform.ready();
 
+    // Permite acesso no navegador (desenvolvimento)
+    // Em produção com dispositivos nativos, a biometria será exigida
+    const isNativePlatform = this.platform.is('capacitor');
+
+    if (!isNativePlatform) {
+      console.log('Modo desenvolvimento: biometria desabilitada no navegador');
+      return true;
+    }
+
     try {
       const result = await NativeBiometric.isAvailable();
 
-      if (!result.isAvailable) return false;
+      if (!result.isAvailable) {
+        console.warn('Biometria não disponível no dispositivo');
+        return false;
+      }
 
       const verified = await NativeBiometric.verifyIdentity({
         reason: 'Autentique-se para acessar o aplicativo',

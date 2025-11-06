@@ -1,0 +1,142 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Dashboard</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="dashboard-container">
+    <!-- Período Atual -->
+    <div class="period-header">
+      <h2>{{ currentMonth }}</h2>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="summary-cards" *ngIf="summary">
+      <!-- Receitas -->
+      <ion-card class="summary-card income-card">
+        <ion-card-content>
+          <div class="card-icon">
+            <ion-icon name="trending-up"></ion-icon>
+          </div>
+          <div class="card-info">
+            <p class="card-label">Receitas</p>
+            <h2 class="card-value">{{ formatCurrency(summary.totalIncome) }}</h2>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Despesas -->
+      <ion-card class="summary-card expense-card">
+        <ion-card-content>
+          <div class="card-icon">
+            <ion-icon name="trending-down"></ion-icon>
+          </div>
+          <div class="card-info">
+            <p class="card-label">Despesas</p>
+            <h2 class="card-value">{{ formatCurrency(summary.totalExpense) }}</h2>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Saldo -->
+      <ion-card class="summary-card balance-card" [class.negative]="summary.balance < 0">
+        <ion-card-content>
+          <div class="card-icon">
+            <ion-icon name="wallet"></ion-icon>
+          </div>
+          <div class="card-info">
+            <p class="card-label">Saldo</p>
+            <h2 class="card-value">{{ formatCurrency(summary.balance) }}</h2>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Gráfico de Receitas vs Despesas -->
+    <ion-card *ngIf="summary">
+      <ion-card-header>
+        <ion-card-title>Visão Geral do Mês</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="chart-container">
+          <canvas #barChart></canvas>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Gráfico de Despesas por Categoria -->
+    <ion-card *ngIf="summary && summary.expensesByCategory.length > 0">
+      <ion-card-header>
+        <ion-card-title>Despesas por Categoria</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="chart-container">
+          <canvas #pieChart></canvas>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Transações Recentes -->
+    <ion-card *ngIf="recentTransactions.length > 0">
+      <ion-card-header>
+        <ion-card-title>Transações Recentes</ion-card-title>
+      </ion-card-header>
+      <ion-card-content class="no-padding">
+        <ion-list>
+          <ion-item *ngFor="let transaction of recentTransactions" lines="full">
+            <ion-icon
+              [name]="getTransactionIcon(transaction.type)"
+              [color]="getTransactionColor(transaction.type)"
+              slot="start"
+            ></ion-icon>
+            <ion-label>
+              <h3>{{ transaction.description }}</h3>
+              <p>{{ transaction.category?.name }} • {{ formatDate(transaction.date) }}</p>
+            </ion-label>
+            <ion-label slot="end" class="amount-label">
+              <h2 [class]="transaction.type">
+                {{ transaction.type === 'income' ? '+' : '-' }}
+                {{ formatCurrency(transaction.amount) }}
+              </h2>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Mensagem quando não há dados -->
+    <ion-card *ngIf="!summary || summary.transactionCount === 0">
+      <ion-card-content class="empty-state">
+        <ion-icon name="wallet" size="large"></ion-icon>
+        <p>Nenhuma transação registrada este mês</p>
+        <p class="empty-subtitle">Adicione sua primeira transação usando o botão +</p>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- FAB com opções de Receita e Despesa -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button color="primary">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+    <ion-fab-list side="top">
+      <ion-fab-button
+        color="success"
+        (click)="goToTransactions('income')"
+        data-desc="Adicionar Receita">
+        <ion-icon name="cash-outline"></ion-icon>
+      </ion-fab-button>
+      <ion-fab-button
+        color="danger"
+        (click)="goToTransactions('expense')"
+        data-desc="Adicionar Despesa">
+        <ion-icon name="card-outline"></ion-icon>
+      </ion-fab-button>
+    </ion-fab-list>
+  </ion-fab>
+</ion-content>

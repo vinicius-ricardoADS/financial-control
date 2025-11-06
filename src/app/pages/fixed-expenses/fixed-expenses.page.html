@@ -1,0 +1,96 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Despesas Fixas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="expenses-container">
+    <ion-list *ngIf="expenses.length > 0">
+      <ion-item-sliding *ngFor="let expense of expenses">
+        <ion-item lines="full">
+          <ion-label>
+            <h2>{{ expense.name }}</h2>
+            <p>{{ expense.category?.name }} • {{ getDayOfMonthLabel(expense.dueDay) }}</p>
+            <p class="amount">{{ formatCurrency(expense.amount) }}</p>
+          </ion-label>
+          <ion-toggle
+            slot="end"
+            [checked]="expense.isActive"
+            (ionChange)="toggleActive(expense)"
+          ></ion-toggle>
+        </ion-item>
+
+        <ion-item-options side="end">
+          <ion-item-option color="primary" (click)="openEditModal(expense)">
+            <ion-icon slot="icon-only" name="pencil"></ion-icon>
+          </ion-item-option>
+          <ion-item-option color="danger" (click)="deleteExpense(expense)">
+            <ion-icon slot="icon-only" name="trash"></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
+    </ion-list>
+
+    <div class="empty-state" *ngIf="expenses.length === 0">
+      <ion-icon name="notifications" size="large"></ion-icon>
+      <p>Nenhuma despesa fixa cadastrada</p>
+    </div>
+  </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button color="primary" (click)="openAddModal()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <ion-modal [isOpen]="isModalOpen" (willDismiss)="closeModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>{{ isEditMode ? 'Editar' : 'Nova' }} Despesa Fixa</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeModal()">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding">
+        <form>
+          <ion-item>
+            <ion-label position="stacked">Nome *</ion-label>
+            <ion-input [(ngModel)]="formData.name" name="name" placeholder="Ex: Aluguel"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Valor *</ion-label>
+            <ion-input type="number" [(ngModel)]="formData.amount" name="amount"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Categoria *</ion-label>
+            <ion-select [(ngModel)]="formData.categoryId" name="category">
+              <ion-select-option *ngFor="let cat of categories" [value]="cat.id">
+                {{ cat.name }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Dia do vencimento</ion-label>
+            <ion-input type="number" [(ngModel)]="formData.dueDay" name="dueDay" min="1" max="31"></ion-input>
+          </ion-item>
+
+          <div class="form-buttons">
+            <ion-button expand="block" color="primary" (click)="saveExpense()">
+              <ion-icon name="checkmark" slot="start"></ion-icon>
+              {{ isEditMode ? 'Atualizar' : 'Adicionar' }}
+            </ion-button>
+          </div>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

@@ -1,13 +1,16 @@
 // For information on how to create your own theme, please see:
 // http://ionicframework.com/docs/theming/
 
-@import 'light.scss';
-@import 'light-hc.scss';
-@import 'light-mc.scss';
+@use 'light.scss';
+@use 'light-hc.scss';
+@use 'light-mc.scss';
 
-@import 'dark.scss';
-@import 'dark-hc.scss';
-@import 'dark-mc.scss';
+@use 'dark.scss';
+@use 'dark-hc.scss';
+@use 'dark-mc.scss';
+
+// Tema personalizado do app
+@import 'app-theme.scss';
 
 :root,
 :root.md,

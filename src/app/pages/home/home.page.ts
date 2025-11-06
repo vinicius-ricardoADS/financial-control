@@ -1,12 +1,28 @@
 import { Component } from '@angular/core';
-import { HeaderComponent } from 'src/app/components/header/header.component';
+import {
+  IonTabs,
+  IonTabBar,
+  IonTabButton,
+  IonIcon,
+  IonLabel,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  pieChart,
+  wallet,
+  notifications,
+  barChart,
+} from 'ionicons/icons';
 
 @Component({
   standalone: true,
   selector: 'app-home',
   templateUrl: './home.page.html',
-  imports: [HeaderComponent],
+  styleUrls: ['./home.page.scss'],
+  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
 })
 export class HomePage {
-  constructor() {}
+  constructor() {
+    addIcons({ pieChart, wallet, notifications, barChart });
+  }
 }

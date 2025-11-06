@@ -1,0 +1,256 @@
+.dashboard-container {
+  padding: 12px;
+  padding-bottom: 80px;
+  background: #ffffff;
+  min-height: 100%;
+}
+
+.period-header {
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #3b82f6;
+  border-radius: 12px;
+
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+    text-transform: capitalize;
+    margin: 0;
+  }
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary-card {
+  margin: 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  ion-card-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    flex-shrink: 0;
+
+    ion-icon {
+      font-size: 32px;
+      color: white;
+    }
+  }
+
+  .card-info {
+    flex: 1;
+
+    .card-label {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #000000;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-value {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+  }
+
+  &.income-card {
+    background: #ffffff;
+    border: 3px solid #10b981;
+
+    .card-icon {
+      background: #10b981;
+    }
+
+    .card-value {
+      color: #10b981;
+    }
+  }
+
+  &.expense-card {
+    background: #ffffff;
+    border: 3px solid #ef4444;
+
+    .card-icon {
+      background: #ef4444;
+    }
+
+    .card-value {
+      color: #ef4444;
+    }
+  }
+
+  &.balance-card {
+    background: #ffffff;
+    border: 3px solid #3b82f6;
+
+    .card-icon {
+      background: #3b82f6;
+    }
+
+    .card-value {
+      color: #3b82f6;
+    }
+
+    &.negative {
+      border-color: #f97316;
+
+      .card-icon {
+        background: #f97316;
+      }
+
+      .card-value {
+        color: #f97316;
+      }
+    }
+  }
+}
+
+.chart-container {
+  padding: 16px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  canvas {
+    max-height: 280px;
+  }
+}
+
+.no-padding {
+  padding: 0 !important;
+}
+
+ion-list {
+  background: transparent;
+
+  ion-item {
+    --padding-start: 16px;
+    --inner-padding-end: 16px;
+    --background: white;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+
+    ion-label {
+      h3 {
+        font-weight: 700;
+        color: #000000;
+        margin-bottom: 6px;
+        font-size: 16px;
+      }
+
+      p {
+        font-size: 14px;
+        color: #4b5563;
+        font-weight: 600;
+      }
+    }
+
+    .amount-label {
+      text-align: right;
+
+      h2 {
+        font-weight: 800;
+        font-size: 18px;
+
+        &.income {
+          color: #10b981;
+        }
+
+        &.expense {
+          color: #ef4444;
+        }
+      }
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+  margin: 16px 0;
+
+  ion-icon {
+    font-size: 80px;
+    color: #9ca3af;
+    margin-bottom: 16px;
+  }
+
+  p {
+    margin: 8px 0;
+    color: #000000;
+    font-size: 16px;
+    font-weight: 700;
+
+    &.empty-subtitle {
+      font-size: 14px;
+      color: #4b5563;
+      font-weight: 600;
+    }
+  }
+}
+
+ion-fab {
+  margin-bottom: 16px;
+  margin-right: 16px;
+
+  ion-fab-button {
+    --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    width: 64px;
+    height: 64px;
+  }
+
+  ion-fab-button[data-desc]::before {
+    position: absolute;
+    content: attr(data-desc);
+    right: 70px;
+    background: #000000;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    white-space: nowrap;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+  }
+}
+
+ion-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background: white;
+  border: 2px solid #e5e7eb;
+
+  ion-card-header {
+    ion-card-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #000000;
+    }
+  }
+}
