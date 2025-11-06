@@ -23,9 +23,12 @@ import {
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { ReportService } from '../../../services/report.service';
 import { TransactionService } from '../../../services/transaction.service';
+import { FixedExpenseService } from '../../../services/fixed-expense.service';
 import { FinancialSummary } from '../../../models/financial-summary.model';
 import { Transaction } from '../../../models/transaction.model';
+import { FixedExpense } from '../../../models/fixed-expense.model';
 import moment from 'moment';
+import "moment/locale/pt-br";
 import { addIcons } from 'ionicons';
 import {
   trendingUp,
@@ -35,6 +38,9 @@ import {
   arrowDown,
   cashOutline,
   cardOutline,
+  notifications,
+  checkmarkCircle,
+  alertCircle,
 } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 
@@ -72,6 +78,12 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   summary: FinancialSummary | null = null;
   recentTransactions: Transaction[] = [];
+  upcomingExpenses: Array<{
+    expense: FixedExpense;
+    isPaid: boolean;
+    daysUntilDue: number;
+    isOverdue: boolean;
+  }> = [];
   currentMonth: string = '';
   currentYear: number = new Date().getFullYear();
   currentMonthNumber: number = new Date().getMonth() + 1;
@@ -83,9 +95,10 @@ export class DashboardPage implements OnInit, OnDestroy {
   constructor(
     private reportService: ReportService,
     private transactionService: TransactionService,
+    private fixedExpenseService: FixedExpenseService,
     private router: Router,
   ) {
-    addIcons({ trendingUp, trendingDown, wallet, arrowUp, arrowDown, cashOutline, cardOutline });
+    addIcons({ trendingUp, trendingDown, wallet, arrowUp, arrowDown, cashOutline, cardOutline, notifications, checkmarkCircle, alertCircle });
   }
 
   async ngOnInit() {
@@ -135,6 +148,14 @@ export class DashboardPage implements OnInit, OnDestroy {
 
       console.log('Dashboard: Transações recentes', this.recentTransactions.length);
 
+      // Carregar próximas despesas (próximos 7 dias)
+      const paymentStatus = await this.fixedExpenseService.getMonthlyPaymentStatus();
+      this.upcomingExpenses = paymentStatus
+        .filter(status => !status.isPaid && status.daysUntilDue <= 7)
+        .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+
+      console.log('Dashboard: Próximas despesas', this.upcomingExpenses.length);
+
       // Renderizar gráficos
       setTimeout(() => {
         this.renderBarChart();
@@ -178,6 +199,13 @@ export class DashboardPage implements OnInit, OnDestroy {
             display: false,
           },
           tooltip: {
+            backgroundColor: '#1e293b',
+            titleColor: '#f1f5f9',
+            bodyColor: '#cbd5e1',
+            borderColor: '#475569',
+            borderWidth: 1,
+            padding: 12,
+            displayColors: false,
             callbacks: {
               label: (context) => {
                 return `R$ ${context.parsed.y.toFixed(2)}`;
@@ -188,8 +216,27 @@ export class DashboardPage implements OnInit, OnDestroy {
         scales: {
           y: {
             beginAtZero: true,
+            grid: {
+              color: '#334155',
+            },
             ticks: {
+              color: '#cbd5e1',
+              font: {
+                size: 12,
+              },
               callback: (value) => `R$ ${value}`,
+            },
+          },
+          x: {
+            grid: {
+              display: false,
+            },
+            ticks: {
+              color: '#f1f5f9',
+              font: {
+                size: 13,
+                weight: 'bold',
+              },
             },
           },
         },
@@ -222,8 +269,8 @@ export class DashboardPage implements OnInit, OnDestroy {
           {
             data: data.map((c) => c.total),
             backgroundColor: data.map((c) => c.color),
-            borderWidth: 2,
-            borderColor: '#ffffff',
+            borderWidth: 3,
+            borderColor: '#1e293b',
           },
         ],
       },
@@ -234,13 +281,24 @@ export class DashboardPage implements OnInit, OnDestroy {
           legend: {
             position: 'bottom',
             labels: {
-              padding: 10,
+              padding: 12,
+              color: '#f1f5f9',
               font: {
-                size: 11,
+                size: 12,
               },
+              boxWidth: 12,
+              boxHeight: 12,
+              usePointStyle: true,
+              pointStyle: 'circle',
             },
           },
           tooltip: {
+            backgroundColor: '#1e293b',
+            titleColor: '#f1f5f9',
+            bodyColor: '#cbd5e1',
+            borderColor: '#475569',
+            borderWidth: 1,
+            padding: 12,
             callbacks: {
               label: (context) => {
                 const label = context.label || '';
@@ -287,5 +345,23 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.router.navigate(['/transactions'], {
       state: { openModalType: type },
     });
+  }
+
+  getDaysLabel(days: number): string {
+    if (days < 0) return `Atrasada (${Math.abs(days)}d)`;
+    if (days === 0) return 'Vence hoje';
+    if (days === 1) return 'Vence amanhã';
+    return `Vence em ${days}d`;
+  }
+
+  getExpenseColor(item: any): string {
+    if (item.isOverdue) return 'danger';
+    if (item.daysUntilDue === 0) return 'warning';
+    if (item.daysUntilDue <= 3) return 'warning';
+    return 'medium';
+  }
+
+  goToFixedExpenses() {
+    this.router.navigate(['/fixed-expenses']);
   }
 }

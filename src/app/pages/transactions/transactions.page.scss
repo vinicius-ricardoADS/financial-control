@@ -1,59 +1,72 @@
 .transactions-container {
   min-height: 100%;
-  background: #ffffff;
-  padding: 8px 0;
+  padding: 8px 0 80px 0;
 }
 
 ion-list {
   background: transparent;
-  padding: 0 12px;
 
-  ion-item {
-    --padding-start: 16px;
-    --inner-padding-end: 16px;
-    --background: white;
-    margin-bottom: 10px;
-    border-radius: 12px;
-    border: 2px solid #d1d5db;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  ion-item-sliding {
+    margin-bottom: 8px;
 
-    ion-label {
-      h2 {
-        font-weight: 700;
-        color: #000000;
-        margin-bottom: 6px;
-        font-size: 16px;
+    ion-item {
+      --padding-start: 16px;
+      --inner-padding-end: 16px;
+      --background: var(--app-bg-secondary);
+      --border-color: var(--app-border);
+      margin: 0 12px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+      ion-label {
+        h2,
+        h3 {
+          font-weight: 600;
+          color: var(--app-text-primary);
+          margin-bottom: 6px;
+          font-size: 16px;
+        }
+
+        p {
+          font-size: 14px;
+          color: var(--app-text-secondary);
+          margin-top: 4px;
+          font-weight: 500;
+
+          &.notes {
+            font-style: italic;
+            color: var(--app-text-tertiary);
+            font-size: 13px;
+            margin-top: 6px;
+          }
+        }
       }
 
-      p {
-        font-size: 14px;
-        color: #4b5563;
-        margin-top: 4px;
-        font-weight: 600;
+      .amount-label {
+        text-align: right;
 
-        &.notes {
-          font-style: italic;
-          color: #6b7280;
-          font-size: 13px;
-          margin-top: 6px;
+        h2 {
+          font-weight: 700;
+          font-size: 18px;
+
+          &.income {
+            color: var(--app-success);
+          }
+
+          &.expense {
+            color: var(--app-danger);
+          }
         }
+      }
+
+      ion-icon[slot="start"] {
+        font-size: 32px;
       }
     }
 
-    .amount-label {
-      text-align: right;
-
-      h2 {
-        font-weight: 800;
-        font-size: 18px;
-
-        &.income {
-          color: #10b981;
-        }
-
-        &.expense {
-          color: #ef4444;
-        }
+    ion-item-options {
+      ion-item-option {
+        min-height: 64px;
       }
     }
   }
@@ -67,26 +80,27 @@ ion-list {
   min-height: 60vh;
   text-align: center;
   padding: 40px 20px;
-  background: #f9fafb;
-  border-radius: 12px;
+  background: var(--app-bg-secondary);
+  border-radius: 16px;
+  border: 1px solid var(--app-border);
   margin: 16px;
 
   ion-icon {
     font-size: 80px;
-    color: #9ca3af;
+    color: var(--app-text-tertiary);
     margin-bottom: 16px;
   }
 
   p {
     margin: 8px 0;
-    color: #000000;
+    color: var(--app-text-primary);
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 600;
 
     &.empty-subtitle {
       font-size: 14px;
-      color: #4b5563;
-      font-weight: 600;
+      color: var(--app-text-secondary);
+      font-weight: 500;
     }
   }
 }
@@ -96,24 +110,25 @@ ion-fab {
   margin-right: 16px;
 
   ion-fab-button {
-    --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    width: 64px;
-    height: 64px;
+    --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    width: 60px;
+    height: 60px;
   }
 
   ion-fab-button[data-desc]::before {
     position: absolute;
     content: attr(data-desc);
     right: 70px;
-    background: #000000;
-    color: white;
+    background: var(--app-bg-tertiary);
+    color: var(--app-text-primary);
     padding: 10px 16px;
     border-radius: 8px;
     white-space: nowrap;
     font-size: 14px;
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     pointer-events: none;
+    border: 1px solid var(--app-border);
   }
 }
 
@@ -126,8 +141,8 @@ ion-modal {
 
       ion-segment {
         border-radius: 12px;
-        border: 3px solid #d1d5db;
-        background: white;
+        background: var(--app-bg-tertiary);
+        border: 1px solid var(--app-border);
 
         ion-segment-button {
           min-height: 64px;
@@ -135,7 +150,7 @@ ion-modal {
           flex-direction: column;
           gap: 6px;
           font-size: 14px;
-          font-weight: 700;
+          font-weight: 600;
 
           ion-icon {
             font-size: 28px;
@@ -144,7 +159,7 @@ ion-modal {
 
           ion-label {
             margin: 0;
-            font-weight: 800;
+            font-weight: 700;
           }
 
           &.segment-button-checked {
@@ -156,11 +171,11 @@ ion-modal {
         }
 
         ion-segment-button[value="expense"].segment-button-checked {
-          background: #ef4444;
+          background: var(--app-danger);
         }
 
         ion-segment-button[value="income"].segment-button-checked {
-          background: #10b981;
+          background: var(--app-success);
         }
       }
     }
@@ -168,14 +183,14 @@ ion-modal {
     ion-item {
       margin-bottom: 16px;
       --border-radius: 12px;
-      --background: white;
-      --border-color: #d1d5db;
-      --border-width: 2px;
+      --background: var(--app-bg-secondary);
+      --border-color: var(--app-border);
+      --border-width: 1px;
 
       ion-label[position="stacked"] {
-        font-weight: 800;
+        font-weight: 700;
         margin-bottom: 8px;
-        color: #000000;
+        color: var(--app-text-primary);
         font-size: 15px;
       }
 
@@ -184,8 +199,9 @@ ion-modal {
       ion-textarea {
         --padding-start: 12px;
         font-size: 16px;
-        color: #000000;
-        font-weight: 600;
+        color: var(--app-text-primary);
+        font-weight: 500;
+        --placeholder-color: var(--app-text-tertiary);
       }
     }
 
@@ -196,9 +212,9 @@ ion-modal {
       ion-button {
         margin: 0;
         --border-radius: 12px;
-        font-weight: 800;
+        font-weight: 700;
         font-size: 16px;
-        height: 52px;
+        height: 48px;
       }
     }
   }

@@ -10,18 +10,39 @@
       <ion-item-sliding *ngFor="let expense of expenses">
         <ion-item lines="full">
           <ion-label>
-            <h2>{{ expense.name }}</h2>
+            <h2>
+              {{ expense.name }}
+              <ion-badge [color]="getStatusBadgeColor(expense.id)" style="margin-left: 8px;">
+                {{ getStatusLabel(expense.id) }}
+              </ion-badge>
+            </h2>
             <p>{{ expense.category?.name }} • {{ getDayOfMonthLabel(expense.dueDay) }}</p>
             <p class="amount">{{ formatCurrency(expense.amount) }}</p>
           </ion-label>
-          <ion-toggle
-            slot="end"
-            [checked]="expense.isActive"
-            (ionChange)="toggleActive(expense)"
-          ></ion-toggle>
+          <div slot="end" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <ion-toggle
+              [checked]="expense.isActive"
+              (ionChange)="toggleActive(expense)"
+            ></ion-toggle>
+            <ion-button
+              *ngIf="expense.isActive && !getPaymentStatus(expense.id).isPaid"
+              size="small"
+              fill="solid"
+              color="success"
+              (click)="markAsPaid(expense, $event)">
+              <ion-icon slot="start" name="checkmark-circle"></ion-icon>
+              Pagar
+            </ion-button>
+          </div>
         </ion-item>
 
         <ion-item-options side="end">
+          <ion-item-option
+            *ngIf="expense.isActive && !getPaymentStatus(expense.id).isPaid"
+            color="success"
+            (click)="markAsPaid(expense)">
+            <ion-icon slot="icon-only" name="checkmark-circle"></ion-icon>
+          </ion-item-option>
           <ion-item-option color="primary" (click)="openEditModal(expense)">
             <ion-icon slot="icon-only" name="pencil"></ion-icon>
           </ion-item-option>

@@ -31,7 +31,8 @@ import { CategoryService } from '../../../services/category.service';
 import { FixedExpense, FixedExpenseCreate } from '../../../models/fixed-expense.model';
 import { Category } from '../../../models/category.model';
 import { addIcons } from 'ionicons';
-import { add, trash, pencil, close, checkmark, notifications } from 'ionicons/icons';
+import { add, trash, pencil, close, checkmark, notifications, checkmarkCircle, alertCircle, timeOutline } from 'ionicons/icons';
+import moment from 'moment';
 
 @Component({
   selector: 'app-fixed-expenses',
@@ -71,6 +72,13 @@ export class FixedExpensesPage implements OnInit {
   isEditMode = false;
   currentExpense: FixedExpense | null = null;
 
+  // Status de pagamento
+  paymentStatusMap: Map<string, {
+    isPaid: boolean;
+    daysUntilDue: number;
+    isOverdue: boolean;
+  }> = new Map();
+
   formData: FixedExpenseCreate = {
     name: '',
     amount: 0,
@@ -86,7 +94,7 @@ export class FixedExpensesPage implements OnInit {
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
   ) {
-    addIcons({ add, trash, pencil, close, checkmark, notifications });
+    addIcons({ add, trash, pencil, close, checkmark, notifications, checkmarkCircle, alertCircle, timeOutline });
   }
 
   async ngOnInit() {
@@ -101,6 +109,22 @@ export class FixedExpensesPage implements OnInit {
   async loadData() {
     this.expenses = await this.expenseService.getAllExpenses();
     this.categories = await this.categoryService.getCategoriesByType('expense');
+
+    // Carregar status de pagamento
+    await this.loadPaymentStatus();
+  }
+
+  async loadPaymentStatus() {
+    const statusList = await this.expenseService.getMonthlyPaymentStatus();
+
+    this.paymentStatusMap.clear();
+    statusList.forEach(item => {
+      this.paymentStatusMap.set(item.expense.id, {
+        isPaid: item.isPaid,
+        daysUntilDue: item.daysUntilDue,
+        isOverdue: item.isOverdue,
+      });
+    });
   }
 
   openAddModal() {
@@ -203,5 +227,84 @@ export class FixedExpensesPage implements OnInit {
 
   getDayOfMonthLabel(day: number): string {
     return `Dia ${day} de cada mês`;
+  }
+
+  getPaymentStatus(expenseId: string) {
+    return this.paymentStatusMap.get(expenseId) || {
+      isPaid: false,
+      daysUntilDue: 0,
+      isOverdue: false,
+    };
+  }
+
+  getStatusBadgeColor(expenseId: string): string {
+    const status = this.getPaymentStatus(expenseId);
+    if (status.isPaid) return 'success';
+    if (status.isOverdue) return 'danger';
+    if (status.daysUntilDue <= 3) return 'warning';
+    return 'medium';
+  }
+
+  getStatusLabel(expenseId: string): string {
+    const status = this.getPaymentStatus(expenseId);
+    if (status.isPaid) return 'Paga';
+    if (status.isOverdue) return `Atrasada (${Math.abs(status.daysUntilDue)}d)`;
+    if (status.daysUntilDue === 0) return 'Vence hoje';
+    if (status.daysUntilDue > 0) return `${status.daysUntilDue}d`;
+    return '';
+  }
+
+  async markAsPaid(expense: FixedExpense, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+
+    const alert = await this.alertCtrl.create({
+      header: 'Marcar como paga',
+      message: `Confirma o pagamento de "${expense.name}" no valor de ${this.formatCurrency(expense.amount)}?`,
+      inputs: [
+        {
+          name: 'notes',
+          type: 'textarea',
+          placeholder: 'Observações (opcional)',
+        },
+      ],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Confirmar',
+          handler: async (data) => {
+            try {
+              await this.expenseService.markAsPaidAndCreateTransaction(
+                expense.id,
+                undefined,
+                undefined,
+                undefined,
+                data.notes,
+              );
+
+              const toast = await this.toastCtrl.create({
+                message: 'Despesa marcada como paga e transação criada!',
+                duration: 2000,
+                color: 'success',
+              });
+              await toast.present();
+
+              await this.loadData();
+            } catch (error) {
+              console.error('Erro ao marcar como paga:', error);
+              const toast = await this.toastCtrl.create({
+                message: 'Erro ao processar pagamento',
+                duration: 2000,
+                color: 'danger',
+              });
+              await toast.present();
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
   }
 }

@@ -15,6 +15,39 @@
       <h2>{{ currentMonth }}</h2>
     </div>
 
+    <!-- Próximas Despesas Fixas -->
+    <ion-card *ngIf="upcomingExpenses.length > 0" class="upcoming-expenses-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="notifications" style="vertical-align: middle; margin-right: 8px;"></ion-icon>
+          Despesas Próximas (7 dias)
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content class="no-padding">
+        <ion-list>
+          <ion-item *ngFor="let item of upcomingExpenses" lines="full" (click)="goToFixedExpenses()" button>
+            <ion-icon
+              [name]="item.isOverdue ? 'alert-circle' : 'time-outline'"
+              [color]="getExpenseColor(item)"
+              slot="start"
+            ></ion-icon>
+            <ion-label>
+              <h3>{{ item.expense.name }}</h3>
+              <p>{{ item.expense.category?.name }}</p>
+            </ion-label>
+            <div slot="end" style="text-align: right;">
+              <ion-label>
+                <h2>{{ formatCurrency(item.expense.amount) }}</h2>
+                <p [style.color]="getExpenseColor(item) === 'danger' ? 'var(--ion-color-danger)' : getExpenseColor(item) === 'warning' ? 'var(--ion-color-warning)' : 'var(--ion-color-medium)'">
+                  {{ getDaysLabel(item.daysUntilDue) }}
+                </p>
+              </ion-label>
+            </div>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
     <!-- Cards de Resumo -->
     <div class="summary-cards" *ngIf="summary">
       <!-- Receitas -->
