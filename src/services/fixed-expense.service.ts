@@ -243,8 +243,6 @@ export class FixedExpenseService {
     };
 
     await this.transactionService.addTransaction(transactionData);
-
-    console.log(`Despesa "${expense.name}" marcada como paga e transação criada!`);
   }
 
   /**

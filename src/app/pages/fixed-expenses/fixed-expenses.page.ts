@@ -102,7 +102,6 @@ export class FixedExpensesPage implements OnInit {
   }
 
   async ionViewWillEnter() {
-    console.log('FixedExpenses: Entrando na view, recarregando dados...');
     await this.loadData();
   }
 
@@ -187,7 +186,12 @@ export class FixedExpensesPage implements OnInit {
       this.closeModal();
       await this.loadData();
     } catch (error) {
-      console.error('Erro ao salvar despesa:', error);
+      const toast = await this.toastCtrl.create({
+        message: 'Erro ao salvar despesa',
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
     }
   }
 
@@ -292,7 +296,6 @@ export class FixedExpensesPage implements OnInit {
 
               await this.loadData();
             } catch (error) {
-              console.error('Erro ao marcar como paga:', error);
               const toast = await this.toastCtrl.create({
                 message: 'Erro ao processar pagamento',
                 duration: 2000,

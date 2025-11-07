@@ -26,7 +26,6 @@ export class ReportService {
       month,
       year,
     );
-    console.log(`Transactions for ${month}/${year}:`, transactions);
     const categories = await this.categoryService.getAllCategories();
 
     const startDate = moment({ year, month: month - 1, day: 1 })
@@ -37,18 +36,14 @@ export class ReportService {
       .toDate();
 
     const income = transactions.filter((t) => t.type === 'income');
-    console.log('Income Transactions:', income);
     const expenses = transactions.filter((t) => t.type === 'expense');
 
     const totalIncome = income.reduce((sum, t) => sum + t.amount, 0);
-    console.log('Total Income:', totalIncome);
     const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
 
     // Agrupar por categoria
     const expensesByCategory = this.groupByCategory(expenses, categories, 'expense');
     const incomeByCategory = this.groupByCategory(income, categories, 'income');
-    console.log('Expenses by Category:', expensesByCategory);
-    console.log('Income by Category:', incomeByCategory);
 
     // Calcular média diária
     const daysInMonth = moment({ year, month: month - 1 }).daysInMonth();

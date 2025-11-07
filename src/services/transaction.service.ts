@@ -49,13 +49,8 @@ export class TransactionService {
   }
 
   async addTransaction(data: TransactionCreate): Promise<Transaction> {
-    console.log('TransactionService.addTransaction: Iniciando...', data);
-
     const transactions = [...this.transactionsSubject.value];
-    console.log('TransactionService.addTransaction: Transações atuais:', transactions.length);
-
     const category = await this.categoryService.getCategoryById(data.categoryId);
-    console.log('TransactionService.addTransaction: Categoria encontrada:', category);
 
     const newTransaction: Transaction = {
       id: this.generateId(),
@@ -73,13 +68,8 @@ export class TransactionService {
       updatedAt: new Date().toISOString(),
     };
 
-    console.log('TransactionService.addTransaction: Nova transação criada:', newTransaction);
-
     transactions.push(newTransaction);
-    console.log('TransactionService.addTransaction: Total após adicionar:', transactions.length);
-
     await this.saveTransactions(transactions);
-    console.log('TransactionService.addTransaction: Transação salva com sucesso!');
 
     return newTransaction;
   }
@@ -157,7 +147,6 @@ export class TransactionService {
   async getTransactionsByMonth(month: number, year: number): Promise<Transaction[]> {
     const startDate = moment({ year, month: month - 1, day: 1 }).startOf('month');
     const endDate = moment({ year, month: month - 1, day: 1 }).endOf('month');
-    console.log(`startDate: ${startDate.toDate()}, endDate: ${endDate.toDate()}`);
 
     return this.getFilteredTransactions({
       startDate: startDate.toDate(),
@@ -181,23 +170,10 @@ export class TransactionService {
   }
 
   private async saveTransactions(transactions: Transaction[]): Promise<void> {
-    console.log('TransactionService.saveTransactions: Iniciando salvamento de', transactions.length, 'transações');
-
     // Remove categoria antes de salvar (circular reference)
     const toSave = transactions.map(({ category, ...rest }) => rest);
-    console.log('TransactionService.saveTransactions: Dados preparados para storage:', toSave);
-
     await this.storage.set(STORAGE_KEY, toSave);
-    console.log('TransactionService.saveTransactions: Dados salvos no storage com sucesso!');
-
-    // Verificar se foi salvo corretamente
-    const savedData = await this.storage.get(STORAGE_KEY);
-    console.log('TransactionService.saveTransactions: Verificação - dados no storage:', savedData);
-
-    console.log('TransactionService.saveTransactions: Disparando next() para subscribers...');
     this.transactionsSubject.next(transactions);
-
-    console.log('TransactionService.saveTransactions: next() disparado! Subscribers devem ser notificados.');
   }
 
   private generateId(): string {

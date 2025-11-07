@@ -131,13 +131,11 @@ export class TransactionsPage implements OnInit, OnDestroy {
 
     // Observar mudanças nas transações
     this.transactionSubscription = this.transactionService.transactions$.subscribe(async () => {
-      console.log('Transactions: Lista de transações mudou, recarregando...');
       await this.loadData();
     });
   }
 
   async ionViewWillEnter() {
-    console.log('Transactions: Entrando na view, recarregando dados...');
     await this.loadData();
   }
 
@@ -239,8 +237,6 @@ export class TransactionsPage implements OnInit, OnDestroy {
     }
 
     try {
-      console.log('Salvando transação:', this.formData);
-
       if (this.isEditMode && this.currentTransaction) {
         await this.transactionService.updateTransaction(
           this.currentTransaction.id,
@@ -264,14 +260,10 @@ export class TransactionsPage implements OnInit, OnDestroy {
 
       this.closeModal();
 
-      console.log('Transação salva, recarregando dados locais...');
-
       // Pequeno delay para garantir que o storage foi atualizado
       await new Promise(resolve => setTimeout(resolve, 100));
 
       await this.loadData();
-
-      console.log('Dados recarregados!');
     } catch (error) {
       console.error('Erro ao salvar transação:', error);
       const toast = await this.toastCtrl.create({

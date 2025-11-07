@@ -84,13 +84,11 @@ export class ReportsPage implements OnInit, OnDestroy {
 
     // Observar mudanças nas transações
     this.transactionSubscription = this.transactionService.transactions$.subscribe(async () => {
-      console.log('Reports: Transações mudaram, recarregando...');
       await this.loadData();
     });
   }
 
   async ionViewWillEnter() {
-    console.log('Reports: Entrando na view, recarregando dados...');
     await this.loadData();
   }
 
@@ -106,15 +104,11 @@ export class ReportsPage implements OnInit, OnDestroy {
 
   async loadData() {
     try {
-      console.log('Reports: Carregando dados...');
-
       this.yearlyData = await this.reportService.getYearlyReport(this.selectedYear);
       this.monthlyComparison = await this.reportService.getMonthlyComparison(
         this.currentMonth,
         this.currentYear,
       );
-
-      console.log('Reports: Monthly comparison carregado', this.monthlyComparison);
 
       setTimeout(() => {
         this.renderLineChart();

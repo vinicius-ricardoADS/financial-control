@@ -107,14 +107,12 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     // Observar mudanças nas transações
     this.transactionSubscription = this.transactionService.transactions$.subscribe(async () => {
-      console.log('Dashboard: Transações mudaram, recarregando...');
       await this.loadData();
     });
   }
 
   async ionViewWillEnter() {
     // Recarregar dados sempre que voltar para a página
-    console.log('Dashboard: Entrando na view, recarregando dados...');
     await this.loadData();
   }
 
@@ -129,15 +127,11 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   async loadData() {
     try {
-      console.log('Dashboard: Carregando dados...');
-
       // Carregar resumo do mês atual
       this.summary = await this.reportService.getMonthlyReport(
         this.currentMonthNumber,
         this.currentYear,
       );
-
-      console.log('Dashboard: Summary carregado', this.summary);
 
       // Carregar transações recentes
       this.recentTransactions = await this.transactionService.getTransactionsByMonth(
@@ -146,15 +140,11 @@ export class DashboardPage implements OnInit, OnDestroy {
       );
       this.recentTransactions = this.recentTransactions.slice(0, 5);
 
-      console.log('Dashboard: Transações recentes', this.recentTransactions.length);
-
       // Carregar próximas despesas (próximos 7 dias)
       const paymentStatus = await this.fixedExpenseService.getMonthlyPaymentStatus();
       this.upcomingExpenses = paymentStatus
         .filter(status => !status.isPaid && status.daysUntilDue <= 7)
         .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
-
-      console.log('Dashboard: Próximas despesas', this.upcomingExpenses.length);
 
       // Renderizar gráficos
       setTimeout(() => {

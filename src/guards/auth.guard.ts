@@ -21,7 +21,6 @@ export class AuthGuard implements CanActivate {
     const isNativePlatform = this.platform.is('capacitor');
 
     if (!isNativePlatform) {
-      console.log('Modo desenvolvimento: biometria desabilitada no navegador');
       return true;
     }
 
