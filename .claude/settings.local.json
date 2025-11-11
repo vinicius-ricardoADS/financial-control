@@ -6,7 +6,8 @@
       "Bash(timeout 10 ionic serve:*)",
       "mcp__ide__getDiagnostics",
       "Bash(npx cap sync)",
-      "Bash(npm run build:prd:*)"
+      "Bash(npm run build:prd:*)",
+      "Bash(npm search:*)"
     ],
     "deny": [],
     "ask": []

@@ -7,6 +7,7 @@ import {
 } from '../models/transaction.model';
 import { StorageService } from './storage.service';
 import { CategoryService } from './category.service';
+import { NotificationService } from './notification.service';
 import moment from 'moment';
 
 const STORAGE_KEY = 'transactions';
@@ -22,6 +23,7 @@ export class TransactionService {
   constructor(
     private storage: StorageService,
     private categoryService: CategoryService,
+    private notificationService: NotificationService,
   ) {
     this.loadTransactions();
   }
@@ -70,6 +72,13 @@ export class TransactionService {
 
     transactions.push(newTransaction);
     await this.saveTransactions(transactions);
+
+    // Enviar notificação
+    await this.notificationService.notifyTransactionAdded(
+      newTransaction.type,
+      newTransaction.description,
+      newTransaction.amount,
+    );
 
     return newTransaction;
   }

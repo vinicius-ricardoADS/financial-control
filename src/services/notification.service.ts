@@ -33,6 +33,7 @@ export class NotificationService {
     // Listener para quando a notificação é recebida
     LocalNotifications.addListener('localNotificationReceived', (notification) => {
       // Notificação recebida enquanto o app está aberto
+      console.log('🔔 Notificação recebida:', notification);
     });
 
     // Listener para quando o usuário clica na notificação
@@ -265,5 +266,130 @@ export class NotificationService {
     } catch (error) {
       console.error('❌ Erro ao cancelar notificação de teste:', error);
     }
+  }
+
+  /**
+   * Envia notificação instantânea quando uma transação é adicionada
+   */
+  async notifyTransactionAdded(
+    type: 'income' | 'expense',
+    description: string,
+    amount: number,
+  ): Promise<boolean> {
+    if (!this.permissionsGranted) {
+      await this.checkPermissions();
+    }
+
+    if (!this.permissionsGranted) {
+      return false;
+    }
+
+    try {
+      const emoji = type === 'income' ? '💰' : '💸';
+      const typeLabel = type === 'income' ? 'Receita' : 'Despesa';
+      const schedule: ScheduleOptions = {
+        notifications: [
+          {
+            id: this.generateRandomId(),
+            title: `${emoji} Nova ${typeLabel} Adicionada`,
+            body: `${description} - ${this.formatCurrency(amount)}`,
+            schedule: {
+              at: new Date(Date.now() + 500), // 500ms delay
+            },
+            extra: {
+              type: 'transaction',
+              transactionType: type,
+            },
+          },
+        ],
+      };
+
+      await LocalNotifications.schedule(schedule);
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao enviar notificação de transação:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Envia notificação instantânea quando uma despesa fixa é adicionada
+   */
+  async notifyFixedExpenseAdded(name: string, amount: number): Promise<boolean> {
+    if (!this.permissionsGranted) {
+      await this.checkPermissions();
+    }
+
+    if (!this.permissionsGranted) {
+      return false;
+    }
+
+    try {
+      const schedule: ScheduleOptions = {
+        notifications: [
+          {
+            id: this.generateRandomId(),
+            title: '📌 Nova Despesa Fixa Adicionada',
+            body: `${name} - ${this.formatCurrency(amount)}`,
+            schedule: {
+              at: new Date(Date.now() + 500),
+            },
+            extra: {
+              type: 'fixed-expense-added',
+            },
+          },
+        ],
+      };
+
+      await LocalNotifications.schedule(schedule);
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao enviar notificação de despesa fixa:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Envia notificação instantânea quando um pagamento de despesa fixa é marcado
+   */
+  async notifyPaymentMarked(name: string, amount: number): Promise<boolean> {
+    if (!this.permissionsGranted) {
+      await this.checkPermissions();
+    }
+
+    if (!this.permissionsGranted) {
+      return false;
+    }
+
+    try {
+      const schedule: ScheduleOptions = {
+        notifications: [
+          {
+            id: this.generateRandomId(),
+            title: '✅ Pagamento Registrado',
+            body: `${name} - ${this.formatCurrency(amount)} foi pago`,
+            schedule: {
+              at: new Date(Date.now() + 500),
+            },
+            extra: {
+              type: 'payment-marked',
+            },
+          },
+        ],
+      };
+
+      await LocalNotifications.schedule(schedule);
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao enviar notificação de pagamento:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Gera ID aleatório para notificações instantâneas
+   */
+  private generateRandomId(): number {
+    return Math.floor(Math.random() * 1000000) + 100000;
   }
 }

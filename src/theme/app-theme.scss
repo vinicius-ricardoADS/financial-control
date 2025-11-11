@@ -86,7 +86,8 @@ ion-header {
         --background: var(--app-bg-tertiary);
         padding: 4px;
         border-radius: 12px;
-        margin: 0 16px 8px 16px;
+        margin: 8px 16px 8px 10px;
+        width: 394px;
 
         ion-segment-button {
           --indicator-color: var(--app-accent);

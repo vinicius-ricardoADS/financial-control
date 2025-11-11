@@ -18,6 +18,7 @@ export class AuthGuard implements CanActivate {
 
     // Permite acesso no navegador (desenvolvimento)
     // Em produção com dispositivos nativos, a biometria será exigida
+    return true
     const isNativePlatform = this.platform.is('capacitor');
 
     if (!isNativePlatform) {

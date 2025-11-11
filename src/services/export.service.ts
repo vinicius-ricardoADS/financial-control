@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import html2canvas from 'html2canvas';
 import { FinancialSummary } from '../models/financial-summary.model';
 import { Transaction } from '../models/transaction.model';
-import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
+import { FileOpener } from '@capacitor-community/file-opener';
 import moment from 'moment';
 
 @Injectable({
@@ -131,130 +132,71 @@ export class ExportService {
       );
     }
 
-    // Salvar
-    await this.savePDF(doc, `relatorio_${monthName}.pdf`);
-  }
-
-  async exportChartToImage(chartElement: HTMLElement): Promise<void> {
-    try {
-      const canvas = await html2canvas(chartElement, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-      });
-
-      const imageData = canvas.toDataURL('image/png');
-      const fileName = `grafico_${moment().format('YYYY-MM-DD_HHmmss')}.png`;
-
-      // Salvar imagem
-      await this.saveImage(imageData, fileName);
-    } catch (error) {
-      console.error('Erro ao exportar gráfico:', error);
-      throw error;
-    }
-  }
-
-  async exportTransactionsToCSV(transactions: Transaction[]): Promise<void> {
-    const headers = ['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor', 'Notas'];
-    const rows = transactions.map((t) => [
-      moment(t.date).format('DD/MM/YYYY'),
-      t.description,
-      t.category?.name || '',
-      t.type === 'income' ? 'Receita' : 'Despesa',
-      t.amount.toFixed(2),
-      t.notes || '',
-    ]);
-
-    const csvContent = [
-      headers.join(';'),
-      ...rows.map((row) => row.join(';')),
-    ].join('\n');
-
-    const fileName = `transacoes_${moment().format('YYYY-MM-DD')}.csv`;
-    await this.saveCSV(csvContent, fileName);
+    // Salvar - Nome simplificado sem caracteres especiais
+    const simplifiedName = `relatorio_${moment().format('YYYY-MM-DD')}.pdf`;
+    await this.savePDF(doc, simplifiedName);
   }
 
   private async savePDF(doc: jsPDF, fileName: string): Promise<void> {
-    try {
-      const pdfOutput = doc.output('datauristring');
-      const base64Data = pdfOutput.split(',')[1];
+    const isNative = Capacitor.isNativePlatform();
 
-      const result = await Filesystem.writeFile({
-        path: fileName,
-        data: base64Data,
-        directory: Directory.Documents,
-      });
+    if (isNative) {
+      // Dispositivo móvel nativo (Android/iOS)
+      try {
+        // Gerar PDF como blob
+        const pdfBlob = doc.output('blob');
 
-      // Compartilhar
-      await Share.share({
-        title: 'Relatório Financeiro',
-        text: 'Seu relatório financeiro está pronto',
-        url: result.uri,
-        dialogTitle: 'Compartilhar relatório',
-      });
-    } catch (error) {
-      console.error('Erro ao salvar PDF:', error);
-      // Fallback para download direto no navegador
+        // Converter blob para base64
+        const reader = new FileReader();
+        const base64Data = await new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            resolve(result.split(',')[1]);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(pdfBlob);
+        });
+
+        // Salvar no diretório de cache (sempre disponível)
+        const savedFile = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Cache,
+        });
+
+        console.log('📄 PDF salvo em:', savedFile.uri);
+
+        // Converter URI para caminho real para o FileOpener
+        const filePath = Capacitor.convertFileSrc(savedFile.uri);
+
+        console.log('📂 Caminho convertido:', filePath);
+
+        // Abrir com FileOpener (mais confiável que Share)
+        try {
+          await FileOpener.open({
+            filePath: savedFile.uri,
+            contentType: 'application/pdf',
+            openWithDefault: true,
+          });
+          console.log('✅ PDF aberto com sucesso');
+        } catch (openError) {
+          console.log('⚠️ Erro ao abrir PDF, tentando compartilhar...', openError);
+          // Fallback: tentar compartilhar se não conseguir abrir
+          await Share.share({
+            title: 'Relatório Financeiro',
+            text: 'Seu relatório financeiro está pronto',
+            url: savedFile.uri,
+            dialogTitle: 'Compartilhar relatório',
+          });
+        }
+      } catch (error) {
+        console.error('❌ Erro ao salvar PDF no dispositivo:', error);
+        // Fallback: tentar salvar no navegador
+        doc.save(fileName);
+      }
+    } else {
+      // Navegador web
       doc.save(fileName);
     }
-  }
-
-  private async saveImage(base64Data: string, fileName: string): Promise<void> {
-    try {
-      const data = base64Data.split(',')[1];
-
-      const result = await Filesystem.writeFile({
-        path: fileName,
-        data: data,
-        directory: Directory.Documents,
-      });
-
-      await Share.share({
-        title: 'Gráfico Financeiro',
-        url: result.uri,
-        dialogTitle: 'Compartilhar gráfico',
-      });
-    } catch (error) {
-      console.error('Erro ao salvar imagem:', error);
-      // Fallback para download
-      const link = document.createElement('a');
-      link.href = base64Data;
-      link.download = fileName;
-      link.click();
-    }
-  }
-
-  private async saveCSV(content: string, fileName: string): Promise<void> {
-    try {
-      const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-      const base64Data = await this.blobToBase64(blob);
-
-      const result = await Filesystem.writeFile({
-        path: fileName,
-        data: base64Data.split(',')[1],
-        directory: Directory.Documents,
-      });
-
-      await Share.share({
-        title: 'Exportar Transações',
-        url: result.uri,
-        dialogTitle: 'Compartilhar CSV',
-      });
-    } catch (error) {
-      console.error('Erro ao salvar CSV:', error);
-      // Fallback
-      const link = document.createElement('a');
-      link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(content);
-      link.download = fileName;
-      link.click();
-    }
-  }
-
-  private blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
   }
 }

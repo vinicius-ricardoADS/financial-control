@@ -80,8 +80,14 @@ export class FixedExpenseService {
     expenses.push(newExpense);
     await this.saveExpenses(expenses);
 
-    // Agendar notificação
+    // Agendar notificação de lembrete
     await this.notificationService.scheduleExpenseNotification(newExpense);
+
+    // Notificação instantânea de despesa adicionada
+    await this.notificationService.notifyFixedExpenseAdded(
+      newExpense.name,
+      newExpense.amount,
+    );
 
     return newExpense;
   }
@@ -232,7 +238,7 @@ export class FixedExpenseService {
     // 1. Marcar como paga no histórico
     await this.markAsPaid(expenseId, targetMonth, targetYear, paymentAmount, notes);
 
-    // 2. Criar transação automaticamente
+    // 2. Criar transação automaticamente (sem notificação duplicada)
     const transactionData: TransactionCreate = {
       type: 'expense',
       amount: paymentAmount,
@@ -242,7 +248,34 @@ export class FixedExpenseService {
       notes: notes || `Pagamento automático de despesa fixa`,
     };
 
-    await this.transactionService.addTransaction(transactionData);
+    // Não usar addTransaction pois ele já enviaria uma notificação
+    // Aqui queremos apenas a notificação de pagamento marcado
+    const transactions = [...this.transactionService['transactionsSubject'].value];
+    const category = await this.categoryService.getCategoryById(transactionData.categoryId);
+
+    const newTransaction = {
+      id: this.generateTransactionId(),
+      type: transactionData.type,
+      amount: transactionData.amount,
+      categoryId: transactionData.categoryId,
+      category,
+      description: transactionData.description,
+      date: transactionData.date || new Date().toISOString(),
+      isRecurring: false,
+      notes: transactionData.notes,
+      tags: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    transactions.push(newTransaction);
+    await this.transactionService['saveTransactions'](transactions);
+
+    // 3. Notificar pagamento marcado
+    await this.notificationService.notifyPaymentMarked(
+      expense.name,
+      paymentAmount,
+    );
   }
 
   /**
@@ -317,5 +350,9 @@ export class FixedExpenseService {
 
   private generatePaymentId(): string {
     return `pay_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  }
+
+  private generateTransactionId(): string {
+    return `txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   }
 }
