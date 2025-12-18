@@ -3,6 +3,8 @@ import { LocalNotifications, ScheduleOptions, ActionPerformed } from '@capacitor
 import { FixedExpense } from '../models/fixed-expense.model';
 import moment from 'moment';
 import { Router } from '@angular/router';
+import { ExternalNotificationService, ExternalNotification } from './external-notification.service';
+import { BankTransactionDetectorService } from './bank-transaction-detector.service';
 
 @Injectable({
   providedIn: 'root',
@@ -10,9 +12,14 @@ import { Router } from '@angular/router';
 export class NotificationService {
   private permissionsGranted = false;
 
-  constructor(private router: Router) {
+  constructor(
+    private router: Router,
+    private externalNotificationService: ExternalNotificationService,
+    private bankTransactionDetector: BankTransactionDetectorService
+  ) {
     this.initializeNotifications();
     this.setupNotificationListeners();
+    this.setupExternalNotificationProcessor();
   }
 
   private async initializeNotifications() {
@@ -43,8 +50,24 @@ export class NotificationService {
       if (data && data.type === 'fixed-expense') {
         // Navega para a página de despesas fixas quando clicado
         this.router.navigate(['/fixed-expenses']);
+      } else if (data && data.type === 'transaction-detected') {
+        // Navega para a página de transações quando detectado transação bancária
+        this.router.navigate(['/transactions']);
       }
     });
+  }
+
+  /**
+   * Configura processador de notificações externas com detector de transações
+   */
+  private setupExternalNotificationProcessor() {
+    this.externalNotificationService.setNotificationCallback(
+      async (notification: ExternalNotification) => {
+        console.log('🔔 Processando notificação externa:', notification);
+        // Enviar para o detector de transações bancárias
+        await this.bankTransactionDetector.processNotification(notification);
+      }
+    );
   }
 
   async checkPermissions(): Promise<boolean> {
@@ -387,9 +410,95 @@ export class NotificationService {
   }
 
   /**
+   * Envia notificação quando uma transação bancária é detectada e adicionada
+   */
+  async notifyTransactionDetected(
+    description: string,
+    amount: number,
+    source: string,
+  ): Promise<boolean> {
+    if (!this.permissionsGranted) {
+      await this.checkPermissions();
+    }
+
+    if (!this.permissionsGranted) {
+      return false;
+    }
+
+    try {
+      const schedule: ScheduleOptions = {
+        notifications: [
+          {
+            id: this.generateRandomId(),
+            title: '🏦 Transação Detectada!',
+            body: `${description} - ${this.formatCurrency(amount)} detectado no ${source} e adicionado automaticamente!`,
+            schedule: {
+              at: new Date(Date.now() + 500),
+            },
+            extra: {
+              type: 'transaction-detected',
+              source: source,
+            },
+          },
+        ],
+      };
+
+      await LocalNotifications.schedule(schedule);
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao enviar notificação de transação detectada:', error);
+      return false;
+    }
+  }
+
+  /**
    * Gera ID aleatório para notificações instantâneas
    */
   private generateRandomId(): number {
     return Math.floor(Math.random() * 1000000) + 100000;
+  }
+
+  // ==================== NOTIFICAÇÕES EXTERNAS ====================
+
+  /**
+   * Verifica se tem permissão para escutar notificações de outros apps
+   */
+  async hasExternalNotificationPermission(): Promise<boolean> {
+    return await this.externalNotificationService.checkPermission();
+  }
+
+  /**
+   * Solicita permissão para escutar notificações de outros apps
+   */
+  async requestExternalNotificationPermission(): Promise<{ success: boolean; message: string }> {
+    return await this.externalNotificationService.requestPermission();
+  }
+
+  /**
+   * Inicia escuta de notificações externas
+   */
+  async startExternalNotificationListener(): Promise<boolean> {
+    return await this.externalNotificationService.startListening();
+  }
+
+  /**
+   * Para escuta de notificações externas
+   */
+  async stopExternalNotificationListener(): Promise<void> {
+    await this.externalNotificationService.stopListening();
+  }
+
+  /**
+   * Retorna status do serviço de notificações externas
+   */
+  async getExternalNotificationStatus(): Promise<{ enabled: boolean; serviceName: string }> {
+    return await this.externalNotificationService.getStatus();
+  }
+
+  /**
+   * Verifica se está escutando notificações externas
+   */
+  isListeningExternalNotifications(): boolean {
+    return this.externalNotificationService.getIsListening();
   }
 }
