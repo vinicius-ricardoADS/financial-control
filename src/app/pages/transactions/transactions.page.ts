@@ -48,6 +48,8 @@ import {
   cardOutline,
 } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
+import { R } from '@angular/material/ripple.d-2fb57d04';
+import { ReleaseTypes } from 'src/models/fixed-expense.model';
 
 @Component({
   selector: 'app-transactions',
@@ -97,7 +99,7 @@ export class TransactionsPage implements OnInit, OnDestroy {
   currentTransaction: Transaction | null = null;
 
   formData: TransactionCreate = {
-    type: 'expense',
+    release_type: ReleaseTypes.EXPENSE,
     amount: 0,
     categoryId: '',
     description: '',
@@ -156,7 +158,7 @@ export class TransactionsPage implements OnInit, OnDestroy {
 
     // Filtro por tipo
     if (this.filterType !== 'all') {
-      filtered = filtered.filter((t) => t.type === this.filterType);
+      filtered = filtered.filter((t) => t.release_type === this.filterType);
     }
 
     // Filtro por busca
@@ -165,7 +167,7 @@ export class TransactionsPage implements OnInit, OnDestroy {
       filtered = filtered.filter(
         (t) =>
           t.description.toLowerCase().includes(term) ||
-          t.category?.name.toLowerCase().includes(term) ||
+          t.category?.category.toLowerCase().includes(term) ||
           t.notes?.toLowerCase().includes(term),
       );
     }
@@ -189,14 +191,14 @@ export class TransactionsPage implements OnInit, OnDestroy {
   }
 
   openAddModal() {
-    this.openAddModalWithType('expense');
+    this.openAddModalWithType(ReleaseTypes.EXPENSE);
   }
 
   openAddModalWithType(type: 'income' | 'expense') {
     this.isEditMode = false;
     this.currentTransaction = null;
     this.formData = {
-      type: type,
+      release_type: type === 'income' ? ReleaseTypes.INCOME : ReleaseTypes.EXPENSE,
       amount: 0,
       categoryId: '',
       description: '',
@@ -210,7 +212,7 @@ export class TransactionsPage implements OnInit, OnDestroy {
     this.isEditMode = true;
     this.currentTransaction = transaction;
     this.formData = {
-      type: transaction.type,
+      release_type: transaction.release_type,
       amount: transaction.amount,
       categoryId: transaction.categoryId,
       description: transaction.description,
@@ -302,10 +304,6 @@ export class TransactionsPage implements OnInit, OnDestroy {
     });
 
     await alert.present();
-  }
-
-  getCategoriesByType(): Category[] {
-    return this.categories.filter((c) => c.type === this.formData.type);
   }
 
   formatCurrency(value: number): string {

@@ -100,8 +100,8 @@ export class ExportService {
     const transactionData = transactions.slice(0, 20).map((t) => [
       moment(t.date).format('DD/MM/YYYY'),
       t.description,
-      t.category?.name || '-',
-      t.type === 'income' ? 'Receita' : 'Despesa',
+      t.category?.category || '-',
+      t.release_type === 'income' ? 'Receita' : 'Despesa',
       `R$ ${t.amount.toFixed(2)}`,
     ]);
 

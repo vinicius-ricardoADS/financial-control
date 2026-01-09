@@ -9,7 +9,7 @@ export interface PaymentRecord {
   notes?: string;
 }
 
-export interface FixedExpense {
+export interface Release {
   id: string;
   name: string;
   amount: number;
@@ -25,11 +25,17 @@ export interface FixedExpense {
   updatedAt: Date | string;
 }
 
-export interface FixedExpenseCreate {
+export enum ReleaseTypes {
+  EXPENSE = 'expense',
+  INCOME = 'income',
+}
+
+export interface ReleasesCreate {
   name: string;
   amount: number;
   dueDay: number;
   categoryId: string;
+  release_type: ReleaseTypes;
   description?: string;
   notifications?: boolean;
   notifyDaysBefore?: number;

@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <ion-title>Despesas Fixas</ion-title>
+    <ion-title>Lançamentos Fixos</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -16,7 +16,7 @@
                 {{ getStatusLabel(expense.id) }}
               </ion-badge>
             </h2>
-            <p>{{ expense.category?.name }} • {{ getDayOfMonthLabel(expense.dueDay) }}</p>
+            <p>{{ expense.category?.category }} • {{ getDayOfMonthLabel(expense.dueDay) }}</p>
             <p class="amount">{{ formatCurrency(expense.amount) }}</p>
           </ion-label>
           <div slot="end" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
@@ -55,7 +55,7 @@
 
     <div class="empty-state" *ngIf="expenses.length === 0">
       <ion-icon name="notifications" size="large"></ion-icon>
-      <p>Nenhuma despesa fixa cadastrada</p>
+      <p>Nenhum lançamento fixo cadastrado</p>
     </div>
   </div>
 
@@ -69,7 +69,7 @@
     <ng-template>
       <ion-header>
         <ion-toolbar color="primary">
-          <ion-title>{{ isEditMode ? 'Editar' : 'Nova' }} Despesa Fixa</ion-title>
+          <ion-title>{{ isEditMode ? 'Editar' : 'Nova' }} Lançamento Fixo</ion-title>
           <ion-buttons slot="end">
             <ion-button (click)="closeModal()">
               <ion-icon name="close"></ion-icon>
@@ -94,7 +94,19 @@
             <ion-label position="stacked">Categoria *</ion-label>
             <ion-select [(ngModel)]="formData.categoryId" name="category">
               <ion-select-option *ngFor="let cat of categories" [value]="cat.id">
-                {{ cat.name }}
+                {{ cat.category }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Tipo de lançamento *</ion-label>
+            <ion-select [(ngModel)]="formData.release_type" name="category">
+              <ion-select-option value="income">
+                Entrada
+              </ion-select-option>
+              <ion-select-option value="expense">
+                Saída
               </ion-select-option>
             </ion-select>
           </ion-item>

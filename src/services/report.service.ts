@@ -35,8 +35,8 @@ export class ReportService {
       .endOf('month')
       .toDate();
 
-    const income = transactions.filter((t) => t.type === 'income');
-    const expenses = transactions.filter((t) => t.type === 'expense');
+    const income = transactions.filter((t) => t.release_type === 'income');
+    const expenses = transactions.filter((t) => t.release_type === 'expense');
 
     const totalIncome = income.reduce((sum, t) => sum + t.amount, 0);
     const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);

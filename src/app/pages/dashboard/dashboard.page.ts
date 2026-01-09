@@ -26,7 +26,7 @@ import { TransactionService } from '../../../services/transaction.service';
 import { FixedExpenseService } from '../../../services/fixed-expense.service';
 import { FinancialSummary } from '../../../models/financial-summary.model';
 import { Transaction } from '../../../models/transaction.model';
-import { FixedExpense } from '../../../models/fixed-expense.model';
+import { Release } from '../../../models/fixed-expense.model';
 import moment from 'moment';
 import "moment/locale/pt-br";
 import { addIcons } from 'ionicons';
@@ -79,7 +79,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   summary: FinancialSummary | null = null;
   recentTransactions: Transaction[] = [];
   upcomingExpenses: Array<{
-    expense: FixedExpense;
+    expense: Release;
     isPaid: boolean;
     daysUntilDue: number;
     isOverdue: boolean;

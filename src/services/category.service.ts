@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Category, DEFAULT_CATEGORIES } from '../models/category.model';
+import { Category } from '../models/category.model';
 import { StorageService } from './storage.service';
 
 const STORAGE_KEY = 'categories';
@@ -14,30 +14,10 @@ export class CategoryService {
     this.categoriesSubject.asObservable();
 
   constructor(private storage: StorageService) {
-    this.loadCategories();
-  }
-
-  private async loadCategories(): Promise<void> {
-    let categories = await this.storage.get<Category[]>(STORAGE_KEY);
-
-    // Se não existir categorias, usa as padrões
-    if (!categories || categories.length === 0) {
-      categories = DEFAULT_CATEGORIES;
-      await this.storage.set(STORAGE_KEY, categories);
-    }
-
-    this.categoriesSubject.next(categories);
   }
 
   async getAllCategories(): Promise<Category[]> {
     return this.categoriesSubject.value;
-  }
-
-  async getCategoriesByType(
-    type: 'income' | 'expense',
-  ): Promise<Category[]> {
-    const categories = this.categoriesSubject.value;
-    return categories.filter((c) => c.type === type);
   }
 
   async getCategoryById(id: string): Promise<Category | undefined> {
@@ -75,11 +55,6 @@ export class CategoryService {
 
     await this.storage.set(STORAGE_KEY, categories);
     this.categoriesSubject.next(categories);
-  }
-
-  async resetToDefaults(): Promise<void> {
-    await this.storage.set(STORAGE_KEY, DEFAULT_CATEGORIES);
-    this.categoriesSubject.next(DEFAULT_CATEGORIES);
   }
 
   private generateId(): string {

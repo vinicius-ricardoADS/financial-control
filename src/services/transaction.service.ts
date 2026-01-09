@@ -56,7 +56,7 @@ export class TransactionService {
 
     const newTransaction: Transaction = {
       id: this.generateId(),
-      type: data.type,
+      release_type: data.release_type,
       amount: data.amount,
       categoryId: data.categoryId,
       category,
@@ -75,7 +75,7 @@ export class TransactionService {
 
     // Enviar notificação
     await this.notificationService.notifyTransactionAdded(
-      newTransaction.type,
+      newTransaction.release_type,
       newTransaction.description,
       newTransaction.amount,
     );
@@ -117,7 +117,7 @@ export class TransactionService {
     let transactions = [...this.transactionsSubject.value];
 
     if (filter.type) {
-      transactions = transactions.filter((t) => t.type === filter.type);
+      transactions = transactions.filter((t) => t.release_type === filter.type);
     }
 
     if (filter.categoryId) {
@@ -144,7 +144,7 @@ export class TransactionService {
         (t) =>
           t.description.toLowerCase().includes(search) ||
           t.notes?.toLowerCase().includes(search) ||
-          t.category?.name.toLowerCase().includes(search),
+          t.category?.category.toLowerCase().includes(search),
       );
     }
 
@@ -168,11 +168,11 @@ export class TransactionService {
     month?: number,
     year?: number,
   ): Promise<number> {
-    let transactions = this.transactionsSubject.value.filter((t) => t.type === type);
+    let transactions = this.transactionsSubject.value.filter((t) => t.release_type === type);
 
     if (month && year) {
       const monthTransactions = await this.getTransactionsByMonth(month, year);
-      transactions = monthTransactions.filter((t) => t.type === type);
+      transactions = monthTransactions.filter((t) => t.release_type === type);
     }
 
     return transactions.reduce((sum, t) => sum + t.amount, 0);

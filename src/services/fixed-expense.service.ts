@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import {
-  FixedExpense,
-  FixedExpenseCreate,
+  Release,
+  ReleasesCreate,
   PaymentRecord,
+  ReleaseTypes,
 } from '../models/fixed-expense.model';
 import { StorageService } from './storage.service';
 import { CategoryService } from './category.service';
@@ -11,6 +12,7 @@ import { NotificationService } from './notification.service';
 import { TransactionService } from './transaction.service';
 import { TransactionCreate } from '../models/transaction.model';
 import moment from 'moment';
+import { R } from '@angular/material/ripple.d-2fb57d04';
 
 const STORAGE_KEY = 'fixed-expenses';
 
@@ -18,8 +20,8 @@ const STORAGE_KEY = 'fixed-expenses';
   providedIn: 'root',
 })
 export class FixedExpenseService {
-  private expensesSubject = new BehaviorSubject<FixedExpense[]>([]);
-  public expenses$: Observable<FixedExpense[]> =
+  private expensesSubject = new BehaviorSubject<Release[]>([]);
+  public expenses$: Observable<Release[]> =
     this.expensesSubject.asObservable();
 
   constructor(
@@ -33,7 +35,7 @@ export class FixedExpenseService {
 
   private async loadExpenses(): Promise<void> {
     const expenses =
-      (await this.storage.get<FixedExpense[]>(STORAGE_KEY)) || [];
+      (await this.storage.get<Release[]>(STORAGE_KEY)) || [];
 
     const withCategories = await Promise.all(
       expenses.map(async (e) => ({
@@ -45,23 +47,23 @@ export class FixedExpenseService {
     this.expensesSubject.next(withCategories);
   }
 
-  async getAllExpenses(): Promise<FixedExpense[]> {
+  async getAllExpenses(): Promise<Release[]> {
     return this.expensesSubject.value;
   }
 
-  async getActiveExpenses(): Promise<FixedExpense[]> {
+  async getActiveExpenses(): Promise<Release[]> {
     return this.expensesSubject.value.filter((e) => e.isActive);
   }
 
-  async getExpenseById(id: string): Promise<FixedExpense | undefined> {
+  async getExpenseById(id: string): Promise<Release | undefined> {
     return this.expensesSubject.value.find((e) => e.id === id);
   }
 
-  async addExpense(data: FixedExpenseCreate): Promise<FixedExpense> {
+  async addExpense(data: ReleasesCreate): Promise<Release> {
     const expenses = [...this.expensesSubject.value];
     const category = await this.categoryService.getCategoryById(data.categoryId);
 
-    const newExpense: FixedExpense = {
+    const newExpense: Release = {
       id: this.generateId(),
       name: data.name,
       amount: data.amount,
@@ -94,7 +96,7 @@ export class FixedExpenseService {
 
   async updateExpense(
     id: string,
-    updates: Partial<FixedExpenseCreate>,
+    updates: Partial<ReleasesCreate>,
   ): Promise<void> {
     let expenses = [...this.expensesSubject.value];
     const index = expenses.findIndex((e) => e.id === id);
@@ -188,7 +190,7 @@ export class FixedExpenseService {
     await this.saveExpenses(expenses);
   }
 
-  async getUpcomingExpenses(daysAhead: number = 7): Promise<FixedExpense[]> {
+  async getUpcomingExpenses(daysAhead: number = 7): Promise<Release[]> {
     const today = moment();
     const futureDate = moment().add(daysAhead, 'days');
     const activeExpenses = await this.getActiveExpenses();
@@ -240,7 +242,7 @@ export class FixedExpenseService {
 
     // 2. Criar transação automaticamente (sem notificação duplicada)
     const transactionData: TransactionCreate = {
-      type: 'expense',
+      release_type: ReleaseTypes.EXPENSE,
       amount: paymentAmount,
       categoryId: expense.categoryId,
       description: expense.name,
@@ -255,7 +257,7 @@ export class FixedExpenseService {
 
     const newTransaction = {
       id: this.generateTransactionId(),
-      type: transactionData.type,
+      release_type: transactionData.release_type,
       amount: transactionData.amount,
       categoryId: transactionData.categoryId,
       category,
@@ -281,7 +283,7 @@ export class FixedExpenseService {
   /**
    * Verifica se uma despesa foi paga em determinado mês
    */
-  isExpensePaidInMonth(expense: FixedExpense, month: number, year: number): boolean {
+  isExpensePaidInMonth(expense: Release, month: number, year: number): boolean {
     return expense.paymentHistory.some((payment) => {
       const paymentDate = moment(payment.date);
       return (
@@ -295,7 +297,7 @@ export class FixedExpenseService {
   /**
    * Verifica se a despesa foi paga no mês atual
    */
-  isExpensePaidThisMonth(expense: FixedExpense): boolean {
+  isExpensePaidThisMonth(expense: Release): boolean {
     const now = moment();
     return this.isExpensePaidInMonth(expense, now.month() + 1, now.year());
   }
@@ -305,7 +307,7 @@ export class FixedExpenseService {
    */
   async getMonthlyPaymentStatus(): Promise<
     Array<{
-      expense: FixedExpense;
+      expense: Release;
       isPaid: boolean;
       dueDate: Date;
       daysUntilDue: number;
@@ -338,7 +340,7 @@ export class FixedExpenseService {
     });
   }
 
-  private async saveExpenses(expenses: FixedExpense[]): Promise<void> {
+  private async saveExpenses(expenses: Release[]): Promise<void> {
     const toSave = expenses.map(({ category, ...rest }) => rest);
     await this.storage.set(STORAGE_KEY, toSave);
     this.expensesSubject.next(expenses);

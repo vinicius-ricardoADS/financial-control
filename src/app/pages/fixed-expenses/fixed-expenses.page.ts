@@ -28,7 +28,7 @@ import {
 } from '@ionic/angular/standalone';
 import { FixedExpenseService } from '../../../services/fixed-expense.service';
 import { CategoryService } from '../../../services/category.service';
-import { FixedExpense, FixedExpenseCreate } from '../../../models/fixed-expense.model';
+import { Release, ReleasesCreate, ReleaseTypes } from '../../../models/fixed-expense.model';
 import { Category } from '../../../models/category.model';
 import { addIcons } from 'ionicons';
 import { add, trash, pencil, close, checkmark, notifications, checkmarkCircle, alertCircle, timeOutline } from 'ionicons/icons';
@@ -66,11 +66,11 @@ import moment from 'moment';
   ],
 })
 export class FixedExpensesPage implements OnInit {
-  expenses: FixedExpense[] = [];
+  expenses: Release[] = [];
   categories: Category[] = [];
   isModalOpen = false;
   isEditMode = false;
-  currentExpense: FixedExpense | null = null;
+  currentExpense: Release | null = null;
 
   // Status de pagamento
   paymentStatusMap: Map<string, {
@@ -79,11 +79,12 @@ export class FixedExpensesPage implements OnInit {
     isOverdue: boolean;
   }> = new Map();
 
-  formData: FixedExpenseCreate = {
+  formData: ReleasesCreate = {
     name: '',
     amount: 0,
     dueDay: 1,
     categoryId: '',
+    release_type: ReleaseTypes.EXPENSE,
     notifications: true,
     notifyDaysBefore: 3,
   };
@@ -107,7 +108,7 @@ export class FixedExpensesPage implements OnInit {
 
   async loadData() {
     this.expenses = await this.expenseService.getAllExpenses();
-    this.categories = await this.categoryService.getCategoriesByType('expense');
+    this.categories = await this.categoryService.getAllCategories();
 
     // Carregar status de pagamento
     await this.loadPaymentStatus();
@@ -134,13 +135,14 @@ export class FixedExpensesPage implements OnInit {
       amount: 0,
       dueDay: 1,
       categoryId: '',
+      release_type: ReleaseTypes.EXPENSE,
       notifications: true,
       notifyDaysBefore: 3,
     };
     this.isModalOpen = true;
   }
 
-  openEditModal(expense: FixedExpense) {
+  openEditModal(expense: Release) {
     this.isEditMode = true;
     this.currentExpense = expense;
     this.formData = {
@@ -148,6 +150,7 @@ export class FixedExpensesPage implements OnInit {
       amount: expense.amount,
       dueDay: expense.dueDay,
       categoryId: expense.categoryId,
+      release_type: ReleaseTypes.EXPENSE,
       notifications: expense.notifications,
       notifyDaysBefore: expense.notifyDaysBefore,
     };
@@ -195,7 +198,7 @@ export class FixedExpensesPage implements OnInit {
     }
   }
 
-  async deleteExpense(expense: FixedExpense) {
+  async deleteExpense(expense: Release) {
     const alert = await this.alertCtrl.create({
       header: 'Confirmar exclusão',
       message: `Deseja realmente excluir "${expense.name}"?`,
@@ -220,7 +223,7 @@ export class FixedExpensesPage implements OnInit {
     await alert.present();
   }
 
-  async toggleActive(expense: FixedExpense) {
+  async toggleActive(expense: Release) {
     await this.expenseService.toggleActive(expense.id);
     await this.loadData();
   }
@@ -258,7 +261,7 @@ export class FixedExpensesPage implements OnInit {
     return '';
   }
 
-  async markAsPaid(expense: FixedExpense, event?: Event) {
+  async markAsPaid(expense: Release, event?: Event) {
     if (event) {
       event.stopPropagation();
     }

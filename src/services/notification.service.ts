@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { LocalNotifications, ScheduleOptions, ActionPerformed } from '@capacitor/local-notifications';
-import { FixedExpense } from '../models/fixed-expense.model';
+import { Release } from '../models/fixed-expense.model';
 import moment from 'moment';
 import { Router } from '@angular/router';
 
@@ -80,7 +80,7 @@ export class NotificationService {
     return this.permissionsGranted;
   }
 
-  async scheduleExpenseNotification(expense: FixedExpense): Promise<boolean> {
+  async scheduleExpenseNotification(expense: Release): Promise<boolean> {
     if (!expense.notifications || !expense.isActive) {
       return false;
     }
@@ -210,7 +210,7 @@ export class NotificationService {
     }
   }
 
-  async rescheduleAllExpenses(expenses: FixedExpense[]): Promise<number> {
+  async rescheduleAllExpenses(expenses: Release[]): Promise<number> {
     let scheduledCount = 0;
 
     for (const expense of expenses) {

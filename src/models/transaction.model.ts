@@ -1,8 +1,9 @@
 import { Category } from './category.model';
+import { ReleaseTypes } from './fixed-expense.model';
 
 export interface Transaction {
   id: string;
-  type: 'income' | 'expense';
+  release_type: ReleaseTypes;
   amount: number;
   categoryId: string;
   category?: Category; // será preenchido ao carregar
@@ -18,7 +19,7 @@ export interface Transaction {
 }
 
 export interface TransactionCreate {
-  type: 'income' | 'expense';
+  release_type: ReleaseTypes;
   amount: number;
   categoryId: string;
   description: string;

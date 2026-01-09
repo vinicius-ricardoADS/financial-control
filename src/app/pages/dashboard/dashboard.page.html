@@ -33,7 +33,7 @@
             ></ion-icon>
             <ion-label>
               <h3>{{ item.expense.name }}</h3>
-              <p>{{ item.expense.category?.name }}</p>
+              <p>{{ item.expense.category?.category }}</p>
             </ion-label>
             <div slot="end" style="text-align: right;">
               <ion-label>
@@ -123,17 +123,17 @@
         <ion-list>
           <ion-item *ngFor="let transaction of recentTransactions" lines="full">
             <ion-icon
-              [name]="getTransactionIcon(transaction.type)"
-              [color]="getTransactionColor(transaction.type)"
+              [name]="getTransactionIcon(transaction.release_type)"
+              [color]="getTransactionColor(transaction.release_type)"
               slot="start"
             ></ion-icon>
             <ion-label>
               <h3>{{ transaction.description }}</h3>
-              <p>{{ transaction.category?.name }} • {{ formatDate(transaction.date) }}</p>
+              <p>{{ transaction.category?.category }} • {{ formatDate(transaction.date) }}</p>
             </ion-label>
             <ion-label slot="end" class="amount-label">
-              <h2 [class]="transaction.type">
-                {{ transaction.type === 'income' ? '+' : '-' }}
+              <h2 [class]="transaction.release_type">
+                {{ transaction.release_type === 'income' ? '+' : '-' }}
                 {{ formatCurrency(transaction.amount) }}
               </h2>
             </ion-label>
