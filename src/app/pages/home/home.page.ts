@@ -12,6 +12,7 @@ import {
   wallet,
   notifications,
   barChart,
+  person,
 } from 'ionicons/icons';
 
 @Component({
@@ -23,6 +24,6 @@ import {
 })
 export class HomePage {
   constructor() {
-    addIcons({ pieChart, wallet, notifications, barChart });
+    addIcons({ pieChart, wallet, notifications, barChart, person });
   }
 }

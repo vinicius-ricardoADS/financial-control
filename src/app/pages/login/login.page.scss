@@ -1,0 +1,168 @@
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100%;
+  padding: 20px;
+  background: var(--app-bg-primary);
+}
+
+.logo-section {
+  text-align: center;
+  margin-bottom: 32px;
+
+  .app-logo {
+    font-size: 80px;
+    color: var(--app-accent);
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .app-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--app-text-primary);
+    margin: 0 0 8px 0;
+  }
+
+  .app-subtitle {
+    font-size: 14px;
+    color: var(--app-text-tertiary);
+    margin: 0;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.login-card {
+  max-width: 450px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  background: var(--app-bg-secondary);
+  border: 1px solid var(--app-border);
+  margin: 0;
+}
+
+ion-card-header {
+  padding: 24px 20px 16px;
+  text-align: center;
+
+  .card-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--app-text-primary);
+    margin-bottom: 8px;
+  }
+
+  .card-subtitle {
+    font-size: 14px;
+    color: var(--app-text-tertiary);
+    margin: 0;
+  }
+}
+
+ion-card-content {
+  padding: 20px;
+
+  form {
+    .form-item {
+      --padding-start: 16px;
+      --inner-padding-end: 16px;
+      --background: var(--app-bg-tertiary);
+      --border-color: var(--app-border);
+      --border-radius: 12px;
+      --highlight-background: var(--app-accent);
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+      ion-label {
+        color: var(--app-text-secondary);
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+
+      ion-input {
+        --color: var(--app-text-primary);
+        --placeholder-color: var(--app-text-tertiary);
+        --placeholder-opacity: 0.7;
+        font-size: 16px;
+      }
+    }
+
+    .form-buttons {
+      margin-top: 24px;
+
+      ion-button {
+        --border-radius: 12px;
+        font-weight: 700;
+        height: 48px;
+        font-size: 16px;
+        margin-bottom: 12px;
+
+        ion-spinner {
+          margin-right: 8px;
+        }
+      }
+
+      .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 20px 0;
+        color: var(--app-text-tertiary);
+        font-size: 14px;
+
+        &::before,
+        &::after {
+          content: '';
+          flex: 1;
+          border-bottom: 1px solid var(--app-border);
+        }
+
+        span {
+          padding: 0 12px;
+        }
+      }
+    }
+  }
+}
+
+// Responsividade
+@media (max-width: 576px) {
+  .login-container {
+    padding: 12px;
+    justify-content: flex-start;
+    padding-top: 40px;
+  }
+
+  .logo-section {
+    margin-bottom: 24px;
+
+    .app-logo {
+      font-size: 60px;
+    }
+
+    .app-title {
+      font-size: 24px;
+    }
+  }
+
+  .login-card {
+    ion-card-header {
+      .card-title {
+        font-size: 20px;
+      }
+    }
+  }
+}

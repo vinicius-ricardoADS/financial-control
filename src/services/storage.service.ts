@@ -42,4 +42,9 @@ export class StorageService {
     await this.init();
     return (await this._storage?.length()) || 0;
   }
+
+  async clear(): Promise<void> {
+    await this.init();
+    await this._storage?.clear();
+  }
 }

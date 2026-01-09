@@ -1,0 +1,84 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-button slot="start" fill="clear" (click)="goBack()">
+      <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+    </ion-button>
+    <ion-title>Cadastro de Usuário</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="container">
+    <ion-card class="register-card">
+      <ion-card-header>
+        <ion-card-title class="card-title">
+          <ion-icon name="person" class="title-icon"></ion-icon>
+          Criar Conta
+        </ion-card-title>
+        <ion-text color="medium">
+          <p class="card-subtitle">Preencha os dados para se cadastrar</p>
+        </ion-text>
+      </ion-card-header>
+
+      <ion-card-content>
+        <form>
+          <ion-item class="form-item">
+            <ion-label position="stacked">Nome Completo *</ion-label>
+            <ion-input
+              [(ngModel)]="formData.name"
+              name="name"
+              type="text"
+              placeholder="Digite seu nome completo"
+              autocomplete="name"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item class="form-item">
+            <ion-label position="stacked">Email *</ion-label>
+            <ion-input
+              [(ngModel)]="formData.email"
+              name="email"
+              type="email"
+              placeholder="seu@email.com"
+              autocomplete="email"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item class="form-item">
+            <ion-label position="stacked">Senha *</ion-label>
+            <ion-input
+              [(ngModel)]="formData.password"
+              name="password"
+              type="password"
+              placeholder="Mínimo 6 caracteres"
+              autocomplete="new-password"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item class="form-item">
+            <ion-label position="stacked">Confirmar Senha *</ion-label>
+            <ion-input
+              [(ngModel)]="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              placeholder="Digite a senha novamente"
+              autocomplete="new-password"
+            ></ion-input>
+          </ion-item>
+
+          <div class="form-buttons">
+            <ion-button
+              expand="block"
+              color="primary"
+              (click)="register()"
+              [disabled]="isLoading"
+            >
+              <ion-spinner name="crescent" *ngIf="isLoading"></ion-spinner>
+              <span *ngIf="!isLoading">Cadastrar</span>
+            </ion-button>
+          </div>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

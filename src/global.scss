@@ -76,6 +76,8 @@ $app-theme: mat.define-theme(
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
 
+/* Importar tema customizado do app */
+@import './theme/app-theme.scss';
 
 * {
   margin: 0;

@@ -342,3 +342,429 @@ ion-toggle {
   --background-checked: var(--app-accent);
   --handle-background: var(--app-text-primary);
 }
+
+// ============================================
+// CUSTOMIZAÇÃO DE ALERTS, SELECTS E OVERLAYS
+// ============================================
+
+// Alerts
+ion-alert {
+  --background: var(--app-bg-secondary);
+  --max-width: 320px;
+  --backdrop-opacity: 0.6;
+
+  .alert-wrapper {
+    background: var(--app-bg-secondary);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--app-border);
+
+    .alert-head {
+      padding: 20px 20px 12px;
+      background: var(--app-bg-secondary);
+
+      .alert-title {
+        color: var(--app-text-primary);
+        font-weight: 700;
+        font-size: 18px;
+        margin: 0;
+      }
+
+      .alert-sub-title {
+        color: var(--app-text-secondary);
+        font-weight: 500;
+        font-size: 14px;
+        margin-top: 4px;
+      }
+    }
+
+    .alert-message {
+      padding: 12px 20px 20px;
+      color: var(--app-text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+      background: var(--app-bg-secondary);
+    }
+
+    .alert-button-group {
+      background: var(--app-bg-tertiary);
+      border-top: 1px solid var(--app-border);
+      padding: 8px;
+
+      .alert-button {
+        background: transparent;
+        color: var(--app-accent);
+        font-weight: 600;
+        font-size: 15px;
+        text-transform: none;
+        border-radius: 8px;
+        margin: 0 4px;
+
+        &:hover,
+        &:active {
+          background: var(--app-bg-secondary);
+        }
+
+        &.alert-button-role-cancel {
+          color: var(--app-text-secondary);
+        }
+
+        &.alert-button-role-destructive {
+          color: var(--app-danger);
+        }
+      }
+    }
+
+    // Alert com inputs
+    .alert-input-group {
+      background: var(--app-bg-secondary);
+      padding: 8px 20px 20px;
+
+      .alert-input {
+        background: var(--app-bg-tertiary);
+        color: var(--app-text-primary);
+        border: 1px solid var(--app-border);
+        border-radius: 8px;
+        padding: 12px;
+        margin: 8px 0;
+        font-size: 15px;
+
+        &:focus {
+          border-color: var(--app-accent);
+          outline: none;
+        }
+
+        &::placeholder {
+          color: var(--app-text-tertiary);
+        }
+      }
+    }
+
+    // Alert com radio/checkbox
+    .alert-radio-group,
+    .alert-checkbox-group {
+      background: var(--app-bg-secondary);
+      padding: 8px 0;
+
+      .alert-radio-label,
+      .alert-checkbox-label {
+        padding: 12px 34px;
+        color: var(--app-text-primary);
+        border-bottom: 1px solid var(--app-border);
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .alert-radio-inner,
+        .alert-checkbox-inner {
+          border-color: var(--app-border);
+
+          .alert-radio-icon,
+          .alert-checkbox-icon {
+            border-color: var(--app-accent);
+            background-color: var(--app-accent);
+          }
+        }
+      }
+    }
+  }
+}
+
+// Action Sheet
+ion-action-sheet {
+  --background: var(--app-bg-secondary);
+  --backdrop-opacity: 0.6;
+
+  .action-sheet-wrapper {
+    background: var(--app-bg-secondary);
+    border-radius: 16px 16px 0 0;
+    border: 1px solid var(--app-border);
+    border-bottom: none;
+
+    .action-sheet-title {
+      color: var(--app-text-primary);
+      font-weight: 700;
+      font-size: 16px;
+      padding: 20px 20px 12px;
+      background: var(--app-bg-secondary);
+    }
+
+    .action-sheet-sub-title {
+      color: var(--app-text-secondary);
+      font-size: 14px;
+      padding: 0 20px 16px;
+      background: var(--app-bg-secondary);
+    }
+
+    .action-sheet-group {
+      background: var(--app-bg-secondary);
+
+      .action-sheet-button {
+        background: transparent;
+        color: var(--app-text-primary);
+        font-size: 16px;
+        font-weight: 500;
+        border-bottom: 1px solid var(--app-border);
+        min-height: 52px;
+
+        &:hover,
+        &:active {
+          background: var(--app-bg-tertiary);
+        }
+
+        &.action-sheet-destructive {
+          color: var(--app-danger);
+        }
+
+        &.action-sheet-cancel {
+          font-weight: 600;
+          color: var(--app-accent);
+        }
+
+        .action-sheet-icon {
+          color: var(--app-text-secondary);
+        }
+      }
+    }
+  }
+}
+
+// Popover
+ion-popover {
+  --background: var(--app-bg-secondary);
+  --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --backdrop-opacity: 0.4;
+
+  .popover-content {
+    background: var(--app-bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--app-border);
+  }
+
+  ion-list {
+    background: transparent;
+
+    ion-item {
+      --background: transparent;
+      --color: var(--app-text-primary);
+
+      &:hover {
+        --background: var(--app-bg-tertiary);
+      }
+    }
+  }
+}
+
+// Select Alert/Popover
+ion-select {
+  --placeholder-color: var(--app-text-tertiary);
+  --placeholder-opacity: 1;
+
+  &::part(text) {
+    color: var(--app-text-primary);
+  }
+
+  &::part(icon) {
+    color: var(--app-text-secondary);
+  }
+}
+
+// Customização específica do Select Alert
+.select-interface-option {
+  .alert-radio-label {
+    background: transparent;
+    color: var(--app-text-primary);
+
+    &:hover {
+      background: var(--app-bg-tertiary);
+    }
+  }
+
+  [aria-checked="true"] {
+    color: var(--app-accent);
+    font-weight: 600;
+
+    .alert-radio-icon {
+      border-color: var(--app-accent);
+      background-color: var(--app-accent);
+    }
+  }
+}
+
+// Toast
+ion-toast {
+  --background: var(--app-bg-secondary);
+  --color: var(--app-text-primary);
+  --border-radius: 12px;
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+  &::part(button) {
+    color: var(--app-accent);
+    font-weight: 600;
+  }
+
+  &.toast-success {
+    --background: rgba(16, 185, 129, 0.95);
+    --color: #ffffff;
+
+    &::part(button) {
+      color: #ffffff;
+    }
+  }
+
+  &.toast-warning {
+    --background: rgba(245, 158, 11, 0.95);
+    --color: #ffffff;
+
+    &::part(button) {
+      color: #ffffff;
+    }
+  }
+
+  &.toast-danger {
+    --background: rgba(239, 68, 68, 0.95);
+    --color: #ffffff;
+
+    &::part(button) {
+      color: #ffffff;
+    }
+  }
+}
+
+// Loading
+ion-loading {
+  --background: var(--app-bg-secondary);
+  --spinner-color: var(--app-accent);
+  --backdrop-opacity: 0.6;
+
+  .loading-wrapper {
+    background: var(--app-bg-secondary);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--app-border);
+    padding: 24px;
+
+    .loading-content {
+      color: var(--app-text-primary);
+      font-weight: 500;
+      font-size: 15px;
+      margin-top: 12px;
+    }
+  }
+}
+
+// Picker
+ion-picker {
+  --background: var(--app-bg-secondary);
+  --border-color: var(--app-border);
+
+  .picker-wrapper {
+    background: var(--app-bg-secondary);
+    border-radius: 16px 16px 0 0;
+    border: 1px solid var(--app-border);
+
+    .picker-toolbar {
+      background: var(--app-bg-secondary);
+      border-bottom: 1px solid var(--app-border);
+
+      .picker-toolbar-button {
+        color: var(--app-accent);
+        font-weight: 600;
+      }
+
+      .picker-toolbar-cancel {
+        color: var(--app-text-secondary);
+      }
+    }
+
+    .picker-columns {
+      background: var(--app-bg-secondary);
+
+      .picker-col {
+        .picker-opts {
+          .picker-opt {
+            color: var(--app-text-secondary);
+
+            &.picker-opt-selected {
+              color: var(--app-text-primary);
+              font-weight: 600;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Datetime
+ion-datetime {
+  --background: var(--app-bg-secondary);
+  --background-rgb: 30, 41, 59;
+
+  .datetime-header {
+    background: var(--app-bg-secondary);
+    color: var(--app-text-primary);
+    border-bottom: 1px solid var(--app-border);
+  }
+
+  .datetime-calendar {
+    background: var(--app-bg-secondary);
+
+    .calendar-day {
+      color: var(--app-text-primary);
+
+      &.calendar-day-today {
+        color: var(--app-accent);
+        font-weight: 600;
+      }
+
+      &.calendar-day-active {
+        background: var(--app-accent);
+        color: #ffffff;
+      }
+    }
+  }
+
+  .datetime-year {
+    color: var(--app-text-primary);
+
+    &.datetime-year-active {
+      color: var(--app-accent);
+      font-weight: 600;
+    }
+  }
+}
+
+// Searchbar
+ion-searchbar {
+  --background: var(--app-bg-tertiary);
+  --color: var(--app-text-primary);
+  --placeholder-color: var(--app-text-tertiary);
+  --icon-color: var(--app-text-secondary);
+  --clear-button-color: var(--app-text-secondary);
+  --cancel-button-color: var(--app-accent);
+  --border-radius: 12px;
+  --box-shadow: none;
+
+  .searchbar-input-container {
+    background: var(--app-bg-tertiary);
+    border: 1px solid var(--app-border);
+  }
+}
+
+// Refresher
+ion-refresher {
+  ion-refresher-content {
+    --color: var(--app-accent);
+  }
+}
+
+// Input customizado
+ion-input,
+ion-textarea {
+  --background: var(--app-bg-tertiary);
+  --color: var(--app-text-primary);
+  --placeholder-color: var(--app-text-tertiary);
+  --placeholder-opacity: 0.7;
+}

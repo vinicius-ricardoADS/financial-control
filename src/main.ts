@@ -1,5 +1,6 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideHttpClient } from '@angular/common/http';
 import {
   PreloadAllModules,
   RouteReuseStrategy,
@@ -57,6 +58,7 @@ bootstrapApplication(AppComponent, {
       withRouterConfig({ onSameUrlNavigation: 'reload' }),
     ),
     provideAnimations(),
+    provideHttpClient(),
   ],
 }).then((ref) => {
   window.injector = ref.injector;
