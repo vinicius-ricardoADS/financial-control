@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { LocalNotifications, ScheduleOptions, ActionPerformed } from '@capacitor/local-notifications';
-import { Release } from '../models/fixed-expense.model';
+import { Release, ReleaseTypes } from '../models/fixed-expense.model';
 import moment from 'moment';
 import { Router } from '@angular/router';
 
@@ -108,7 +108,7 @@ export class NotificationService {
         const targetDate = moment({
           year: currentYear,
           month: currentMonth + monthOffset,
-          day: expense.dueDay,
+          day: expense.payment_day,
         });
 
         // Subtrair os dias de antecedência
@@ -131,7 +131,7 @@ export class NotificationService {
               {
                 id: notificationId,
                 title: `💰 Despesa Fixa: ${expense.description}`,
-                body: `Vence em ${expense.notifyDaysBefore} ${expense.notifyDaysBefore === 1 ? 'dia' : 'dias'} - ${this.formatCurrency(expense.amount)}`,
+                body: `Vence em ${expense.notifyDaysBefore} ${expense.notifyDaysBefore === 1 ? 'dia' : 'dias'} - ${this.formatCurrency(expense.value)}`,
                 schedule: {
                   at: notificationDate.toDate(),
                 },
@@ -272,7 +272,7 @@ export class NotificationService {
    * Envia notificação instantânea quando uma transação é adicionada
    */
   async notifyTransactionAdded(
-    type: 'income' | 'expense',
+    type: ReleaseTypes,
     description: string,
     amount: number,
   ): Promise<boolean> {
@@ -285,8 +285,8 @@ export class NotificationService {
     }
 
     try {
-      const emoji = type === 'income' ? '💰' : '💸';
-      const typeLabel = type === 'income' ? 'Receita' : 'Despesa';
+      const emoji = type === ReleaseTypes.INCOME ? '💰' : '💸';
+      const typeLabel = type === ReleaseTypes.INCOME ? 'Receita' : 'Despesa';
       const schedule: ScheduleOptions = {
         notifications: [
           {

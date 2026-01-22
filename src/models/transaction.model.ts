@@ -31,7 +31,7 @@ export interface TransactionCreate {
 }
 
 export interface TransactionFilter {
-  type?: 'income' | 'expense';
+  type?: ReleaseTypes;
   categoryId?: string;
   startDate?: Date | string;
   endDate?: Date | string;

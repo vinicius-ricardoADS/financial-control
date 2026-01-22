@@ -88,8 +88,11 @@ export class TransactionsPage implements OnInit {
   filteredTransactions: Transaction[] = [];
   categories: Category[] = [];
 
-  filterType: 'all' | 'income' | 'expense' = 'all';
+  filterType: 'all' | ReleaseTypes = 'all';
   searchTerm: string = '';
+
+  // Expor ReleaseTypes para o template
+  ReleaseTypes = ReleaseTypes;
 
   // Modal de adicionar/editar
   isModalOpen = false;
@@ -183,11 +186,11 @@ export class TransactionsPage implements OnInit {
     this.openAddModalWithType(ReleaseTypes.EXPENSE);
   }
 
-  openAddModalWithType(type: 'income' | 'expense') {
+  openAddModalWithType(type: ReleaseTypes) {
     this.isEditMode = false;
     this.currentTransaction = null;
     this.formData = {
-      release_type: type === 'income' ? ReleaseTypes.INCOME : ReleaseTypes.EXPENSE,
+      release_type: type,
       amount: 0,
       categoryId: '',
       description: '',
@@ -303,12 +306,16 @@ export class TransactionsPage implements OnInit {
     return moment(date).format('DD/MM/YYYY');
   }
 
-  getTransactionIcon(type: string): string {
-    return type === 'income' ? 'arrow-up' : 'arrow-down';
+  getTransactionIcon(type: ReleaseTypes): string {
+    return type === ReleaseTypes.INCOME ? 'arrow-up' : 'arrow-down';
   }
 
-  getTransactionColor(type: string): string {
-    return type === 'income' ? 'success' : 'danger';
+  getTransactionColor(type: ReleaseTypes): string {
+    return type === ReleaseTypes.INCOME ? 'success' : 'danger';
+  }
+
+  getTransactionClass(type: ReleaseTypes): string {
+    return type === ReleaseTypes.INCOME ? 'income' : 'expense';
   }
 
   // Retorna a data de hoje no formato YYYY-MM-DD para o input HTML

@@ -81,12 +81,12 @@ export class FixedExpensesPage implements OnInit {
 
   formData: ReleasesCreate = {
     description: '',
-    detail_description: '',
+    notes: '',
     isActive: true,
-    amount: 0,
-    dueDay: 1,
-    categoryId: '',
-    release_type: ReleaseTypes.EXPENSE,
+    value: 0,
+    payment_day: 1,
+    category_id: '',
+    release_type_id: ReleaseTypes.EXPENSE,
     payment_method: '',
     notifications: true,
     notifyDaysBefore: 3,
@@ -103,6 +103,7 @@ export class FixedExpensesPage implements OnInit {
 
   async ngOnInit() {
     await this.loadCategories();
+    await this.loadData();
   }
 
   async ionViewWillEnter() {
@@ -115,6 +116,7 @@ export class FixedExpensesPage implements OnInit {
 
   async loadData() {
     this.expenses = await this.expenseService.getAllExpenses();
+    console.log('Despesas fixas carregadas:', this.expenses);
 
     // Carregar status de pagamento
     await this.loadPaymentStatus();
@@ -138,13 +140,13 @@ export class FixedExpensesPage implements OnInit {
     this.currentExpense = null;
     this.formData = {
       description: '',
-      detail_description: '',
+      notes: '',
       isActive: true,
       payment_method: '',
-      amount: 0,
-      dueDay: 1,
-      categoryId: '',
-      release_type: ReleaseTypes.EXPENSE,
+      value: 0,
+      payment_day: 1,
+      category_id: '',
+      release_type_id: ReleaseTypes.EXPENSE,
       notifications: true,
       notifyDaysBefore: 3,
     };
@@ -156,13 +158,13 @@ export class FixedExpensesPage implements OnInit {
     this.currentExpense = expense;
     this.formData = {
       description: expense.description,
-      detail_description: expense.detail_description,
+      notes: expense.notes,
       isActive: expense.isActive,
       payment_method: expense.payment_method,
-      amount: expense.amount,
-      dueDay: expense.dueDay,
-      categoryId: expense.categoryId,
-      release_type: ReleaseTypes.EXPENSE,
+      value: expense.value,
+      payment_day: expense.payment_day,
+      category_id: expense.categoryId,
+      release_type_id: ReleaseTypes.EXPENSE,
       notifications: expense.notifications,
       notifyDaysBefore: expense.notifyDaysBefore,
     };
@@ -174,7 +176,7 @@ export class FixedExpensesPage implements OnInit {
   }
 
   async saveExpense() {
-    if (!this.formData.description || !this.formData.categoryId || this.formData.amount <= 0) {
+    if (!this.formData.description || !this.formData.category_id || this.formData.value <= 0) {
       const toast = await this.toastCtrl.create({
         message: 'Preencha todos os campos obrigatórios',
         duration: 2000,
@@ -240,10 +242,6 @@ export class FixedExpensesPage implements OnInit {
     await this.loadData();
   }
 
-  formatCurrency(value: number): string {
-    return `R$ ${value.toFixed(2).replace('.', ',')}`;
-  }
-
   getDayOfMonthLabel(day: number): string {
     return `Dia ${day} de cada mês`;
   }
@@ -280,7 +278,7 @@ export class FixedExpensesPage implements OnInit {
 
     const alert = await this.alertCtrl.create({
       header: 'Marcar como paga',
-      message: `Confirma o pagamento de "${expense.description}" no valor de ${this.formatCurrency(expense.amount)}?`,
+      message: `Confirma o pagamento de "${expense.description}" no valor de ${expense.value}?`,
       inputs: [
         {
           name: 'notes',

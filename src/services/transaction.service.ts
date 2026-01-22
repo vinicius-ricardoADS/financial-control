@@ -5,6 +5,7 @@ import {
   TransactionCreate,
   TransactionFilter,
 } from '../models/transaction.model';
+import { ReleaseTypes } from '../models/fixed-expense.model';
 import { StorageService } from './storage.service';
 import { CategoryService } from './category.service';
 import { NotificationService } from './notification.service';
@@ -164,7 +165,7 @@ export class TransactionService {
   }
 
   async getTotalByType(
-    type: 'income' | 'expense',
+    type: ReleaseTypes,
     month?: number,
     year?: number,
   ): Promise<number> {

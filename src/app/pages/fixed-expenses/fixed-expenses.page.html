@@ -16,8 +16,8 @@
                 {{ getStatusLabel(expense.id) }}
               </ion-badge>
             </h2>
-            <p>{{ expense.category?.category }} • {{ getDayOfMonthLabel(expense.dueDay) }}</p>
-            <p class="amount">{{ formatCurrency(expense.amount) }}</p>
+            <p>{{ expense.category?.category }} • {{ getDayOfMonthLabel(expense.payment_day) }}</p>
+            <p class="amount">{{ expense.value }}</p>
           </ion-label>
           <div slot="end" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
             <ion-toggle
@@ -87,12 +87,12 @@
 
           <ion-item>
             <ion-label position="stacked">Valor *</ion-label>
-            <ion-input type="number" [(ngModel)]="formData.amount" name="amount"></ion-input>
+            <ion-input type="number" [(ngModel)]="formData.value" name="value"></ion-input>
           </ion-item>
 
           <ion-item>
             <ion-label position="stacked">Categoria *</ion-label>
-            <ion-select [(ngModel)]="formData.categoryId" name="category">
+            <ion-select [(ngModel)]="formData.category_id" name="category">
               <ion-select-option *ngFor="let cat of categories" [value]="cat.id">
                 {{ cat.category }}
               </ion-select-option>
@@ -101,11 +101,11 @@
 
           <ion-item>
             <ion-label position="stacked">Tipo de lançamento *</ion-label>
-            <ion-select [(ngModel)]="formData.release_type" name="category">
-              <ion-select-option value="income">
+            <ion-select [(ngModel)]="formData.release_type_id" name="category">
+              <ion-select-option value="1">
                 Entrada
               </ion-select-option>
-              <ion-select-option value="expense">
+              <ion-select-option value="2">
                 Saída
               </ion-select-option>
             </ion-select>
@@ -113,7 +113,7 @@
 
           <ion-item>
             <ion-label position="stacked">Dia do pagamento</ion-label>
-            <ion-input type="number" [(ngModel)]="formData.dueDay" name="dueDay" min="1" max="31"></ion-input>
+            <ion-input type="number" [(ngModel)]="formData.payment_day" name="dueDay" min="1" max="31"></ion-input>
           </ion-item>
 
           <ion-item>
@@ -123,7 +123,7 @@
 
           <ion-item>
             <ion-label position="stacked">Descrição detalhada</ion-label>
-            <ion-input [(ngModel)]="formData.detail_description" name="detail_description" placeholder="Ex: Aluguel apartamento"></ion-input>
+            <ion-input [(ngModel)]="formData.notes" name="note" placeholder="Ex: Aluguel apartamento"></ion-input>
           </ion-item>
 
           <ion-item>

@@ -3,6 +3,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { FinancialSummary } from '../models/financial-summary.model';
 import { Transaction } from '../models/transaction.model';
+import { ReleaseTypes } from '../models/fixed-expense.model';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
@@ -101,7 +102,7 @@ export class ExportService {
       moment(t.date).format('DD/MM/YYYY'),
       t.description,
       t.category?.category || '-',
-      t.release_type === 'income' ? 'Receita' : 'Despesa',
+      t.release_type === ReleaseTypes.INCOME ? 'Receita' : 'Despesa',
       `R$ ${t.amount.toFixed(2)}`,
     ]);
 

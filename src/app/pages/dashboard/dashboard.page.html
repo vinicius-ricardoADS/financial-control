@@ -37,7 +37,7 @@
             </ion-label>
             <div slot="end" style="text-align: right;">
               <ion-label>
-                <h2>{{ formatCurrency(item.expense.amount) }}</h2>
+                <h2>{{ formatCurrency(item.expense.value) }}</h2>
                 <p [style.color]="getExpenseColor(item) === 'danger' ? 'var(--ion-color-danger)' : getExpenseColor(item) === 'warning' ? 'var(--ion-color-warning)' : 'var(--ion-color-medium)'">
                   {{ getDaysLabel(item.daysUntilDue) }}
                 </p>
@@ -132,8 +132,8 @@
               <p>{{ transaction.category?.category }} • {{ formatDate(transaction.date) }}</p>
             </ion-label>
             <ion-label slot="end" class="amount-label">
-              <h2 [class]="transaction.release_type">
-                {{ transaction.release_type === 'income' ? '+' : '-' }}
+              <h2 [class]="getTransactionClass(transaction.release_type)">
+                {{ transaction.release_type === ReleaseTypes.INCOME ? '+' : '-' }}
                 {{ formatCurrency(transaction.amount) }}
               </h2>
             </ion-label>
@@ -160,13 +160,13 @@
     <ion-fab-list side="top">
       <ion-fab-button
         color="success"
-        (click)="goToTransactions('income')"
+        (click)="goToTransactions(ReleaseTypes.INCOME)"
         data-desc="Adicionar Receita">
         <ion-icon name="cash-outline"></ion-icon>
       </ion-fab-button>
       <ion-fab-button
         color="danger"
-        (click)="goToTransactions('expense')"
+        (click)="goToTransactions(ReleaseTypes.EXPENSE)"
         data-desc="Adicionar Despesa">
         <ion-icon name="card-outline"></ion-icon>
       </ion-fab-button>

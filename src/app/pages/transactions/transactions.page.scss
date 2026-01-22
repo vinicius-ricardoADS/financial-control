@@ -170,11 +170,11 @@ ion-modal {
           }
         }
 
-        ion-segment-button[value="expense"].segment-button-checked {
+        ion-segment-button[value="2"].segment-button-checked {
           background: var(--app-danger);
         }
 
-        ion-segment-button[value="income"].segment-button-checked {
+        ion-segment-button[value="1"].segment-button-checked {
           background: var(--app-success);
         }
       }

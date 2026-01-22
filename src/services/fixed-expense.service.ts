@@ -1,89 +1,81 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import {
   Release,
   ReleasesCreate,
-  PaymentRecord,
   ReleaseTypes,
 } from '../models/fixed-expense.model';
-import { StorageService } from './storage.service';
 import { CategoryService } from './category.service';
 import { NotificationService } from './notification.service';
 import { TransactionService } from './transaction.service';
 import { TransactionCreate } from '../models/transaction.model';
+import { environment } from '../environments/environment';
 import moment from 'moment';
-import { R } from '@angular/material/ripple.d-2fb57d04';
-
-const STORAGE_KEY = 'fixed-expenses';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FixedExpenseService {
+  private readonly apiUrl = `${environment.api}/fixedrelease`;
   private expensesSubject = new BehaviorSubject<Release[]>([]);
   public expenses$: Observable<Release[]> =
     this.expensesSubject.asObservable();
 
+  private expensesLoaded = false;
+
   constructor(
-    private storage: StorageService,
+    private http: HttpClient,
     private categoryService: CategoryService,
     private notificationService: NotificationService,
     private transactionService: TransactionService,
-  ) {
-    this.loadExpenses();
-  }
-
-  private async loadExpenses(): Promise<void> {
-    const expenses =
-      (await this.storage.get<Release[]>(STORAGE_KEY)) || [];
-
-    const withCategories = await Promise.all(
-      expenses.map(async (e) => ({
-        ...e,
-        category: await this.categoryService.getCategoryById(e.categoryId),
-      })),
-    );
-
-    this.expensesSubject.next(withCategories);
-  }
+  ) {}
 
   async getAllExpenses(): Promise<Release[]> {
-    return this.expensesSubject.value;
+    if (this.expensesLoaded && this.expensesSubject.value.length > 0) {
+      return this.expensesSubject.value;
+    }
+
+    const expenses = await firstValueFrom(
+      this.http.get<Release[]>(this.apiUrl).pipe(
+        tap((data) => {
+          this.expensesSubject.next(data);
+          this.expensesLoaded = true;
+        })
+      )
+    );
+    return expenses;
   }
 
   async getActiveExpenses(): Promise<Release[]> {
-    return this.expensesSubject.value.filter((e) => e.isActive);
+    const expenses = await this.getAllExpenses();
+    return expenses.filter((e) => e.isActive);
   }
 
   async getExpenseById(id: string): Promise<Release | undefined> {
-    return this.expensesSubject.value.find((e) => e.id === id);
+    if (this.expensesLoaded) {
+      const cached = this.expensesSubject.value.find((e) => e.id === id);
+      if (cached) return cached;
+    }
+
+    try {
+      const expense = await firstValueFrom(
+        this.http.get<Release>(`${this.apiUrl}/${id}`)
+      );
+      return expense;
+    } catch {
+      return undefined;
+    }
   }
 
   async addExpense(data: ReleasesCreate): Promise<Release> {
-    const expenses = [...this.expensesSubject.value];
-    const category = await this.categoryService.getCategoryById(data.categoryId);
+    const newExpense = await firstValueFrom(
+      this.http.post<Release>(this.apiUrl, data)
+    );
 
-    const newExpense: Release = {
-      id: this.generateId(),
-      description: data.description,
-      detail_description: data.detail_description,
-      release_type: ReleaseTypes.EXPENSE,
-      payment_method: data.payment_method,
-      is_active: data.isActive ?? true,
-      amount: data.amount,
-      dueDay: data.dueDay,
-      categoryId: data.categoryId,
-      category,
-      isActive: true,
-      notifications: data.notifications ?? true,
-      notifyDaysBefore: data.notifyDaysBefore ?? 3,
-      paymentHistory: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    expenses.push(newExpense);
-    await this.saveExpenses(expenses);
+    const expenses = [...this.expensesSubject.value, newExpense];
+    this.expensesSubject.next(expenses);
 
     // Agendar notificação de lembrete
     await this.notificationService.scheduleExpenseNotification(newExpense);
@@ -91,44 +83,36 @@ export class FixedExpenseService {
     // Notificação instantânea de despesa adicionada
     await this.notificationService.notifyFixedExpenseAdded(
       newExpense.description,
-      newExpense.amount,
+      newExpense.value,
     );
 
     return newExpense;
   }
 
-  async updateExpense(
-    id: string,
-    updates: Partial<ReleasesCreate>,
-  ): Promise<void> {
-    let expenses = [...this.expensesSubject.value];
-    const index = expenses.findIndex((e) => e.id === id);
+  async updateExpense(id: string, updates: Partial<ReleasesCreate>): Promise<void> {
+    const updatedExpense = await firstValueFrom(
+      this.http.put<Release>(`${this.apiUrl}/${id}`, updates)
+    );
 
-    if (index === -1) return;
-
-    const category = updates.categoryId
-      ? await this.categoryService.getCategoryById(updates.categoryId)
-      : expenses[index].category;
-
-    expenses[index] = {
-      ...expenses[index],
-      ...updates,
-      category,
-      updatedAt: new Date().toISOString(),
-    };
-
-    await this.saveExpenses(expenses);
+    const expenses = this.expensesSubject.value.map((e) =>
+      e.id === id ? updatedExpense : e
+    );
+    this.expensesSubject.next(expenses);
 
     // Reagendar notificação com novos dados
-    await this.notificationService.scheduleExpenseNotification(expenses[index]);
+    await this.notificationService.scheduleExpenseNotification(updatedExpense);
   }
 
   async deleteExpense(id: string): Promise<void> {
     // Cancelar notificações antes de deletar
     await this.notificationService.cancelExpenseNotifications(id);
 
+    await firstValueFrom(
+      this.http.delete<void>(`${this.apiUrl}/${id}`)
+    );
+
     const expenses = this.expensesSubject.value.filter((e) => e.id !== id);
-    await this.saveExpenses(expenses);
+    this.expensesSubject.next(expenses);
   }
 
   async toggleActive(id: string): Promise<void> {
@@ -156,41 +140,22 @@ export class FixedExpenseService {
     amount?: number,
     notes?: string,
   ): Promise<void> {
-    const expenses = [...this.expensesSubject.value];
-    const index = expenses.findIndex((e) => e.id === expenseId);
+    const expense = await this.getExpenseById(expenseId);
+    if (!expense) return;
 
-    if (index === -1) return;
-
-    const expense = expenses[index];
-    const paymentDate = moment({ year, month: month - 1, day: expense.dueDay });
-
-    // Verifica se já existe pagamento para esse mês
-    const existingPaymentIndex = expense.paymentHistory.findIndex((p) => {
-      const pDate = moment(p.date);
-      return pDate.month() === month - 1 && pDate.year() === year;
-    });
-
-    const payment: PaymentRecord = {
-      id: this.generatePaymentId(),
-      date: paymentDate.toISOString(),
-      amount: amount || expense.amount,
-      paid: true,
-      paidDate: new Date().toISOString(),
+    const paymentData = {
+      month,
+      year,
+      amount: amount || expense.value,
       notes,
     };
 
-    if (existingPaymentIndex >= 0) {
-      expense.paymentHistory[existingPaymentIndex] = payment;
-    } else {
-      expense.paymentHistory.push(payment);
-    }
+    await firstValueFrom(
+      this.http.post<void>(`${this.apiUrl}/${expenseId}/pay`, paymentData)
+    );
 
-    expenses[index] = {
-      ...expense,
-      updatedAt: new Date().toISOString(),
-    };
-
-    await this.saveExpenses(expenses);
+    // Recarrega os dados para atualizar o cache
+    await this.refreshExpenses();
   }
 
   async getUpcomingExpenses(daysAhead: number = 7): Promise<Release[]> {
@@ -204,7 +169,7 @@ export class FixedExpenseService {
       const dueDate = moment({
         year: currentYear,
         month: currentMonth,
-        day: expense.dueDay,
+        day: expense.payment_day,
       });
 
       // Se a data de vencimento já passou, verifica o próximo mês
@@ -218,7 +183,7 @@ export class FixedExpenseService {
 
   async getMonthlyTotal(month: number, year: number): Promise<number> {
     const activeExpenses = await this.getActiveExpenses();
-    return activeExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    return activeExpenses.reduce((sum, expense) => sum + expense.value, 0);
   }
 
   /**
@@ -238,43 +203,22 @@ export class FixedExpenseService {
 
     const targetMonth = month || moment().month() + 1;
     const targetYear = year || moment().year();
-    const paymentAmount = amount || expense.amount;
+    const paymentAmount = amount || expense.value;
 
     // 1. Marcar como paga no histórico
     await this.markAsPaid(expenseId, targetMonth, targetYear, paymentAmount, notes);
 
-    // 2. Criar transação automaticamente (sem notificação duplicada)
+    // 2. Criar transação automaticamente
     const transactionData: TransactionCreate = {
       release_type: ReleaseTypes.EXPENSE,
       amount: paymentAmount,
       categoryId: expense.categoryId,
       description: expense.description,
-      date: moment({ year: targetYear, month: targetMonth - 1, day: expense.dueDay }).format('YYYY-MM-DD'),
+      date: moment({ year: targetYear, month: targetMonth - 1, day: expense.payment_day }).format('YYYY-MM-DD'),
       notes: notes || `Pagamento automático de despesa fixa`,
     };
 
-    // Não usar addTransaction pois ele já enviaria uma notificação
-    // Aqui queremos apenas a notificação de pagamento marcado
-    const transactions = [...this.transactionService['transactionsSubject'].value];
-    const category = await this.categoryService.getCategoryById(transactionData.categoryId);
-
-    const newTransaction = {
-      id: this.generateTransactionId(),
-      release_type: transactionData.release_type,
-      amount: transactionData.amount,
-      categoryId: transactionData.categoryId,
-      category,
-      description: transactionData.description,
-      date: transactionData.date || new Date().toISOString(),
-      isRecurring: false,
-      notes: transactionData.notes,
-      tags: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    transactions.push(newTransaction);
-    await this.transactionService['saveTransactions'](transactions);
+    await this.transactionService.addTransaction(transactionData);
 
     // 3. Notificar pagamento marcado
     await this.notificationService.notifyPaymentMarked(
@@ -287,14 +231,14 @@ export class FixedExpenseService {
    * Verifica se uma despesa foi paga em determinado mês
    */
   isExpensePaidInMonth(expense: Release, month: number, year: number): boolean {
-    return expense.paymentHistory.some((payment) => {
+    return expense.paymentHistory?.some((payment) => {
       const paymentDate = moment(payment.date);
       return (
         payment.paid &&
         paymentDate.month() === month - 1 &&
         paymentDate.year() === year
       );
-    });
+    }) ?? false;
   }
 
   /**
@@ -327,7 +271,7 @@ export class FixedExpenseService {
       const dueDate = moment({
         year: currentYear,
         month: currentMonth - 1,
-        day: expense.dueDay,
+        day: expense.payment_day,
       });
 
       const daysUntilDue = dueDate.diff(now, 'days');
@@ -343,21 +287,11 @@ export class FixedExpenseService {
     });
   }
 
-  private async saveExpenses(expenses: Release[]): Promise<void> {
-    const toSave = expenses.map(({ category, ...rest }) => rest);
-    await this.storage.set(STORAGE_KEY, toSave);
-    this.expensesSubject.next(expenses);
-  }
-
-  private generateId(): string {
-    return `fexp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  }
-
-  private generatePaymentId(): string {
-    return `pay_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  }
-
-  private generateTransactionId(): string {
-    return `txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  /**
+   * Força recarregar as despesas do servidor
+   */
+  async refreshExpenses(): Promise<Release[]> {
+    this.expensesLoaded = false;
+    return this.getAllExpenses();
   }
 }

@@ -15,10 +15,10 @@
       <ion-segment-button value="all">
         <ion-label>Todas</ion-label>
       </ion-segment-button>
-      <ion-segment-button value="income">
+      <ion-segment-button [value]="ReleaseTypes.INCOME">
         <ion-label>Receitas</ion-label>
       </ion-segment-button>
-      <ion-segment-button value="expense">
+      <ion-segment-button [value]="ReleaseTypes.EXPENSE">
         <ion-label>Despesas</ion-label>
       </ion-segment-button>
     </ion-segment>
@@ -41,8 +41,8 @@
             <p *ngIf="transaction.notes" class="notes">{{ transaction.notes }}</p>
           </ion-label>
           <ion-label slot="end" class="amount-label">
-            <h2 [class]="transaction.release_type">
-              {{ transaction.release_type === 'income' ? '+' : '-' }}
+            <h2 [class]="getTransactionClass(transaction.release_type)">
+              {{ transaction.release_type === ReleaseTypes.INCOME ? '+' : '-' }}
               {{ formatCurrency(transaction.amount) }}
             </h2>
           </ion-label>
@@ -75,13 +75,13 @@
     <ion-fab-list side="top">
       <ion-fab-button
         color="success"
-        (click)="openAddModalWithType('income')"
+        (click)="openAddModalWithType(ReleaseTypes.INCOME)"
         data-desc="Receita">
         <ion-icon name="cash-outline"></ion-icon>
       </ion-fab-button>
       <ion-fab-button
         color="danger"
-        (click)="openAddModalWithType('expense')"
+        (click)="openAddModalWithType(ReleaseTypes.EXPENSE)"
         data-desc="Despesa">
         <ion-icon name="card-outline"></ion-icon>
       </ion-fab-button>
@@ -107,11 +107,11 @@
           <!-- Tipo -->
           <div class="type-selector">
             <ion-segment [(ngModel)]="formData.release_type" name="type" color="primary">
-              <ion-segment-button value="expense">
+              <ion-segment-button [value]="ReleaseTypes.EXPENSE">
                 <ion-icon name="card-outline"></ion-icon>
                 <ion-label>Despesa</ion-label>
               </ion-segment-button>
-              <ion-segment-button value="income">
+              <ion-segment-button [value]="ReleaseTypes.INCOME">
                 <ion-icon name="cash-outline"></ion-icon>
                 <ion-label>Receita</ion-label>
               </ion-segment-button>
