@@ -20,7 +20,7 @@
       <ion-card-header>
         <ion-card-title>
           <ion-icon name="notifications" style="vertical-align: middle; margin-right: 8px;"></ion-icon>
-          Despesas Próximas (7 dias)
+          Próximos Lançamentos
         </ion-card-title>
       </ion-card-header>
       <ion-card-content class="no-padding">
@@ -37,7 +37,7 @@
             </ion-label>
             <div slot="end" style="text-align: right;">
               <ion-label>
-                <h2>{{ formatCurrency(item.expense.value) }}</h2>
+                <h2>{{ item.expense.value }}</h2>
                 <p [style.color]="getExpenseColor(item) === 'danger' ? 'var(--ion-color-danger)' : getExpenseColor(item) === 'warning' ? 'var(--ion-color-warning)' : 'var(--ion-color-medium)'">
                   {{ getDaysLabel(item.daysUntilDue) }}
                 </p>

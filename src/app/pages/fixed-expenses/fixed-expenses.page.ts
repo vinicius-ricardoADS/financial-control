@@ -28,7 +28,7 @@ import {
 } from '@ionic/angular/standalone';
 import { FixedExpenseService } from '../../../services/fixed-expense.service';
 import { CategoryService } from '../../../services/category.service';
-import { Release, ReleasesCreate, ReleaseTypes } from '../../../models/fixed-expense.model';
+import { Release, ReleasesCreate, ReleaseTypes, ActiveStatus } from '../../../models/fixed-expense.model';
 import { Category } from '../../../models/category.model';
 import { addIcons } from 'ionicons';
 import { add, trash, pencil, close, checkmark, notifications, checkmarkCircle, alertCircle, timeOutline } from 'ionicons/icons';
@@ -82,7 +82,7 @@ export class FixedExpensesPage implements OnInit {
   formData: ReleasesCreate = {
     description: '',
     notes: '',
-    isActive: true,
+    is_active: ActiveStatus.ACTIVE,
     value: 0,
     payment_day: 1,
     category_id: '',
@@ -91,6 +91,9 @@ export class FixedExpensesPage implements OnInit {
     notifications: true,
     notifyDaysBefore: 3,
   };
+
+  // Expor ActiveStatus para o template
+  ActiveStatus = ActiveStatus;
 
   constructor(
     private expenseService: FixedExpenseService,
@@ -141,7 +144,7 @@ export class FixedExpensesPage implements OnInit {
     this.formData = {
       description: '',
       notes: '',
-      isActive: true,
+      is_active: ActiveStatus.ACTIVE,
       payment_method: '',
       value: 0,
       payment_day: 1,
@@ -159,12 +162,12 @@ export class FixedExpensesPage implements OnInit {
     this.formData = {
       description: expense.description,
       notes: expense.notes,
-      isActive: expense.isActive,
+      is_active: expense.is_active,
       payment_method: expense.payment_method,
       value: expense.value,
       payment_day: expense.payment_day,
-      category_id: expense.categoryId,
-      release_type_id: ReleaseTypes.EXPENSE,
+      category_id: expense.category_id,
+      release_type_id: expense.release_type_id,
       notifications: expense.notifications,
       notifyDaysBefore: expense.notifyDaysBefore,
     };
@@ -242,6 +245,13 @@ export class FixedExpensesPage implements OnInit {
     await this.loadData();
   }
 
+  /**
+   * Verifica se uma despesa está ativa
+   */
+  isExpenseActive(expense: Release): boolean {
+    return expense.is_active === ActiveStatus.ACTIVE;
+  }
+
   getDayOfMonthLabel(day: number): string {
     return `Dia ${day} de cada mês`;
   }
@@ -271,6 +281,10 @@ export class FixedExpensesPage implements OnInit {
     return '';
   }
 
+  getColor(expense: any): string | null {
+    return expense?.category_name === 'Salário' ? '#85bb65' : null;
+  }
+
   async markAsPaid(expense: Release, event?: Event) {
     if (event) {
       event.stopPropagation();
@@ -278,7 +292,7 @@ export class FixedExpensesPage implements OnInit {
 
     const alert = await this.alertCtrl.create({
       header: 'Marcar como paga',
-      message: `Confirma o pagamento de "${expense.description}" no valor de ${expense.value}?`,
+      message: `Confirma o pagamento de "${expense.description}" no valor de R$ ${expense.value.toFixed(2)}?`,
       inputs: [
         {
           name: 'notes',

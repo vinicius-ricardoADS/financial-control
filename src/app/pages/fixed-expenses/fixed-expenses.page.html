@@ -16,16 +16,16 @@
                 {{ getStatusLabel(expense.id) }}
               </ion-badge>
             </h2>
-            <p>{{ expense.category?.category }} • {{ getDayOfMonthLabel(expense.payment_day) }}</p>
-            <p class="amount">{{ expense.value }}</p>
+            <p>{{ expense?.category_name }} • {{ getDayOfMonthLabel(expense.payment_day) }}</p>
+            <p [style.color]="getColor(expense)" class="amount">{{ expense.value }}</p>
           </ion-label>
           <div slot="end" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
             <ion-toggle
-              [checked]="expense.isActive"
+              [checked]="isExpenseActive(expense)"
               (ionChange)="toggleActive(expense)"
             ></ion-toggle>
             <ion-button
-              *ngIf="expense.isActive && !getPaymentStatus(expense.id).isPaid"
+              *ngIf="isExpenseActive(expense) && !getPaymentStatus(expense.id).isPaid"
               size="small"
               fill="solid"
               color="success"
@@ -38,7 +38,7 @@
 
         <ion-item-options side="end">
           <ion-item-option
-            *ngIf="expense.isActive && !getPaymentStatus(expense.id).isPaid"
+            *ngIf="isExpenseActive(expense) && !getPaymentStatus(expense.id).isPaid"
             color="success"
             (click)="markAsPaid(expense)">
             <ion-icon slot="icon-only" name="checkmark-circle"></ion-icon>
@@ -128,7 +128,7 @@
 
           <ion-item>
             <ion-label position="stacked">Recorrente *</ion-label>
-            <ion-select [(ngModel)]="formData.isActive" name="is_active">
+            <ion-select [(ngModel)]="formData.is_active" name="is_active">
               <ion-select-option [value]="true">
                 Sim
               </ion-select-option>

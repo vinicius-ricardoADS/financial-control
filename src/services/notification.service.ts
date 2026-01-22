@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { LocalNotifications, ScheduleOptions, ActionPerformed } from '@capacitor/local-notifications';
-import { Release, ReleaseTypes } from '../models/fixed-expense.model';
+import { Release, ReleaseTypes, ActiveStatus } from '../models/fixed-expense.model';
 import moment from 'moment';
 import { Router } from '@angular/router';
 
@@ -81,7 +81,7 @@ export class NotificationService {
   }
 
   async scheduleExpenseNotification(expense: Release): Promise<boolean> {
-    if (!expense.notifications || !expense.isActive) {
+    if (!expense.notifications || expense.is_active !== ActiveStatus.ACTIVE) {
       return false;
     }
 
@@ -214,7 +214,7 @@ export class NotificationService {
     let scheduledCount = 0;
 
     for (const expense of expenses) {
-      if (expense.notifications && expense.isActive) {
+      if (expense.notifications && expense.is_active === ActiveStatus.ACTIVE) {
         const success = await this.scheduleExpenseNotification(expense);
         if (success) {
           scheduledCount++;

@@ -6,6 +6,7 @@ import {
   Release,
   ReleasesCreate,
   ReleaseTypes,
+  ActiveStatus,
 } from '../models/fixed-expense.model';
 import { CategoryService } from './category.service';
 import { NotificationService } from './notification.service';
@@ -50,7 +51,7 @@ export class FixedExpenseService {
 
   async getActiveExpenses(): Promise<Release[]> {
     const expenses = await this.getAllExpenses();
-    return expenses.filter((e) => e.isActive);
+    return expenses.filter((e) => e.is_active === ActiveStatus.ACTIVE);
   }
 
   async getExpenseById(id: string): Promise<Release | undefined> {
@@ -119,11 +120,14 @@ export class FixedExpenseService {
     const expense = await this.getExpenseById(id);
     if (!expense) return;
 
-    const newActiveState = !expense.isActive;
-    await this.updateExpense(id, { isActive: newActiveState } as any);
+    const newActiveState = expense.is_active === ActiveStatus.ACTIVE
+      ? ActiveStatus.INACTIVE
+      : ActiveStatus.ACTIVE;
+
+    await this.updateExpense(id, { is_active: newActiveState });
 
     // Se desativou, cancelar notificações. Se ativou, reagendar
-    if (!newActiveState) {
+    if (newActiveState === ActiveStatus.INACTIVE) {
       await this.notificationService.cancelExpenseNotifications(id);
     } else {
       const updatedExpense = await this.getExpenseById(id);
@@ -131,6 +135,13 @@ export class FixedExpenseService {
         await this.notificationService.scheduleExpenseNotification(updatedExpense);
       }
     }
+  }
+
+  /**
+   * Verifica se uma despesa está ativa
+   */
+  isActive(expense: Release): boolean {
+    return expense.is_active === ActiveStatus.ACTIVE;
   }
 
   async markAsPaid(
@@ -212,7 +223,7 @@ export class FixedExpenseService {
     const transactionData: TransactionCreate = {
       release_type: ReleaseTypes.EXPENSE,
       amount: paymentAmount,
-      categoryId: expense.categoryId,
+      categoryId: expense.category_id,
       description: expense.description,
       date: moment({ year: targetYear, month: targetMonth - 1, day: expense.payment_day }).format('YYYY-MM-DD'),
       notes: notes || `Pagamento automático de despesa fixa`,

@@ -9,29 +9,34 @@ export interface PaymentRecord {
   notes?: string;
 }
 
-export interface Release {
-  id: string;
-  userId?: string
-  description: string;
-  notes?: string;
-  is_active: boolean;
-  release_type: ReleaseTypes;
-  payment_method?: string;
-  value: number;
-  payment_day: number; // dia do vencimento (1-31)
-  categoryId: string;
-  category?: Category;
-  isActive: boolean;
-  notifications: boolean;
-  notifyDaysBefore: number; // quantos dias antes notificar
-  paymentHistory: PaymentRecord[];
-  createdAt: Date | string;
-  updatedAt: Date | string;
+export enum ActiveStatus {
+  ACTIVE = 1,
+  INACTIVE = 2,
 }
 
 export enum ReleaseTypes {
-  EXPENSE = '2',
   INCOME = '1',
+  EXPENSE = '2',
+}
+
+export interface Release {
+  id: string;
+  userId?: string;
+  description: string;
+  notes?: string;
+  is_active: ActiveStatus;
+  release_type_id: ReleaseTypes;
+  payment_method?: string;
+  value: number;
+  payment_day: number;
+  category_id: string;
+  category_name?: string;
+  category?: Category;
+  notifications: boolean;
+  notifyDaysBefore: number;
+  paymentHistory: PaymentRecord[];
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 export interface ReleasesCreate {
@@ -43,6 +48,6 @@ export interface ReleasesCreate {
   release_type_id: ReleaseTypes;
   payment_method?: string;
   notifications?: boolean;
-  isActive?: boolean;
+  is_active?: ActiveStatus;
   notifyDaysBefore?: number;
 }
