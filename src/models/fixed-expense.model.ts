@@ -11,7 +11,11 @@ export interface PaymentRecord {
 
 export interface Release {
   id: string;
-  name: string;
+  description: string;
+  detail_description?: string;
+  is_active: boolean;
+  release_type: ReleaseTypes;
+  payment_method?: string;
   amount: number;
   dueDay: number; // dia do vencimento (1-31)
   categoryId: string;
@@ -19,7 +23,6 @@ export interface Release {
   isActive: boolean;
   notifications: boolean;
   notifyDaysBefore: number; // quantos dias antes notificar
-  description?: string;
   paymentHistory: PaymentRecord[];
   createdAt: Date | string;
   updatedAt: Date | string;
@@ -31,12 +34,14 @@ export enum ReleaseTypes {
 }
 
 export interface ReleasesCreate {
-  name: string;
+  description: string;
+  detail_description?: string;
   amount: number;
   dueDay: number;
   categoryId: string;
   release_type: ReleaseTypes;
-  description?: string;
+  payment_method?: string;
   notifications?: boolean;
+  isActive?: boolean;
   notifyDaysBefore?: number;
 }

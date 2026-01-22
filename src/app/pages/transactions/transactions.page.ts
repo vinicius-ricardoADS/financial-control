@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -47,8 +47,6 @@ import {
   cashOutline,
   cardOutline,
 } from 'ionicons/icons';
-import { Subscription } from 'rxjs';
-import { R } from '@angular/material/ripple.d-2fb57d04';
 import { ReleaseTypes } from 'src/models/fixed-expense.model';
 
 @Component({
@@ -85,7 +83,7 @@ import { ReleaseTypes } from 'src/models/fixed-expense.model';
     IonButtons,
   ],
 })
-export class TransactionsPage implements OnInit, OnDestroy {
+export class TransactionsPage implements OnInit {
   transactions: Transaction[] = [];
   filteredTransactions: Transaction[] = [];
   categories: Category[] = [];
@@ -107,8 +105,6 @@ export class TransactionsPage implements OnInit, OnDestroy {
     notes: '',
   };
 
-  private transactionSubscription?: Subscription;
-
   constructor(
     private transactionService: TransactionService,
     private categoryService: CategoryService,
@@ -129,22 +125,15 @@ export class TransactionsPage implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
-    await this.loadData();
-
-    // Observar mudanças nas transações
-    this.transactionSubscription = this.transactionService.transactions$.subscribe(async () => {
-      await this.loadData();
-    });
+    await this.loadCategories();
   }
 
   async ionViewWillEnter() {
     await this.loadData();
   }
 
-  ngOnDestroy() {
-    if (this.transactionSubscription) {
-      this.transactionSubscription.unsubscribe();
-    }
+  private async loadCategories() {
+    this.categories = await this.categoryService.getAllCategories();
   }
 
   async loadData() {

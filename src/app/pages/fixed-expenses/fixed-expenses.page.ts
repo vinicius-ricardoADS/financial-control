@@ -80,11 +80,14 @@ export class FixedExpensesPage implements OnInit {
   }> = new Map();
 
   formData: ReleasesCreate = {
-    name: '',
+    description: '',
+    detail_description: '',
+    isActive: true,
     amount: 0,
     dueDay: 1,
     categoryId: '',
     release_type: ReleaseTypes.EXPENSE,
+    payment_method: '',
     notifications: true,
     notifyDaysBefore: 3,
   };
@@ -99,16 +102,19 @@ export class FixedExpensesPage implements OnInit {
   }
 
   async ngOnInit() {
-    await this.loadData();
+    await this.loadCategories();
   }
 
   async ionViewWillEnter() {
     await this.loadData();
   }
 
+  private async loadCategories() {
+    this.categories = await this.categoryService.getAllCategories();
+  }
+
   async loadData() {
     this.expenses = await this.expenseService.getAllExpenses();
-    this.categories = await this.categoryService.getAllCategories();
 
     // Carregar status de pagamento
     await this.loadPaymentStatus();
@@ -131,7 +137,10 @@ export class FixedExpensesPage implements OnInit {
     this.isEditMode = false;
     this.currentExpense = null;
     this.formData = {
-      name: '',
+      description: '',
+      detail_description: '',
+      isActive: true,
+      payment_method: '',
       amount: 0,
       dueDay: 1,
       categoryId: '',
@@ -146,7 +155,10 @@ export class FixedExpensesPage implements OnInit {
     this.isEditMode = true;
     this.currentExpense = expense;
     this.formData = {
-      name: expense.name,
+      description: expense.description,
+      detail_description: expense.detail_description,
+      isActive: expense.isActive,
+      payment_method: expense.payment_method,
       amount: expense.amount,
       dueDay: expense.dueDay,
       categoryId: expense.categoryId,
@@ -162,7 +174,7 @@ export class FixedExpensesPage implements OnInit {
   }
 
   async saveExpense() {
-    if (!this.formData.name || !this.formData.categoryId || this.formData.amount <= 0) {
+    if (!this.formData.description || !this.formData.categoryId || this.formData.amount <= 0) {
       const toast = await this.toastCtrl.create({
         message: 'Preencha todos os campos obrigatórios',
         duration: 2000,
@@ -201,7 +213,7 @@ export class FixedExpensesPage implements OnInit {
   async deleteExpense(expense: Release) {
     const alert = await this.alertCtrl.create({
       header: 'Confirmar exclusão',
-      message: `Deseja realmente excluir "${expense.name}"?`,
+      message: `Deseja realmente excluir "${expense.description}"?`,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         {
@@ -268,7 +280,7 @@ export class FixedExpensesPage implements OnInit {
 
     const alert = await this.alertCtrl.create({
       header: 'Marcar como paga',
-      message: `Confirma o pagamento de "${expense.name}" no valor de ${this.formatCurrency(expense.amount)}?`,
+      message: `Confirma o pagamento de "${expense.description}" no valor de ${this.formatCurrency(expense.amount)}?`,
       inputs: [
         {
           name: 'notes',

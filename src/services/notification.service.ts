@@ -90,7 +90,7 @@ export class NotificationService {
     }
 
     if (!this.permissionsGranted) {
-      console.warn('⚠️ Sem permissão de notificação para despesa:', expense.name);
+      console.warn('⚠️ Sem permissão de notificação para despesa:', expense.description);
       return false;
     }
 
@@ -130,7 +130,7 @@ export class NotificationService {
             notifications: [
               {
                 id: notificationId,
-                title: `💰 Despesa Fixa: ${expense.name}`,
+                title: `💰 Despesa Fixa: ${expense.description}`,
                 body: `Vence em ${expense.notifyDaysBefore} ${expense.notifyDaysBefore === 1 ? 'dia' : 'dias'} - ${this.formatCurrency(expense.amount)}`,
                 schedule: {
                   at: notificationDate.toDate(),

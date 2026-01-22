@@ -65,7 +65,11 @@ export class FixedExpenseService {
 
     const newExpense: Release = {
       id: this.generateId(),
-      name: data.name,
+      description: data.description,
+      detail_description: data.detail_description,
+      release_type: ReleaseTypes.EXPENSE,
+      payment_method: data.payment_method,
+      is_active: data.isActive ?? true,
       amount: data.amount,
       dueDay: data.dueDay,
       categoryId: data.categoryId,
@@ -73,7 +77,6 @@ export class FixedExpenseService {
       isActive: true,
       notifications: data.notifications ?? true,
       notifyDaysBefore: data.notifyDaysBefore ?? 3,
-      description: data.description,
       paymentHistory: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -87,7 +90,7 @@ export class FixedExpenseService {
 
     // Notificação instantânea de despesa adicionada
     await this.notificationService.notifyFixedExpenseAdded(
-      newExpense.name,
+      newExpense.description,
       newExpense.amount,
     );
 
@@ -245,7 +248,7 @@ export class FixedExpenseService {
       release_type: ReleaseTypes.EXPENSE,
       amount: paymentAmount,
       categoryId: expense.categoryId,
-      description: expense.name,
+      description: expense.description,
       date: moment({ year: targetYear, month: targetMonth - 1, day: expense.dueDay }).format('YYYY-MM-DD'),
       notes: notes || `Pagamento automático de despesa fixa`,
     };
@@ -275,7 +278,7 @@ export class FixedExpenseService {
 
     // 3. Notificar pagamento marcado
     await this.notificationService.notifyPaymentMarked(
-      expense.name,
+      expense.description,
       paymentAmount,
     );
   }

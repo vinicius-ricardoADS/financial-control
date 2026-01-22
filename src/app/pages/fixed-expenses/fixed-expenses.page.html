@@ -11,7 +11,7 @@
         <ion-item lines="full">
           <ion-label>
             <h2>
-              {{ expense.name }}
+              {{ expense.description }}
               <ion-badge [color]="getStatusBadgeColor(expense.id)" style="margin-left: 8px;">
                 {{ getStatusLabel(expense.id) }}
               </ion-badge>
@@ -69,7 +69,7 @@
     <ng-template>
       <ion-header>
         <ion-toolbar color="primary">
-          <ion-title>{{ isEditMode ? 'Editar' : 'Nova' }} Lançamento Fixo</ion-title>
+          <ion-title>{{ isEditMode ? 'Editar' : 'Novo' }} Lançamento Fixo</ion-title>
           <ion-buttons slot="end">
             <ion-button (click)="closeModal()">
               <ion-icon name="close"></ion-icon>
@@ -81,8 +81,8 @@
       <ion-content class="ion-padding">
         <form>
           <ion-item>
-            <ion-label position="stacked">Nome *</ion-label>
-            <ion-input [(ngModel)]="formData.name" name="name" placeholder="Ex: Aluguel"></ion-input>
+            <ion-label position="stacked">Descrição *</ion-label>
+            <ion-input [(ngModel)]="formData.description" name="description" placeholder="Ex: Aluguel"></ion-input>
           </ion-item>
 
           <ion-item>
@@ -112,8 +112,30 @@
           </ion-item>
 
           <ion-item>
-            <ion-label position="stacked">Dia do vencimento</ion-label>
+            <ion-label position="stacked">Dia do pagamento</ion-label>
             <ion-input type="number" [(ngModel)]="formData.dueDay" name="dueDay" min="1" max="31"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Forma do pagamento</ion-label>
+            <ion-input placeholder="Boleto" type="text" [(ngModel)]="formData.payment_method" name="payment_method"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Descrição detalhada</ion-label>
+            <ion-input [(ngModel)]="formData.detail_description" name="detail_description" placeholder="Ex: Aluguel apartamento"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Recorrente *</ion-label>
+            <ion-select [(ngModel)]="formData.isActive" name="is_active">
+              <ion-select-option [value]="true">
+                Sim
+              </ion-select-option>
+              <ion-select-option [value]="false">
+                Não
+              </ion-select-option>
+            </ion-select>
           </ion-item>
 
           <div class="form-buttons">

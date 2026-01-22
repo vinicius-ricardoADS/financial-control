@@ -1,6 +1,7 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './interceptors/auth.interceptor';
 import {
   PreloadAllModules,
   RouteReuseStrategy,
@@ -58,7 +59,7 @@ bootstrapApplication(AppComponent, {
       withRouterConfig({ onSameUrlNavigation: 'reload' }),
     ),
     provideAnimations(),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([authInterceptor])),
   ],
 }).then((ref) => {
   window.injector = ref.injector;
