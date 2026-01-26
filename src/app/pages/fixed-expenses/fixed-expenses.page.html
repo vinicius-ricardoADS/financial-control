@@ -101,7 +101,7 @@
 
           <ion-item>
             <ion-label position="stacked">Tipo de lançamento *</ion-label>
-            <ion-select [(ngModel)]="formData.release_type_id" name="category">
+            <ion-select [(ngModel)]="formData.release_type_id" name="release_type_id">
               <ion-select-option value="1">
                 Entrada
               </ion-select-option>
@@ -129,10 +129,10 @@
           <ion-item>
             <ion-label position="stacked">Recorrente *</ion-label>
             <ion-select [(ngModel)]="formData.is_active" name="is_active">
-              <ion-select-option [value]="true">
+              <ion-select-option [value]="ActiveStatus.ACTIVE">
                 Sim
               </ion-select-option>
-              <ion-select-option [value]="false">
+              <ion-select-option [value]="ActiveStatus.INACTIVE">
                 Não
               </ion-select-option>
             </ion-select>

@@ -26,6 +26,7 @@ export interface Release {
   notes?: string;
   is_active: ActiveStatus;
   release_type_id: ReleaseTypes;
+  release_type?: string;
   payment_method?: string;
   value: number;
   payment_day: number;
@@ -45,7 +46,9 @@ export interface ReleasesCreate {
   value: number;
   payment_day: number;
   category_id: string;
+  category_name?: string;
   release_type_id: ReleaseTypes;
+  release_type?: string;
   payment_method?: string;
   notifications?: boolean;
   is_active?: ActiveStatus;

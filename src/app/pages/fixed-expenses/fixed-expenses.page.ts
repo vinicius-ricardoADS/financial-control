@@ -86,7 +86,9 @@ export class FixedExpensesPage implements OnInit {
     value: 0,
     payment_day: 1,
     category_id: '',
+    category_name: '',
     release_type_id: ReleaseTypes.EXPENSE,
+    release_type: '',
     payment_method: '',
     notifications: true,
     notifyDaysBefore: 3,
@@ -147,8 +149,8 @@ export class FixedExpensesPage implements OnInit {
       is_active: ActiveStatus.ACTIVE,
       payment_method: '',
       value: 0,
-      payment_day: 1,
       category_id: '',
+      payment_day: 1,
       release_type_id: ReleaseTypes.EXPENSE,
       notifications: true,
       notifyDaysBefore: 3,
@@ -166,12 +168,25 @@ export class FixedExpensesPage implements OnInit {
       payment_method: expense.payment_method,
       value: expense.value,
       payment_day: expense.payment_day,
-      category_id: expense.category_id,
-      release_type_id: expense.release_type_id,
+      category_name: expense?.category_name,
+      category_id: this.getCategoryIdByName(expense.category_name),
+      release_type_id: this.getReleaseTypeIdByType(expense.release_type),
+      release_type: expense.release_type,
       notifications: expense.notifications,
       notifyDaysBefore: expense.notifyDaysBefore,
     };
     this.isModalOpen = true;
+  }
+
+  getReleaseTypeIdByType(releaseType?: string): ReleaseTypes {
+    if (!releaseType) return ReleaseTypes.EXPENSE;
+    return releaseType === 'entrada' ? ReleaseTypes.INCOME : ReleaseTypes.EXPENSE;
+  }
+
+  getCategoryIdByName(categoryName?: string): string {
+    if (!categoryName) return '';
+    const category = this.categories.find(cat => cat.category === categoryName);
+    return category ? category.id : '';
   }
 
   closeModal() {
