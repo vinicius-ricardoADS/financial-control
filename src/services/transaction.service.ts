@@ -58,7 +58,7 @@ export class TransactionService {
     const newTransaction: Transaction = {
       id: this.generateId(),
       release_type: data.release_type,
-      amount: data.amount,
+      value: data.value,
       categoryId: data.categoryId,
       category,
       description: data.description,
@@ -78,7 +78,7 @@ export class TransactionService {
     await this.notificationService.notifyTransactionAdded(
       newTransaction.release_type,
       newTransaction.description,
-      newTransaction.amount,
+      newTransaction.value,
     );
 
     return newTransaction;
@@ -176,7 +176,7 @@ export class TransactionService {
       transactions = monthTransactions.filter((t) => t.release_type === type);
     }
 
-    return transactions.reduce((sum, t) => sum + t.amount, 0);
+    return transactions.reduce((sum, t) => sum + t.value, 0);
   }
 
   private async saveTransactions(transactions: Transaction[]): Promise<void> {

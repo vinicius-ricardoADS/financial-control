@@ -344,7 +344,14 @@ export class DashboardPage implements OnInit, OnDestroy {
   // Expor ReleaseTypes para o template
   ReleaseTypes = ReleaseTypes;
 
-  getDaysLabel(days: number): string {
+  getDaysLabel(expense: {
+    expense: Release;
+    isPaid: boolean;
+    daysUntilDue: number;
+    isOverdue: boolean;
+  }): string {
+    const days = expense.daysUntilDue;
+    if (expense.expense.category_name)
     if (days < 0) return `Atrasada (${Math.abs(days)}d)`;
     if (days === 0) return 'Vence hoje';
     if (days === 1) return 'Vence amanhã';

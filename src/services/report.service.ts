@@ -39,8 +39,8 @@ export class ReportService {
     const income = transactions.filter((t) => t.release_type === ReleaseTypes.INCOME);
     const expenses = transactions.filter((t) => t.release_type === ReleaseTypes.EXPENSE);
 
-    const totalIncome = income.reduce((sum, t) => sum + t.amount, 0);
-    const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
+    const totalIncome = income.reduce((sum, t) => sum + t.value, 0);
+    const totalExpense = expenses.reduce((sum, t) => sum + t.value, 0);
 
     // Agrupar por categoria
     const expensesByCategory = this.groupByCategory(expenses, categories, ReleaseTypes.EXPENSE);
@@ -144,7 +144,7 @@ export class ReportService {
       endDate,
     });
 
-    const total = transactions.reduce((sum, t) => sum + t.amount, 0);
+    const total = transactions.reduce((sum, t) => sum + t.value, 0);
     const days = moment(endDate).diff(moment(startDate), 'days') + 1;
     const average = total / Math.max(days, 1);
 
@@ -157,8 +157,8 @@ export class ReportService {
       moment(t.date).isSameOrAfter(midPoint),
     );
 
-    const firstHalfTotal = firstHalf.reduce((sum, t) => sum + t.amount, 0);
-    const secondHalfTotal = secondHalf.reduce((sum, t) => sum + t.amount, 0);
+    const firstHalfTotal = firstHalf.reduce((sum, t) => sum + t.value, 0);
+    const secondHalfTotal = secondHalf.reduce((sum, t) => sum + t.value, 0);
 
     let trend: 'up' | 'down' | 'stable' = 'stable';
     const change = ((secondHalfTotal - firstHalfTotal) / firstHalfTotal) * 100;

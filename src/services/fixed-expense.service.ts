@@ -222,7 +222,7 @@ export class FixedExpenseService {
     // 2. Criar transação automaticamente
     const transactionData: TransactionCreate = {
       release_type: ReleaseTypes.EXPENSE,
-      amount: paymentAmount,
+      value: paymentAmount,
       categoryId: expense.category_id,
       description: expense.description,
       date: moment({ year: targetYear, month: targetMonth - 1, day: expense.payment_day }).format('YYYY-MM-DD'),

@@ -101,7 +101,7 @@ export class TransactionsPage implements OnInit {
 
   formData: TransactionCreate = {
     release_type: ReleaseTypes.EXPENSE,
-    amount: 0,
+    value: 0,
     categoryId: '',
     description: '',
     date: this.getTodayDateString(),
@@ -191,7 +191,7 @@ export class TransactionsPage implements OnInit {
     this.currentTransaction = null;
     this.formData = {
       release_type: type,
-      amount: 0,
+      value: 0,
       categoryId: '',
       description: '',
       date: this.getTodayDateString(),
@@ -205,7 +205,7 @@ export class TransactionsPage implements OnInit {
     this.currentTransaction = transaction;
     this.formData = {
       release_type: transaction.release_type,
-      amount: transaction.amount,
+      value: transaction.value,
       categoryId: transaction.categoryId,
       description: transaction.description,
       date: this.convertToDateInputFormat(transaction.date),
@@ -220,7 +220,7 @@ export class TransactionsPage implements OnInit {
 
   async saveTransaction() {
     // Validação
-    if (!this.formData.description || !this.formData.categoryId || this.formData.amount <= 0) {
+    if (!this.formData.description || !this.formData.categoryId || this.formData.value <= 0) {
       const toast = await this.toastCtrl.create({
         message: 'Preencha todos os campos obrigatórios',
         duration: 2000,

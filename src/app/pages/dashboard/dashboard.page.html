@@ -33,13 +33,13 @@
             ></ion-icon>
             <ion-label>
               <h3>{{ item.expense.description }}</h3>
-              <p>{{ item.expense.category?.category }}</p>
+              <p>{{ item.expense.category_name }}</p>
             </ion-label>
             <div slot="end" style="text-align: right;">
               <ion-label>
                 <h2>{{ item.expense.value }}</h2>
                 <p [style.color]="getExpenseColor(item) === 'danger' ? 'var(--ion-color-danger)' : getExpenseColor(item) === 'warning' ? 'var(--ion-color-warning)' : 'var(--ion-color-medium)'">
-                  {{ getDaysLabel(item.daysUntilDue) }}
+                  {{ getDaysLabel(item) }}
                 </p>
               </ion-label>
             </div>
@@ -134,7 +134,7 @@
             <ion-label slot="end" class="amount-label">
               <h2 [class]="getTransactionClass(transaction.release_type)">
                 {{ transaction.release_type === ReleaseTypes.INCOME ? '+' : '-' }}
-                {{ formatCurrency(transaction.amount) }}
+                {{ formatCurrency(transaction.value) }}
               </h2>
             </ion-label>
           </ion-item>

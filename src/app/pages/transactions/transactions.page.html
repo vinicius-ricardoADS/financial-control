@@ -43,7 +43,7 @@
           <ion-label slot="end" class="amount-label">
             <h2 [class]="getTransactionClass(transaction.release_type)">
               {{ transaction.release_type === ReleaseTypes.INCOME ? '+' : '-' }}
-              {{ formatCurrency(transaction.amount) }}
+              {{ formatCurrency(transaction.value) }}
             </h2>
           </ion-label>
         </ion-item>
@@ -123,8 +123,8 @@
             <ion-label position="stacked">Valor *</ion-label>
             <ion-input
               type="number"
-              [(ngModel)]="formData.amount"
-              name="amount"
+              [(ngModel)]="formData.value"
+              name="value"
               placeholder="0.00"
               inputmode="decimal"
             ></ion-input>

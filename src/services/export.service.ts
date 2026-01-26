@@ -103,7 +103,7 @@ export class ExportService {
       t.description,
       t.category?.category || '-',
       t.release_type === ReleaseTypes.INCOME ? 'Receita' : 'Despesa',
-      `R$ ${t.amount.toFixed(2)}`,
+      `R$ ${t.value.toFixed(2)}`,
     ]);
 
     autoTable(doc, {

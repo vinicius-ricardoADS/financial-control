@@ -292,7 +292,7 @@ export class FixedExpensesPage implements OnInit {
 
     const alert = await this.alertCtrl.create({
       header: 'Marcar como paga',
-      message: `Confirma o pagamento de "${expense.description}" no valor de R$ ${expense.value.toFixed(2)}?`,
+      message: `Confirma o pagamento de "${expense.description}" no valor de R$ ${expense.value}?`,
       inputs: [
         {
           name: 'notes',

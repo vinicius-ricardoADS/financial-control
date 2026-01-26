@@ -4,7 +4,7 @@ import { ReleaseTypes } from './fixed-expense.model';
 export interface Transaction {
   id: string;
   release_type: ReleaseTypes;
-  amount: number;
+  value: number;
   categoryId: string;
   category?: Category; // será preenchido ao carregar
   description: string;
@@ -20,7 +20,7 @@ export interface Transaction {
 
 export interface TransactionCreate {
   release_type: ReleaseTypes;
-  amount: number;
+  value: number;
   categoryId: string;
   description: string;
   date?: Date | string;
