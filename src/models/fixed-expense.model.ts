@@ -51,6 +51,6 @@ export interface ReleasesCreate {
   release_type?: string;
   payment_method?: string;
   notifications?: boolean;
-  is_active?: ActiveStatus;
+  is_active?: boolean;
   notifyDaysBefore?: number;
 }

@@ -41,6 +41,7 @@ export class FixedExpenseService {
     const expenses = await firstValueFrom(
       this.http.get<Release[]>(this.apiUrl).pipe(
         tap((data) => {
+          console.log('Fetched expenses from API:', data);
           this.expensesSubject.next(data);
           this.expensesLoaded = true;
         })
@@ -51,7 +52,7 @@ export class FixedExpenseService {
 
   async getActiveExpenses(): Promise<Release[]> {
     const expenses = await this.getAllExpenses();
-    return expenses.filter((e) => e.is_active === ActiveStatus.ACTIVE);
+    return expenses;
   }
 
   async getExpenseById(id: string): Promise<Release | undefined> {
@@ -92,11 +93,15 @@ export class FixedExpenseService {
 
   async updateExpense(id: string, updates: Partial<ReleasesCreate>): Promise<void> {
     const updatedExpense = await firstValueFrom(
-      this.http.put<Release>(`${this.apiUrl}/${id}`, updates)
+      this.http.put<any>(`${this.apiUrl}/${id}`, updates)
     );
 
+    const expense: Release = updatedExpense?.data
+
+    console.log('Updated Expense:', expense);
+
     const expenses = this.expensesSubject.value.map((e) =>
-      e.id === id ? updatedExpense : e
+      e.id === id ? expense : e
     );
     this.expensesSubject.next(expenses);
 
@@ -120,14 +125,29 @@ export class FixedExpenseService {
     const expense = await this.getExpenseById(id);
     if (!expense) return;
 
-    const newActiveState = expense.is_active === ActiveStatus.ACTIVE
-      ? ActiveStatus.INACTIVE
-      : ActiveStatus.ACTIVE;
+    const newActiveState = expense.is_active !== ActiveStatus.ACTIVE;
 
-    await this.updateExpense(id, { is_active: newActiveState });
+    const categoryId = expense.category_id
+      || await this.getCategoryIdByName(expense.category_name);
+
+    const releaseTypeId = expense.release_type_id
+      || (expense.release_type === 'entrada' ? ReleaseTypes.INCOME : ReleaseTypes.EXPENSE);
+
+    const updateData: ReleasesCreate = {
+      release_type_id: releaseTypeId,
+      category_id: categoryId,
+      description: expense.description,
+      value: expense.value,
+      payment_day: expense.payment_day,
+      payment_method: expense.payment_method || '',
+      notes: expense.notes,
+      is_active: newActiveState,
+    };
+
+    await this.updateExpense(id, updateData);
 
     // Se desativou, cancelar notificações. Se ativou, reagendar
-    if (newActiveState === ActiveStatus.INACTIVE) {
+    if (!newActiveState) {
       await this.notificationService.cancelExpenseNotifications(id);
     } else {
       const updatedExpense = await this.getExpenseById(id);
@@ -135,6 +155,13 @@ export class FixedExpenseService {
         await this.notificationService.scheduleExpenseNotification(updatedExpense);
       }
     }
+  }
+
+  private async getCategoryIdByName(categoryName?: string): Promise<string> {
+    if (!categoryName) return '';
+    const categories = await this.categoryService.getAllCategories();
+    const category = categories.find(cat => cat.category === categoryName);
+    return category ? category.id : '';
   }
 
   /**

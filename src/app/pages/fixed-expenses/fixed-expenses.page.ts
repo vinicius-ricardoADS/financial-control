@@ -82,7 +82,7 @@ export class FixedExpensesPage implements OnInit {
   formData: ReleasesCreate = {
     description: '',
     notes: '',
-    is_active: ActiveStatus.ACTIVE,
+    is_active: true,
     value: 0,
     payment_day: 1,
     category_id: '',
@@ -146,7 +146,7 @@ export class FixedExpensesPage implements OnInit {
     this.formData = {
       description: '',
       notes: '',
-      is_active: ActiveStatus.ACTIVE,
+      is_active: true,
       payment_method: '',
       value: 0,
       category_id: '',
@@ -164,7 +164,7 @@ export class FixedExpensesPage implements OnInit {
     this.formData = {
       description: expense.description,
       notes: expense.notes,
-      is_active: expense.is_active,
+      is_active: expense.is_active === ActiveStatus.ACTIVE,
       payment_method: expense.payment_method,
       value: expense.value,
       payment_day: expense.payment_day,
@@ -257,7 +257,8 @@ export class FixedExpensesPage implements OnInit {
 
   async toggleActive(expense: Release) {
     await this.expenseService.toggleActive(expense.id);
-    await this.loadData();
+    this.expenses = await this.expenseService.refreshExpenses();
+    await this.loadPaymentStatus();
   }
 
   /**
