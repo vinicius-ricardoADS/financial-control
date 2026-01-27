@@ -242,7 +242,7 @@ export class NotificationService {
   }
 
   private formatCurrency(value: number): string {
-    return `R$ ${value.toFixed(2).replace('.', ',')}`;
+    return `R$ ${value}`;
   }
 
   async getPendingNotifications(): Promise<any[]> {

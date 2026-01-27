@@ -41,7 +41,6 @@ export class FixedExpenseService {
     const expenses = await firstValueFrom(
       this.http.get<Release[]>(this.apiUrl).pipe(
         tap((data) => {
-          console.log('Fetched expenses from API:', data);
           this.expensesSubject.next(data);
           this.expensesLoaded = true;
         })
@@ -97,8 +96,6 @@ export class FixedExpenseService {
     );
 
     const expense: Release = updatedExpense?.data
-
-    console.log('Updated Expense:', expense);
 
     const expenses = this.expensesSubject.value.map((e) =>
       e.id === id ? expense : e
@@ -189,7 +186,7 @@ export class FixedExpenseService {
     };
 
     await firstValueFrom(
-      this.http.post<void>(`${this.apiUrl}/${expenseId}/pay`, paymentData)
+      this.http.patch<void>(`${this.apiUrl}/${expenseId}`, paymentData)
     );
 
     // Recarrega os dados para atualizar o cache

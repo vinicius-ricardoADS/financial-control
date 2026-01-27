@@ -218,6 +218,8 @@ export class FixedExpensesPage implements OnInit {
       });
       await toast.present();
 
+      await this.expenseService.refreshExpenses()
+
       this.closeModal();
       await this.loadData();
     } catch (error) {
