@@ -1,0 +1,42 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Perfil</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="container">
+    <div class="profile-header">
+      <div class="profile-icon">
+        <ion-icon name="person"></ion-icon>
+      </div>
+      <h2 class="profile-title">Configurações</h2>
+    </div>
+
+    <ion-list class="options-list">
+      <div class="list-section">
+        <h3 class="section-title">Conta</h3>
+
+        <ion-item button (click)="confirmLogout()" lines="full">
+          <ion-icon name="log-out" slot="start" color="primary"></ion-icon>
+          <ion-label>
+            <h2>Sair da conta</h2>
+            <p>Fazer logout do aplicativo</p>
+          </ion-label>
+        </ion-item>
+      </div>
+
+      <div class="list-section">
+        <h3 class="section-title">Dados</h3>
+
+        <ion-item button (click)="confirmClearData()" lines="full">
+          <ion-icon name="trash" slot="start" color="danger"></ion-icon>
+          <ion-label>
+            <h2>Limpar todos os dados</h2>
+            <p>Apagar todas as transações e configurações</p>
+          </ion-label>
+        </ion-item>
+      </div>
+    </ion-list>
+  </div>
+</ion-content>

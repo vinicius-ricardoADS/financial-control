@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -47,7 +47,7 @@ import {
   cashOutline,
   cardOutline,
 } from 'ionicons/icons';
-import { Subscription } from 'rxjs';
+import { ReleaseTypes } from 'src/models/fixed-expense.model';
 
 @Component({
   selector: 'app-transactions',
@@ -83,13 +83,16 @@ import { Subscription } from 'rxjs';
     IonButtons,
   ],
 })
-export class TransactionsPage implements OnInit, OnDestroy {
+export class TransactionsPage implements OnInit {
   transactions: Transaction[] = [];
   filteredTransactions: Transaction[] = [];
   categories: Category[] = [];
 
-  filterType: 'all' | 'income' | 'expense' = 'all';
+  filterType: 'all' | ReleaseTypes = 'all';
   searchTerm: string = '';
+
+  // Expor ReleaseTypes para o template
+  ReleaseTypes = ReleaseTypes;
 
   // Modal de adicionar/editar
   isModalOpen = false;
@@ -97,15 +100,13 @@ export class TransactionsPage implements OnInit, OnDestroy {
   currentTransaction: Transaction | null = null;
 
   formData: TransactionCreate = {
-    type: 'expense',
-    amount: 0,
+    release_type: ReleaseTypes.EXPENSE,
+    value: 0,
     categoryId: '',
     description: '',
     date: this.getTodayDateString(),
     notes: '',
   };
-
-  private transactionSubscription?: Subscription;
 
   constructor(
     private transactionService: TransactionService,
@@ -127,22 +128,15 @@ export class TransactionsPage implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
-    await this.loadData();
-
-    // Observar mudanças nas transações
-    this.transactionSubscription = this.transactionService.transactions$.subscribe(async () => {
-      await this.loadData();
-    });
+    await this.loadCategories();
   }
 
   async ionViewWillEnter() {
     await this.loadData();
   }
 
-  ngOnDestroy() {
-    if (this.transactionSubscription) {
-      this.transactionSubscription.unsubscribe();
-    }
+  private async loadCategories() {
+    this.categories = await this.categoryService.getAllCategories();
   }
 
   async loadData() {
@@ -156,7 +150,7 @@ export class TransactionsPage implements OnInit, OnDestroy {
 
     // Filtro por tipo
     if (this.filterType !== 'all') {
-      filtered = filtered.filter((t) => t.type === this.filterType);
+      filtered = filtered.filter((t) => t.release_type === this.filterType);
     }
 
     // Filtro por busca
@@ -165,7 +159,7 @@ export class TransactionsPage implements OnInit, OnDestroy {
       filtered = filtered.filter(
         (t) =>
           t.description.toLowerCase().includes(term) ||
-          t.category?.name.toLowerCase().includes(term) ||
+          t.category?.category.toLowerCase().includes(term) ||
           t.notes?.toLowerCase().includes(term),
       );
     }
@@ -189,15 +183,15 @@ export class TransactionsPage implements OnInit, OnDestroy {
   }
 
   openAddModal() {
-    this.openAddModalWithType('expense');
+    this.openAddModalWithType(ReleaseTypes.EXPENSE);
   }
 
-  openAddModalWithType(type: 'income' | 'expense') {
+  openAddModalWithType(type: ReleaseTypes) {
     this.isEditMode = false;
     this.currentTransaction = null;
     this.formData = {
-      type: type,
-      amount: 0,
+      release_type: type,
+      value: 0,
       categoryId: '',
       description: '',
       date: this.getTodayDateString(),
@@ -210,8 +204,8 @@ export class TransactionsPage implements OnInit, OnDestroy {
     this.isEditMode = true;
     this.currentTransaction = transaction;
     this.formData = {
-      type: transaction.type,
-      amount: transaction.amount,
+      release_type: transaction.release_type,
+      value: transaction.value,
       categoryId: transaction.categoryId,
       description: transaction.description,
       date: this.convertToDateInputFormat(transaction.date),
@@ -226,7 +220,7 @@ export class TransactionsPage implements OnInit, OnDestroy {
 
   async saveTransaction() {
     // Validação
-    if (!this.formData.description || !this.formData.categoryId || this.formData.amount <= 0) {
+    if (!this.formData.description || !this.formData.categoryId || this.formData.value <= 0) {
       const toast = await this.toastCtrl.create({
         message: 'Preencha todos os campos obrigatórios',
         duration: 2000,
@@ -304,10 +298,6 @@ export class TransactionsPage implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  getCategoriesByType(): Category[] {
-    return this.categories.filter((c) => c.type === this.formData.type);
-  }
-
   formatCurrency(value: number): string {
     return `R$ ${value.toFixed(2).replace('.', ',')}`;
   }
@@ -316,12 +306,16 @@ export class TransactionsPage implements OnInit, OnDestroy {
     return moment(date).format('DD/MM/YYYY');
   }
 
-  getTransactionIcon(type: string): string {
-    return type === 'income' ? 'arrow-up' : 'arrow-down';
+  getTransactionIcon(type: ReleaseTypes): string {
+    return type === ReleaseTypes.INCOME ? 'arrow-up' : 'arrow-down';
   }
 
-  getTransactionColor(type: string): string {
-    return type === 'income' ? 'success' : 'danger';
+  getTransactionColor(type: ReleaseTypes): string {
+    return type === ReleaseTypes.INCOME ? 'success' : 'danger';
+  }
+
+  getTransactionClass(type: ReleaseTypes): string {
+    return type === ReleaseTypes.INCOME ? 'income' : 'expense';
   }
 
   // Retorna a data de hoje no formato YYYY-MM-DD para o input HTML

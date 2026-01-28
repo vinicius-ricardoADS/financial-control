@@ -1,0 +1,109 @@
+.container {
+  padding: 20px;
+  padding-bottom: 80px;
+  min-height: 100%;
+}
+
+.profile-header {
+  text-align: center;
+  padding: 40px 20px;
+
+  .profile-icon {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 20px;
+    background: var(--app-bg-secondary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--app-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+    ion-icon {
+      font-size: 50px;
+      color: var(--app-accent);
+    }
+  }
+
+  .profile-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--app-text-primary);
+    margin: 0;
+  }
+}
+
+.options-list {
+  background: transparent;
+
+  .list-section {
+    margin-bottom: 24px;
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--app-text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0 16px 12px;
+    }
+
+    ion-item {
+      --padding-start: 16px;
+      --inner-padding-end: 16px;
+      --background: var(--app-bg-secondary);
+      --border-color: var(--app-border);
+      margin: 0 12px 12px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      ion-icon {
+        font-size: 24px;
+        margin-right: 16px;
+      }
+
+      ion-label {
+        h2 {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--app-text-primary);
+          margin-bottom: 4px;
+        }
+
+        p {
+          font-size: 13px;
+          color: var(--app-text-tertiary);
+          margin: 0;
+        }
+      }
+    }
+  }
+}
+
+// Responsividade
+@media (max-width: 576px) {
+  .profile-header {
+    padding: 30px 20px;
+
+    .profile-icon {
+      width: 80px;
+      height: 80px;
+
+      ion-icon {
+        font-size: 40px;
+      }
+    }
+
+    .profile-title {
+      font-size: 20px;
+    }
+  }
+}

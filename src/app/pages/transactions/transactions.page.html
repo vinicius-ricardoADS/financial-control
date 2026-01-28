@@ -15,10 +15,10 @@
       <ion-segment-button value="all">
         <ion-label>Todas</ion-label>
       </ion-segment-button>
-      <ion-segment-button value="income">
+      <ion-segment-button [value]="ReleaseTypes.INCOME">
         <ion-label>Receitas</ion-label>
       </ion-segment-button>
-      <ion-segment-button value="expense">
+      <ion-segment-button [value]="ReleaseTypes.EXPENSE">
         <ion-label>Despesas</ion-label>
       </ion-segment-button>
     </ion-segment>
@@ -31,19 +31,19 @@
       <ion-item-sliding *ngFor="let transaction of filteredTransactions">
         <ion-item lines="full">
           <ion-icon
-            [name]="getTransactionIcon(transaction.type)"
-            [color]="getTransactionColor(transaction.type)"
+            [name]="getTransactionIcon(transaction.release_type)"
+            [color]="getTransactionColor(transaction.release_type)"
             slot="start"
           ></ion-icon>
           <ion-label>
             <h2>{{ transaction.description }}</h2>
-            <p>{{ transaction.category?.name }} • {{ formatDate(transaction.date) }}</p>
+            <p>{{ transaction.category?.category }} • {{ formatDate(transaction.date) }}</p>
             <p *ngIf="transaction.notes" class="notes">{{ transaction.notes }}</p>
           </ion-label>
           <ion-label slot="end" class="amount-label">
-            <h2 [class]="transaction.type">
-              {{ transaction.type === 'income' ? '+' : '-' }}
-              {{ formatCurrency(transaction.amount) }}
+            <h2 [class]="getTransactionClass(transaction.release_type)">
+              {{ transaction.release_type === ReleaseTypes.INCOME ? '+' : '-' }}
+              {{ formatCurrency(transaction.value) }}
             </h2>
           </ion-label>
         </ion-item>
@@ -75,13 +75,13 @@
     <ion-fab-list side="top">
       <ion-fab-button
         color="success"
-        (click)="openAddModalWithType('income')"
+        (click)="openAddModalWithType(ReleaseTypes.INCOME)"
         data-desc="Receita">
         <ion-icon name="cash-outline"></ion-icon>
       </ion-fab-button>
       <ion-fab-button
         color="danger"
-        (click)="openAddModalWithType('expense')"
+        (click)="openAddModalWithType(ReleaseTypes.EXPENSE)"
         data-desc="Despesa">
         <ion-icon name="card-outline"></ion-icon>
       </ion-fab-button>
@@ -106,12 +106,12 @@
         <form>
           <!-- Tipo -->
           <div class="type-selector">
-            <ion-segment [(ngModel)]="formData.type" name="type" color="primary">
-              <ion-segment-button value="expense">
+            <ion-segment [(ngModel)]="formData.release_type" name="type" color="primary">
+              <ion-segment-button [value]="ReleaseTypes.EXPENSE">
                 <ion-icon name="card-outline"></ion-icon>
                 <ion-label>Despesa</ion-label>
               </ion-segment-button>
-              <ion-segment-button value="income">
+              <ion-segment-button [value]="ReleaseTypes.INCOME">
                 <ion-icon name="cash-outline"></ion-icon>
                 <ion-label>Receita</ion-label>
               </ion-segment-button>
@@ -123,8 +123,8 @@
             <ion-label position="stacked">Valor *</ion-label>
             <ion-input
               type="number"
-              [(ngModel)]="formData.amount"
-              name="amount"
+              [(ngModel)]="formData.value"
+              name="value"
               placeholder="0.00"
               inputmode="decimal"
             ></ion-input>
@@ -148,8 +148,11 @@
               name="category"
               placeholder="Selecione uma categoria"
             >
-              <ion-select-option *ngFor="let cat of getCategoriesByType()" [value]="cat.id">
-                {{ cat.name }}
+              <ion-select-option value="Entrada">
+                Entrada
+              </ion-select-option>
+              <ion-select-option value="Saída">
+                Saída
               </ion-select-option>
             </ion-select>
           </ion-item>

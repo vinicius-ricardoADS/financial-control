@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { LocalNotifications, ScheduleOptions, ActionPerformed } from '@capacitor/local-notifications';
-import { FixedExpense } from '../models/fixed-expense.model';
+import { Release, ReleaseTypes, ActiveStatus } from '../models/fixed-expense.model';
 import moment from 'moment';
 import { Router } from '@angular/router';
 
@@ -33,6 +33,7 @@ export class NotificationService {
     // Listener para quando a notificação é recebida
     LocalNotifications.addListener('localNotificationReceived', (notification) => {
       // Notificação recebida enquanto o app está aberto
+      console.log('🔔 Notificação recebida:', notification);
     });
 
     // Listener para quando o usuário clica na notificação
@@ -79,8 +80,8 @@ export class NotificationService {
     return this.permissionsGranted;
   }
 
-  async scheduleExpenseNotification(expense: FixedExpense): Promise<boolean> {
-    if (!expense.notifications || !expense.isActive) {
+  async scheduleExpenseNotification(expense: Release): Promise<boolean> {
+    if (!expense.notifications || expense.is_active !== ActiveStatus.ACTIVE) {
       return false;
     }
 
@@ -89,7 +90,7 @@ export class NotificationService {
     }
 
     if (!this.permissionsGranted) {
-      console.warn('⚠️ Sem permissão de notificação para despesa:', expense.name);
+      console.warn('⚠️ Sem permissão de notificação para despesa:', expense.description);
       return false;
     }
 
@@ -107,7 +108,7 @@ export class NotificationService {
         const targetDate = moment({
           year: currentYear,
           month: currentMonth + monthOffset,
-          day: expense.dueDay,
+          day: expense.payment_day,
         });
 
         // Subtrair os dias de antecedência
@@ -129,8 +130,8 @@ export class NotificationService {
             notifications: [
               {
                 id: notificationId,
-                title: `💰 Despesa Fixa: ${expense.name}`,
-                body: `Vence em ${expense.notifyDaysBefore} ${expense.notifyDaysBefore === 1 ? 'dia' : 'dias'} - ${this.formatCurrency(expense.amount)}`,
+                title: `💰 Despesa Fixa: ${expense.description}`,
+                body: `Vence em ${expense.notifyDaysBefore} ${expense.notifyDaysBefore === 1 ? 'dia' : 'dias'} - ${this.formatCurrency(expense.value)}`,
                 schedule: {
                   at: notificationDate.toDate(),
                 },
@@ -209,11 +210,11 @@ export class NotificationService {
     }
   }
 
-  async rescheduleAllExpenses(expenses: FixedExpense[]): Promise<number> {
+  async rescheduleAllExpenses(expenses: Release[]): Promise<number> {
     let scheduledCount = 0;
 
     for (const expense of expenses) {
-      if (expense.notifications && expense.isActive) {
+      if (expense.notifications && expense.is_active === ActiveStatus.ACTIVE) {
         const success = await this.scheduleExpenseNotification(expense);
         if (success) {
           scheduledCount++;
@@ -241,7 +242,7 @@ export class NotificationService {
   }
 
   private formatCurrency(value: number): string {
-    return `R$ ${value.toFixed(2).replace('.', ',')}`;
+    return `R$ ${value}`;
   }
 
   async getPendingNotifications(): Promise<any[]> {
@@ -265,5 +266,130 @@ export class NotificationService {
     } catch (error) {
       console.error('❌ Erro ao cancelar notificação de teste:', error);
     }
+  }
+
+  /**
+   * Envia notificação instantânea quando uma transação é adicionada
+   */
+  async notifyTransactionAdded(
+    type: ReleaseTypes,
+    description: string,
+    amount: number,
+  ): Promise<boolean> {
+    if (!this.permissionsGranted) {
+      await this.checkPermissions();
+    }
+
+    if (!this.permissionsGranted) {
+      return false;
+    }
+
+    try {
+      const emoji = type === ReleaseTypes.INCOME ? '💰' : '💸';
+      const typeLabel = type === ReleaseTypes.INCOME ? 'Receita' : 'Despesa';
+      const schedule: ScheduleOptions = {
+        notifications: [
+          {
+            id: this.generateRandomId(),
+            title: `${emoji} Nova ${typeLabel} Adicionada`,
+            body: `${description} - ${this.formatCurrency(amount)}`,
+            schedule: {
+              at: new Date(Date.now() + 500), // 500ms delay
+            },
+            extra: {
+              type: 'transaction',
+              transactionType: type,
+            },
+          },
+        ],
+      };
+
+      await LocalNotifications.schedule(schedule);
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao enviar notificação de transação:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Envia notificação instantânea quando uma despesa fixa é adicionada
+   */
+  async notifyFixedExpenseAdded(name: string, amount: number): Promise<boolean> {
+    if (!this.permissionsGranted) {
+      await this.checkPermissions();
+    }
+
+    if (!this.permissionsGranted) {
+      return false;
+    }
+
+    try {
+      const schedule: ScheduleOptions = {
+        notifications: [
+          {
+            id: this.generateRandomId(),
+            title: '📌 Nova Despesa Fixa Adicionada',
+            body: `${name} - ${this.formatCurrency(amount)}`,
+            schedule: {
+              at: new Date(Date.now() + 500),
+            },
+            extra: {
+              type: 'fixed-expense-added',
+            },
+          },
+        ],
+      };
+
+      await LocalNotifications.schedule(schedule);
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao enviar notificação de despesa fixa:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Envia notificação instantânea quando um pagamento de despesa fixa é marcado
+   */
+  async notifyPaymentMarked(name: string, amount: number): Promise<boolean> {
+    if (!this.permissionsGranted) {
+      await this.checkPermissions();
+    }
+
+    if (!this.permissionsGranted) {
+      return false;
+    }
+
+    try {
+      const schedule: ScheduleOptions = {
+        notifications: [
+          {
+            id: this.generateRandomId(),
+            title: '✅ Pagamento Registrado',
+            body: `${name} - ${this.formatCurrency(amount)} foi pago`,
+            schedule: {
+              at: new Date(Date.now() + 500),
+            },
+            extra: {
+              type: 'payment-marked',
+            },
+          },
+        ],
+      };
+
+      await LocalNotifications.schedule(schedule);
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao enviar notificação de pagamento:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Gera ID aleatório para notificações instantâneas
+   */
+  private generateRandomId(): number {
+    return Math.floor(Math.random() * 1000000) + 100000;
   }
 }

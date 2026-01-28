@@ -5,6 +5,21 @@ import { AuthGuard } from 'src/guards/auth.guard';
 export const routes: Routes = [
   {
     path: '',
+    redirectTo: 'login',
+    pathMatch: 'full',
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./pages/login/login.page').then((m) => m.LoginPage),
+  },
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./pages/register/register.page').then((m) => m.RegisterPage),
+  },
+  {
+    path: 'home',
     component: HomePage,
     canActivate: [AuthGuard],
     children: [
@@ -38,6 +53,11 @@ export const routes: Routes = [
         path: 'reports',
         loadComponent: () =>
           import('./pages/reports/reports.page').then((m) => m.ReportsPage),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./pages/profile/profile.page').then((m) => m.ProfilePage),
       },
     ],
   },

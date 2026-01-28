@@ -1,88 +1,91 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { Category, DEFAULT_CATEGORIES } from '../models/category.model';
-import { StorageService } from './storage.service';
-
-const STORAGE_KEY = 'categories';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { Category } from '../models/category.model';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CategoryService {
+  private readonly apiUrl = `${environment.api}/categories`;
   private categoriesSubject = new BehaviorSubject<Category[]>([]);
   public categories$: Observable<Category[]> =
     this.categoriesSubject.asObservable();
 
-  constructor(private storage: StorageService) {
-    this.loadCategories();
-  }
+  private categoriesLoaded = false;
 
-  private async loadCategories(): Promise<void> {
-    let categories = await this.storage.get<Category[]>(STORAGE_KEY);
-
-    // Se não existir categorias, usa as padrões
-    if (!categories || categories.length === 0) {
-      categories = DEFAULT_CATEGORIES;
-      await this.storage.set(STORAGE_KEY, categories);
-    }
-
-    this.categoriesSubject.next(categories);
-  }
+  constructor(private http: HttpClient) {}
 
   async getAllCategories(): Promise<Category[]> {
-    return this.categoriesSubject.value;
-  }
+    // Retorna do cache se já foi carregado
+    if (this.categoriesLoaded && this.categoriesSubject.value.length > 0) {
+      return this.categoriesSubject.value;
+    }
 
-  async getCategoriesByType(
-    type: 'income' | 'expense',
-  ): Promise<Category[]> {
-    const categories = this.categoriesSubject.value;
-    return categories.filter((c) => c.type === type);
+    const categories = await firstValueFrom(
+      this.http.get<Category[]>(this.apiUrl).pipe(
+        tap((data) => {
+          this.categoriesSubject.next(data);
+          this.categoriesLoaded = true;
+        })
+      )
+    );
+    return categories;
   }
 
   async getCategoryById(id: string): Promise<Category | undefined> {
-    const categories = this.categoriesSubject.value;
-    return categories.find((c) => c.id === id);
+    // Tenta buscar do cache primeiro
+    if (this.categoriesLoaded) {
+      const cached = this.categoriesSubject.value.find((c) => c.id === id);
+      if (cached) return cached;
+    }
+
+    try {
+      const category = await firstValueFrom(
+        this.http.get<Category>(`${this.apiUrl}/${id}`)
+      );
+      return category;
+    } catch {
+      return undefined;
+    }
   }
 
   async addCategory(category: Omit<Category, 'id'>): Promise<Category> {
-    const categories = [...this.categoriesSubject.value];
-    const newCategory: Category = {
-      ...category,
-      id: this.generateId(),
-    };
-
-    categories.push(newCategory);
-    await this.storage.set(STORAGE_KEY, categories);
+    const newCategory = await firstValueFrom(
+      this.http.post<Category>(this.apiUrl, category)
+    );
+    const categories = [...this.categoriesSubject.value, newCategory];
     this.categoriesSubject.next(categories);
-
     return newCategory;
   }
 
   async updateCategory(id: string, updates: Partial<Category>): Promise<void> {
-    const categories = this.categoriesSubject.value.map((cat) =>
-      cat.id === id ? { ...cat, ...updates } : cat,
+    await firstValueFrom(
+      this.http.put<Category>(`${this.apiUrl}/${id}`, updates)
     );
-
-    await this.storage.set(STORAGE_KEY, categories);
+    const categories = this.categoriesSubject.value.map((cat) =>
+      cat.id === id ? { ...cat, ...updates } : cat
+    );
     this.categoriesSubject.next(categories);
   }
 
   async deleteCategory(id: string): Promise<void> {
-    const categories = this.categoriesSubject.value.filter(
-      (cat) => cat.id !== id,
+    await firstValueFrom(
+      this.http.delete<void>(`${this.apiUrl}/${id}`)
     );
-
-    await this.storage.set(STORAGE_KEY, categories);
+    const categories = this.categoriesSubject.value.filter(
+      (cat) => cat.id !== id
+    );
     this.categoriesSubject.next(categories);
   }
 
-  async resetToDefaults(): Promise<void> {
-    await this.storage.set(STORAGE_KEY, DEFAULT_CATEGORIES);
-    this.categoriesSubject.next(DEFAULT_CATEGORIES);
-  }
-
-  private generateId(): string {
-    return `cat_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  /**
+   * Força recarregar as categorias do servidor
+   */
+  async refreshCategories(): Promise<Category[]> {
+    this.categoriesLoaded = false;
+    return this.getAllCategories();
   }
 }

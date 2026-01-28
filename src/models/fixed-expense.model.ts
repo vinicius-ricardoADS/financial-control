@@ -9,28 +9,59 @@ export interface PaymentRecord {
   notes?: string;
 }
 
-export interface FixedExpense {
+export enum ActiveStatus {
+  ACTIVE = 1,
+  INACTIVE = 2,
+}
+
+export enum PaymentStatus {
+  PENDING = 1,
+  PAID = 2,
+}
+
+export enum ReleaseTypes {
+  INCOME = '1',
+  EXPENSE = '2',
+}
+
+export interface Release {
   id: string;
-  name: string;
-  amount: number;
-  dueDay: number; // dia do vencimento (1-31)
-  categoryId: string;
+  userId?: string;
+  description: string;
+  notes?: string;
+  is_active: ActiveStatus;
+  release_type_id: ReleaseTypes;
+  release_type?: string;
+  current_month_payment_date?: string;
+  current_month_payment_status?: string;
+  current_month_release_date?: string;
+  current_month_release_id?: string;
+  payment_method?: string;
+  value: number;
+  payment_day: number;
+  category_id: string;
+  category_name?: string;
   category?: Category;
-  isActive: boolean;
+  status?: PaymentStatus;
   notifications: boolean;
-  notifyDaysBefore: number; // quantos dias antes notificar
-  description?: string;
+  notifyDaysBefore: number;
   paymentHistory: PaymentRecord[];
   createdAt: Date | string;
   updatedAt: Date | string;
 }
 
-export interface FixedExpenseCreate {
-  name: string;
-  amount: number;
-  dueDay: number;
-  categoryId: string;
-  description?: string;
+export interface ReleasesCreate {
+  description: string;
+  notes?: string;
+  value: number;
+  payment_day: number;
+  category_id: string;
+  category_name?: string;
+  release_type_id: ReleaseTypes;
+  release_type?: string;
+  payment_method?: string;
   notifications?: boolean;
+  is_active?: boolean;
   notifyDaysBefore?: number;
+  status?: PaymentStatus;
 }

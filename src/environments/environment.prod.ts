@@ -1,3 +1,3 @@
 export const environment = {
-  production: true
+  api: "https://apifinancas.lrsistemas.cloud"
 };

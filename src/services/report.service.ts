@@ -8,6 +8,7 @@ import {
 import { TransactionService } from './transaction.service';
 import { CategoryService } from './category.service';
 import { FixedExpenseService } from './fixed-expense.service';
+import { ReleaseTypes } from '../models/fixed-expense.model';
 import moment from 'moment';
 import * as _ from 'lodash';
 
@@ -35,15 +36,15 @@ export class ReportService {
       .endOf('month')
       .toDate();
 
-    const income = transactions.filter((t) => t.type === 'income');
-    const expenses = transactions.filter((t) => t.type === 'expense');
+    const income = transactions.filter((t) => t.release_type === ReleaseTypes.INCOME);
+    const expenses = transactions.filter((t) => t.release_type === ReleaseTypes.EXPENSE);
 
-    const totalIncome = income.reduce((sum, t) => sum + t.amount, 0);
-    const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
+    const totalIncome = income.reduce((sum, t) => sum + t.value, 0);
+    const totalExpense = expenses.reduce((sum, t) => sum + t.value, 0);
 
     // Agrupar por categoria
-    const expensesByCategory = this.groupByCategory(expenses, categories, 'expense');
-    const incomeByCategory = this.groupByCategory(income, categories, 'income');
+    const expensesByCategory = this.groupByCategory(expenses, categories, ReleaseTypes.EXPENSE);
+    const incomeByCategory = this.groupByCategory(income, categories, ReleaseTypes.INCOME);
 
     // Calcular média diária
     const daysInMonth = moment({ year, month: month - 1 }).daysInMonth();
@@ -143,7 +144,7 @@ export class ReportService {
       endDate,
     });
 
-    const total = transactions.reduce((sum, t) => sum + t.amount, 0);
+    const total = transactions.reduce((sum, t) => sum + t.value, 0);
     const days = moment(endDate).diff(moment(startDate), 'days') + 1;
     const average = total / Math.max(days, 1);
 
@@ -156,8 +157,8 @@ export class ReportService {
       moment(t.date).isSameOrAfter(midPoint),
     );
 
-    const firstHalfTotal = firstHalf.reduce((sum, t) => sum + t.amount, 0);
-    const secondHalfTotal = secondHalf.reduce((sum, t) => sum + t.amount, 0);
+    const firstHalfTotal = firstHalf.reduce((sum, t) => sum + t.value, 0);
+    const secondHalfTotal = secondHalf.reduce((sum, t) => sum + t.value, 0);
 
     let trend: 'up' | 'down' | 'stable' = 'stable';
     const change = ((secondHalfTotal - firstHalfTotal) / firstHalfTotal) * 100;
@@ -176,7 +177,7 @@ export class ReportService {
   private groupByCategory(
     transactions: any[],
     categories: any[],
-    type: 'income' | 'expense',
+    type: ReleaseTypes,
   ): CategoryExpense[] | CategoryIncome[] {
     const grouped = _.groupBy(transactions, 'categoryId');
     const total = transactions.reduce((sum, t) => sum + t.amount, 0);
@@ -197,7 +198,7 @@ export class ReportService {
       };
 
       // Adicionar budget se for expense
-      if (type === 'expense' && category?.budget) {
+      if (type === ReleaseTypes.EXPENSE && category?.budget) {
         result.budget = category.budget;
         result.remaining = category.budget - categoryTotal;
       }

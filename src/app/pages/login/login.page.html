@@ -1,0 +1,71 @@
+<ion-content [fullscreen]="true">
+  <div class="login-container">
+    <div class="logo-section">
+      <ion-icon name="wallet" class="app-logo"></ion-icon>
+      <h1 class="app-title">Controle Financeiro</h1>
+      <p class="app-subtitle">Gerencie suas finanças de forma inteligente</p>
+    </div>
+
+    <ion-card class="login-card">
+      <ion-card-header>
+        <ion-card-title class="card-title">Entrar</ion-card-title>
+        <ion-text color="medium">
+          <p class="card-subtitle">Acesse sua conta</p>
+        </ion-text>
+      </ion-card-header>
+
+      <ion-card-content>
+        <form>
+          <ion-item class="form-item">
+            <ion-label position="stacked">Email</ion-label>
+            <ion-input
+              [(ngModel)]="credentials.email"
+              name="email"
+              type="email"
+              placeholder="seu@email.com"
+              autocomplete="email"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item class="form-item">
+            <ion-label position="stacked">Senha</ion-label>
+            <ion-input
+              [(ngModel)]="credentials.password"
+              name="password"
+              type="password"
+              placeholder="Digite sua senha"
+              autocomplete="current-password"
+            ></ion-input>
+          </ion-item>
+
+          <div class="form-buttons">
+            <ion-button
+              expand="block"
+              color="primary"
+              (click)="login()"
+              [disabled]="isLoading"
+            >
+              <ion-spinner name="crescent" *ngIf="isLoading"></ion-spinner>
+              <span *ngIf="!isLoading">Entrar</span>
+            </ion-button>
+
+            <div class="divider">
+              <span>ou</span>
+            </div>
+
+            <ion-button
+              expand="block"
+              fill="outline"
+              color="primary"
+              (click)="goToRegister()"
+              [disabled]="isLoading"
+            >
+              <ion-icon name="person-add" slot="start"></ion-icon>
+              Criar nova conta
+            </ion-button>
+          </div>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

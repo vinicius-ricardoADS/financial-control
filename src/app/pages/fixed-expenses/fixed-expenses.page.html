@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <ion-title>Despesas Fixas</ion-title>
+    <ion-title>Lançamentos Fixos</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -11,21 +11,21 @@
         <ion-item lines="full">
           <ion-label>
             <h2>
-              {{ expense.name }}
-              <ion-badge [color]="getStatusBadgeColor(expense.id)" style="margin-left: 8px;">
-                {{ getStatusLabel(expense.id) }}
+              {{ expense.description }}
+              <ion-badge [color]="getStatusBadgeColor(expense)" style="margin-left: 8px;">
+                {{ getStatusLabel(expense) }}
               </ion-badge>
             </h2>
-            <p>{{ expense.category?.name }} • {{ getDayOfMonthLabel(expense.dueDay) }}</p>
-            <p class="amount">{{ formatCurrency(expense.amount) }}</p>
+            <p>{{ expense?.category_name }} • {{ getDayOfMonthLabel(expense.payment_day) }}</p>
+            <p [style.color]="getColor(expense)" class="amount">{{ expense.value }}</p>
           </ion-label>
           <div slot="end" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
             <ion-toggle
-              [checked]="expense.isActive"
+              [checked]="isExpenseActive(expense)"
               (ionChange)="toggleActive(expense)"
             ></ion-toggle>
             <ion-button
-              *ngIf="expense.isActive && !getPaymentStatus(expense.id).isPaid"
+              *ngIf="isExpenseActive(expense) && !isCurrentMonthPaid(expense)"
               size="small"
               fill="solid"
               color="success"
@@ -33,12 +33,18 @@
               <ion-icon slot="start" name="checkmark-circle"></ion-icon>
               Pagar
             </ion-button>
+            <ion-badge
+              *ngIf="isExpenseActive(expense) && isCurrentMonthPaid(expense)"
+              color="success">
+              <ion-icon name="checkmark-circle"></ion-icon>
+              Pago
+            </ion-badge>
           </div>
         </ion-item>
 
         <ion-item-options side="end">
           <ion-item-option
-            *ngIf="expense.isActive && !getPaymentStatus(expense.id).isPaid"
+            *ngIf="isExpenseActive(expense) && !isCurrentMonthPaid(expense)"
             color="success"
             (click)="markAsPaid(expense)">
             <ion-icon slot="icon-only" name="checkmark-circle"></ion-icon>
@@ -55,7 +61,7 @@
 
     <div class="empty-state" *ngIf="expenses.length === 0">
       <ion-icon name="notifications" size="large"></ion-icon>
-      <p>Nenhuma despesa fixa cadastrada</p>
+      <p>Nenhum lançamento fixo cadastrado</p>
     </div>
   </div>
 
@@ -69,7 +75,7 @@
     <ng-template>
       <ion-header>
         <ion-toolbar color="primary">
-          <ion-title>{{ isEditMode ? 'Editar' : 'Nova' }} Despesa Fixa</ion-title>
+          <ion-title>{{ isEditMode ? 'Editar' : 'Novo' }} Lançamento Fixo</ion-title>
           <ion-buttons slot="end">
             <ion-button (click)="closeModal()">
               <ion-icon name="close"></ion-icon>
@@ -81,27 +87,61 @@
       <ion-content class="ion-padding">
         <form>
           <ion-item>
-            <ion-label position="stacked">Nome *</ion-label>
-            <ion-input [(ngModel)]="formData.name" name="name" placeholder="Ex: Aluguel"></ion-input>
+            <ion-label position="stacked">Descrição *</ion-label>
+            <ion-input [(ngModel)]="formData.description" name="description" placeholder="Ex: Aluguel"></ion-input>
           </ion-item>
 
           <ion-item>
             <ion-label position="stacked">Valor *</ion-label>
-            <ion-input type="number" [(ngModel)]="formData.amount" name="amount"></ion-input>
+            <ion-input type="number" [(ngModel)]="formData.value" name="value"></ion-input>
           </ion-item>
 
           <ion-item>
             <ion-label position="stacked">Categoria *</ion-label>
-            <ion-select [(ngModel)]="formData.categoryId" name="category">
+            <ion-select [(ngModel)]="formData.category_id" name="category">
               <ion-select-option *ngFor="let cat of categories" [value]="cat.id">
-                {{ cat.name }}
+                {{ cat.category }}
               </ion-select-option>
             </ion-select>
           </ion-item>
 
           <ion-item>
-            <ion-label position="stacked">Dia do vencimento</ion-label>
-            <ion-input type="number" [(ngModel)]="formData.dueDay" name="dueDay" min="1" max="31"></ion-input>
+            <ion-label position="stacked">Tipo de lançamento *</ion-label>
+            <ion-select [(ngModel)]="formData.release_type_id" name="release_type_id">
+              <ion-select-option value="1">
+                Entrada
+              </ion-select-option>
+              <ion-select-option value="2">
+                Saída
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Dia do pagamento</ion-label>
+            <ion-input type="number" [(ngModel)]="formData.payment_day" name="dueDay" min="1" max="31"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Forma do pagamento</ion-label>
+            <ion-input placeholder="Boleto" type="text" [(ngModel)]="formData.payment_method" name="payment_method"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Descrição detalhada</ion-label>
+            <ion-input [(ngModel)]="formData.notes" name="note" placeholder="Ex: Aluguel apartamento"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Recorrente *</ion-label>
+            <ion-select [(ngModel)]="formData.is_active" name="is_active">
+              <ion-select-option [value]="true">
+                Sim
+              </ion-select-option>
+              <ion-select-option [value]="false">
+                Não
+              </ion-select-option>
+            </ion-select>
           </ion-item>
 
           <div class="form-buttons">

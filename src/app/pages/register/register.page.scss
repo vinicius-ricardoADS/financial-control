@@ -1,0 +1,110 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100%;
+  padding: 20px;
+  background: var(--app-bg-primary);
+}
+
+.register-card {
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  background: var(--app-bg-secondary);
+  border: 1px solid var(--app-border);
+  margin: 0;
+}
+
+ion-card-header {
+  padding: 24px 20px 16px;
+  text-align: center;
+
+  .card-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--app-text-primary);
+    margin-bottom: 8px;
+
+    .title-icon {
+      font-size: 28px;
+      color: var(--app-accent);
+    }
+  }
+
+  .card-subtitle {
+    font-size: 14px;
+    color: var(--app-text-tertiary);
+    margin: 0;
+  }
+}
+
+ion-card-content {
+  padding: 20px;
+
+  form {
+    .form-item {
+      --padding-start: 16px;
+      --inner-padding-end: 16px;
+      --background: var(--app-bg-tertiary);
+      --border-color: var(--app-border);
+      --border-radius: 12px;
+      --highlight-background: var(--app-accent);
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+      ion-label {
+        color: var(--app-text-secondary);
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+
+      ion-input {
+        --color: var(--app-text-primary);
+        --placeholder-color: var(--app-text-tertiary);
+        --placeholder-opacity: 0.7;
+        font-size: 16px;
+      }
+    }
+
+    .form-buttons {
+      margin-top: 24px;
+
+      ion-button {
+        --border-radius: 12px;
+        font-weight: 700;
+        height: 48px;
+        font-size: 16px;
+
+        ion-spinner {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+}
+
+// Responsividade
+@media (max-width: 576px) {
+  .container {
+    padding: 12px;
+  }
+
+  .register-card {
+    ion-card-header {
+      .card-title {
+        font-size: 20px;
+
+        .title-icon {
+          font-size: 24px;
+        }
+      }
+    }
+  }
+}

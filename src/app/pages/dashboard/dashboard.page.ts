@@ -26,7 +26,7 @@ import { TransactionService } from '../../../services/transaction.service';
 import { FixedExpenseService } from '../../../services/fixed-expense.service';
 import { FinancialSummary } from '../../../models/financial-summary.model';
 import { Transaction } from '../../../models/transaction.model';
-import { FixedExpense } from '../../../models/fixed-expense.model';
+import { Release, ReleaseTypes } from '../../../models/fixed-expense.model';
 import moment from 'moment';
 import "moment/locale/pt-br";
 import { addIcons } from 'ionicons';
@@ -79,7 +79,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   summary: FinancialSummary | null = null;
   recentTransactions: Transaction[] = [];
   upcomingExpenses: Array<{
-    expense: FixedExpense;
+    expense: Release;
     isPaid: boolean;
     daysUntilDue: number;
     isOverdue: boolean;
@@ -323,21 +323,36 @@ export class DashboardPage implements OnInit, OnDestroy {
     return moment(date).format('DD/MM/YYYY');
   }
 
-  getTransactionIcon(type: string): string {
-    return type === 'income' ? 'arrow-up' : 'arrow-down';
+  getTransactionIcon(type: ReleaseTypes): string {
+    return type === ReleaseTypes.INCOME ? 'arrow-up' : 'arrow-down';
   }
 
-  getTransactionColor(type: string): string {
-    return type === 'income' ? 'success' : 'danger';
+  getTransactionColor(type: ReleaseTypes): string {
+    return type === ReleaseTypes.INCOME ? 'success' : 'danger';
   }
 
-  goToTransactions(type: 'income' | 'expense') {
+  getTransactionClass(type: ReleaseTypes): string {
+    return type === ReleaseTypes.INCOME ? 'income' : 'expense';
+  }
+
+  goToTransactions(type: ReleaseTypes) {
     this.router.navigate(['/transactions'], {
       state: { openModalType: type },
     });
   }
 
-  getDaysLabel(days: number): string {
+  // Expor ReleaseTypes para o template
+  ReleaseTypes = ReleaseTypes;
+
+  getDaysLabel(expense: {
+    expense: Release;
+    isPaid: boolean;
+    daysUntilDue: number;
+    isOverdue: boolean;
+  }): string {
+    const days = expense.daysUntilDue;
+    if (expense.expense?.current_month_payment_status === 'pago') return 'Pagamento realizado';
+    if (expense.expense.category_name)
     if (days < 0) return `Atrasada (${Math.abs(days)}d)`;
     if (days === 0) return 'Vence hoje';
     if (days === 1) return 'Vence amanhã';
@@ -345,9 +360,12 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   getExpenseColor(item: any): string {
-    if (item.isOverdue) return 'danger';
-    if (item.daysUntilDue === 0) return 'warning';
-    if (item.daysUntilDue <= 3) return 'warning';
+    if (item?.expense?.current_month_payment_status === null)  {
+      if (item.isOverdue) return 'danger';
+      if (item.daysUntilDue === 0) return 'warning';
+      if (item.daysUntilDue <= 3) return 'warning';
+    }
+    if (item?.expense?.current_month_payment_status === 'pago') return 'success';
     return 'medium';
   }
 
