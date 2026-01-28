@@ -7,6 +7,7 @@ import {
   ReleasesCreate,
   ReleaseTypes,
   ActiveStatus,
+  PaymentStatus,
 } from '../models/fixed-expense.model';
 import { CategoryService } from './category.service';
 import { NotificationService } from './notification.service';
@@ -137,7 +138,7 @@ export class FixedExpenseService {
       value: expense.value,
       payment_day: expense.payment_day,
       payment_method: expense.payment_method || '',
-      notes: expense.notes,
+      notes: expense.notes || '',
       is_active: newActiveState,
     };
 
@@ -168,25 +169,30 @@ export class FixedExpenseService {
     return expense.is_active === ActiveStatus.ACTIVE;
   }
 
-  async markAsPaid(
-    expenseId: string,
-    month: number,
-    year: number,
-    amount?: number,
-    notes?: string,
-  ): Promise<void> {
+  async markAsPaid(expenseId: string): Promise<void> {
     const expense = await this.getExpenseById(expenseId);
     if (!expense) return;
 
-    const paymentData = {
-      month,
-      year,
-      amount: amount || expense.value,
-      notes,
+    const categoryId = expense.category_id
+      || await this.getCategoryIdByName(expense.category_name);
+
+    const releaseTypeId = expense.release_type_id
+      || (expense.release_type === 'entrada' ? ReleaseTypes.INCOME : ReleaseTypes.EXPENSE);
+
+    const paymentData: ReleasesCreate = {
+      release_type_id: releaseTypeId,
+      category_id: categoryId,
+      description: expense.description,
+      value: expense.value,
+      payment_day: expense.payment_day,
+      payment_method: expense.payment_method || '',
+      notes: expense.notes || '',
+      is_active: expense.is_active === ActiveStatus.ACTIVE,
+      status: PaymentStatus.PAID,
     };
 
     await firstValueFrom(
-      this.http.patch<void>(`${this.apiUrl}/${expenseId}`, paymentData)
+      this.http.patch<any>(`${this.apiUrl}/${expenseId}`, paymentData)
     );
 
     // Recarrega os dados para atualizar o cache
@@ -226,9 +232,6 @@ export class FixedExpenseService {
    */
   async markAsPaidAndCreateTransaction(
     expenseId: string,
-    month?: number,
-    year?: number,
-    amount?: number,
     notes?: string,
   ): Promise<void> {
     const expense = await this.getExpenseById(expenseId);
@@ -236,20 +239,17 @@ export class FixedExpenseService {
       throw new Error('Despesa não encontrada');
     }
 
-    const targetMonth = month || moment().month() + 1;
-    const targetYear = year || moment().year();
-    const paymentAmount = amount || expense.value;
-
-    // 1. Marcar como paga no histórico
-    await this.markAsPaid(expenseId, targetMonth, targetYear, paymentAmount, notes);
+    // 1. Marcar como paga via PATCH com status = 2
+    await this.markAsPaid(expenseId);
 
     // 2. Criar transação automaticamente
+    const now = moment();
     const transactionData: TransactionCreate = {
       release_type: ReleaseTypes.EXPENSE,
-      value: paymentAmount,
+      value: expense.value,
       categoryId: expense.category_id,
       description: expense.description,
-      date: moment({ year: targetYear, month: targetMonth - 1, day: expense.payment_day }).format('YYYY-MM-DD'),
+      date: moment({ year: now.year(), month: now.month(), day: expense.payment_day }).format('YYYY-MM-DD'),
       notes: notes || `Pagamento automático de despesa fixa`,
     };
 
@@ -258,30 +258,15 @@ export class FixedExpenseService {
     // 3. Notificar pagamento marcado
     await this.notificationService.notifyPaymentMarked(
       expense.description,
-      paymentAmount,
+      expense.value,
     );
   }
 
   /**
-   * Verifica se uma despesa foi paga em determinado mês
+   * Verifica se uma despesa está paga
    */
-  isExpensePaidInMonth(expense: Release, month: number, year: number): boolean {
-    return expense.paymentHistory?.some((payment) => {
-      const paymentDate = moment(payment.date);
-      return (
-        payment.paid &&
-        paymentDate.month() === month - 1 &&
-        paymentDate.year() === year
-      );
-    }) ?? false;
-  }
-
-  /**
-   * Verifica se a despesa foi paga no mês atual
-   */
-  isExpensePaidThisMonth(expense: Release): boolean {
-    const now = moment();
-    return this.isExpensePaidInMonth(expense, now.month() + 1, now.year());
+  isExpensePaid(expense: Release): boolean {
+    return expense.status === PaymentStatus.PAID;
   }
 
   /**
@@ -302,7 +287,7 @@ export class FixedExpenseService {
     const currentYear = now.year();
 
     return activeExpenses.map((expense) => {
-      const isPaid = this.isExpensePaidInMonth(expense, currentMonth, currentYear);
+      const isPaid = this.isExpensePaid(expense);
       const dueDate = moment({
         year: currentYear,
         month: currentMonth - 1,

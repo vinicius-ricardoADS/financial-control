@@ -270,6 +270,10 @@ export class FixedExpensesPage implements OnInit {
     return expense.is_active === ActiveStatus.ACTIVE;
   }
 
+  isCurrentMonthPaid(expense: Release): boolean {
+    return expense.current_month_payment_status === 'pago';
+  }
+
   getDayOfMonthLabel(day: number): string {
     return `Dia ${day} de cada mês`;
   }
@@ -326,9 +330,6 @@ export class FixedExpensesPage implements OnInit {
             try {
               await this.expenseService.markAsPaidAndCreateTransaction(
                 expense.id,
-                undefined,
-                undefined,
-                undefined,
                 data.notes,
               );
 

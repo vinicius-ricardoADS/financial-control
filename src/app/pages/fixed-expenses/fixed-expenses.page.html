@@ -25,7 +25,7 @@
               (ionChange)="toggleActive(expense)"
             ></ion-toggle>
             <ion-button
-              *ngIf="isExpenseActive(expense) && !getPaymentStatus(expense.id).isPaid"
+              *ngIf="isExpenseActive(expense) && !isCurrentMonthPaid(expense)"
               size="small"
               fill="solid"
               color="success"
@@ -33,12 +33,18 @@
               <ion-icon slot="start" name="checkmark-circle"></ion-icon>
               Pagar
             </ion-button>
+            <ion-badge
+              *ngIf="isExpenseActive(expense) && isCurrentMonthPaid(expense)"
+              color="success">
+              <ion-icon name="checkmark-circle"></ion-icon>
+              Pago
+            </ion-badge>
           </div>
         </ion-item>
 
         <ion-item-options side="end">
           <ion-item-option
-            *ngIf="isExpenseActive(expense) && !getPaymentStatus(expense.id).isPaid"
+            *ngIf="isExpenseActive(expense) && !isCurrentMonthPaid(expense)"
             color="success"
             (click)="markAsPaid(expense)">
             <ion-icon slot="icon-only" name="checkmark-circle"></ion-icon>
