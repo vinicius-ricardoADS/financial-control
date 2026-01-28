@@ -12,8 +12,8 @@
           <ion-label>
             <h2>
               {{ expense.description }}
-              <ion-badge [color]="getStatusBadgeColor(expense.id)" style="margin-left: 8px;">
-                {{ getStatusLabel(expense.id) }}
+              <ion-badge [color]="getStatusBadgeColor(expense)" style="margin-left: 8px;">
+                {{ getStatusLabel(expense) }}
               </ion-badge>
             </h2>
             <p>{{ expense?.category_name }} • {{ getDayOfMonthLabel(expense.payment_day) }}</p>

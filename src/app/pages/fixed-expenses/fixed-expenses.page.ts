@@ -286,21 +286,29 @@ export class FixedExpensesPage implements OnInit {
     };
   }
 
-  getStatusBadgeColor(expenseId: string): string {
-    const status = this.getPaymentStatus(expenseId);
-    if (status.isPaid) return 'success';
-    if (status.isOverdue) return 'danger';
-    if (status.daysUntilDue <= 3) return 'warning';
+  getStatusBadgeColor(expense: Release): string {
+    if (expense?.current_month_payment_status === null) {
+      const status = this.getPaymentStatus(expense.id);
+      if (status.isPaid) return 'success';
+      if (status.isOverdue) return 'danger';
+      if (status.daysUntilDue <= 3) return 'warning';
+    }
+    const status = this.isCurrentMonthPaid(expense);
+    if (status) return 'success';
     return 'medium';
   }
 
-  getStatusLabel(expenseId: string): string {
-    const status = this.getPaymentStatus(expenseId);
-    if (status.isPaid) return 'Paga';
-    if (status.isOverdue) return `Atrasada (${Math.abs(status.daysUntilDue)}d)`;
-    if (status.daysUntilDue === 0) return 'Vence hoje';
-    if (status.daysUntilDue > 0) return `${status.daysUntilDue}d`;
-    return '';
+  getStatusLabel(expense: Release): string {
+    if (expense?.current_month_payment_status === null) {
+      const status = this.getPaymentStatus(expense.id);
+      if (status.isPaid) return 'Paga';
+      if (status.isOverdue) return `Atrasada (${Math.abs(status.daysUntilDue)}d)`;
+      if (status.daysUntilDue === 0) return 'Vence hoje';
+      if (status.daysUntilDue > 0) return `${status.daysUntilDue}d`;
+    }
+    const status = this.isCurrentMonthPaid(expense);
+    if (status) return 'Paga';
+    return 'Pendente';
   }
 
   getColor(expense: any): string | null {

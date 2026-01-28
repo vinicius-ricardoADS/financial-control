@@ -351,6 +351,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     isOverdue: boolean;
   }): string {
     const days = expense.daysUntilDue;
+    if (expense.expense?.current_month_payment_status === 'pago') return 'Pagamento realizado';
     if (expense.expense.category_name)
     if (days < 0) return `Atrasada (${Math.abs(days)}d)`;
     if (days === 0) return 'Vence hoje';
@@ -359,9 +360,12 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   getExpenseColor(item: any): string {
-    if (item.isOverdue) return 'danger';
-    if (item.daysUntilDue === 0) return 'warning';
-    if (item.daysUntilDue <= 3) return 'warning';
+    if (item?.expense?.current_month_payment_status === null)  {
+      if (item.isOverdue) return 'danger';
+      if (item.daysUntilDue === 0) return 'warning';
+      if (item.daysUntilDue <= 3) return 'warning';
+    }
+    if (item?.expense?.current_month_payment_status === 'pago') return 'success';
     return 'medium';
   }
 
