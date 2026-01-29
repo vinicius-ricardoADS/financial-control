@@ -301,13 +301,13 @@ export class FixedExpensesPage implements OnInit {
   getStatusLabel(expense: Release): string {
     if (expense?.current_month_payment_status === null) {
       const status = this.getPaymentStatus(expense.id);
-      if (status.isPaid) return 'Paga';
+      if (status.isPaid) return 'Pagamento concluído';
       if (status.isOverdue) return `Atrasada (${Math.abs(status.daysUntilDue)}d)`;
       if (status.daysUntilDue === 0) return 'Vence hoje';
       if (status.daysUntilDue > 0) return `${status.daysUntilDue}d`;
     }
     const status = this.isCurrentMonthPaid(expense);
-    if (status) return 'Paga';
+    if (status) return 'Pagamento concluído';
     return 'Pendente';
   }
 

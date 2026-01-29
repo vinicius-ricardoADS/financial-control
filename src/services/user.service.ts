@@ -8,19 +8,19 @@ import {
   LoginCredentials,
   LoginResponse,
 } from '../models/user.model';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  private apiUrl = 'http://localhost:3000';
 
   constructor(private http: HttpClient) {}
 
   async register(userData: UserCreate): Promise<User> {
     try {
       const response = await firstValueFrom(
-        this.http.post<UserRegisterResponse>(`${this.apiUrl}/user`, userData)
+        this.http.post<UserRegisterResponse>(`${environment.api}/user`, userData)
       );
       return response.user;
     } catch (error) {
@@ -32,7 +32,7 @@ export class UserService {
   async login(credentials: LoginCredentials): Promise<string> {
     try {
       const response = await firstValueFrom(
-        this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials)
+        this.http.post<LoginResponse>(`${environment.api}/login`, credentials)
       );
       return response.token;
     } catch (error) {
