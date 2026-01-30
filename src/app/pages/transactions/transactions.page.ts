@@ -127,6 +127,7 @@ export class TransactionsPage implements OnInit {
       this.categoryService.getAllCategories(),
     ]);
     this.transactions = transactions;
+    console.log('Loaded transactions:', this.transactions);
     this.categories = categories;
     this.applyFilters();
   }
