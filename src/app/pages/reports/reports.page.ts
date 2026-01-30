@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
 import {
   IonContent,
   IonHeader,
@@ -68,7 +67,6 @@ export class ReportsPage implements OnInit, OnDestroy {
   barChart: Chart | null = null;
   pieChart: Chart | null = null;
 
-  private transactionSubscription?: Subscription;
 
   constructor(
     private reportService: ReportService,
@@ -81,11 +79,6 @@ export class ReportsPage implements OnInit, OnDestroy {
 
   async ngOnInit() {
     await this.loadData();
-
-    // Observar mudanças nas transações
-    this.transactionSubscription = this.transactionService.transactions$.subscribe(async () => {
-      await this.loadData();
-    });
   }
 
   async ionViewWillEnter() {
@@ -93,9 +86,6 @@ export class ReportsPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.transactionSubscription) {
-      this.transactionSubscription.unsubscribe();
-    }
     // Destruir gráficos
     if (this.lineChart) this.lineChart.destroy();
     if (this.barChart) this.barChart.destroy();

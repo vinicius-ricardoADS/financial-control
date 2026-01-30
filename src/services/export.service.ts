@@ -101,9 +101,9 @@ export class ExportService {
     const transactionData = transactions.slice(0, 20).map((t) => [
       moment(t.date).format('DD/MM/YYYY'),
       t.description,
-      t.category?.category || '-',
+      t.category_name || '-',
       t.release_type === ReleaseTypes.INCOME ? 'Receita' : 'Despesa',
-      `R$ ${t.value.toFixed(2)}`,
+      `R$ ${parseFloat(t.value).toFixed(2)}`,
     ]);
 
     autoTable(doc, {

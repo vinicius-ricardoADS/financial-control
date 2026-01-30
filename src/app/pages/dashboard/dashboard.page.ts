@@ -21,10 +21,8 @@ import {
   IonRefresherContent,
 } from '@ionic/angular/standalone';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
-import { ReportService } from '../../../services/report.service';
-import { TransactionService } from '../../../services/transaction.service';
+import { DashboardService, DashboardData } from '../../../services/dashboard.service';
 import { FixedExpenseService } from '../../../services/fixed-expense.service';
-import { FinancialSummary } from '../../../models/financial-summary.model';
 import { Transaction } from '../../../models/transaction.model';
 import { Release, ReleaseTypes } from '../../../models/fixed-expense.model';
 import moment from 'moment';
@@ -42,9 +40,16 @@ import {
   checkmarkCircle,
   alertCircle,
 } from 'ionicons/icons';
-import { Subscription } from 'rxjs';
 
 Chart.register(...registerables);
+
+export interface CategorySummary {
+  categoryName: string;
+  categoryIcon: string;
+  total: number;
+  percentage: number;
+  color: string;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -73,11 +78,12 @@ Chart.register(...registerables);
   ],
 })
 export class DashboardPage implements OnInit, OnDestroy {
-  @ViewChild('pieChart', { static: false }) pieChartRef!: ElementRef;
   @ViewChild('barChart', { static: false }) barChartRef!: ElementRef;
+  @ViewChild('pieChart', { static: false }) pieChartRef!: ElementRef;
 
-  summary: FinancialSummary | null = null;
+  dashboardData: DashboardData | null = null;
   recentTransactions: Transaction[] = [];
+  expensesByCategory: CategorySummary[] = [];
   upcomingExpenses: Array<{
     expense: Release;
     isPaid: boolean;
@@ -85,16 +91,23 @@ export class DashboardPage implements OnInit, OnDestroy {
     isOverdue: boolean;
   }> = [];
   currentMonth: string = '';
-  currentYear: number = new Date().getFullYear();
-  currentMonthNumber: number = new Date().getMonth() + 1;
 
-  pieChart: Chart | null = null;
   barChart: Chart | null = null;
-  private transactionSubscription?: Subscription;
+  pieChart: Chart | null = null;
+
+  // Cores para as categorias
+  private categoryColors = [
+    '#ef4444', '#f97316', '#f59e0b', '#eab308',
+    '#84cc16', '#22c55e', '#14b8a6', '#06b6d4',
+    '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6',
+    '#a855f7', '#d946ef', '#ec4899', '#f43f5e',
+  ];
+
+  // Expor ReleaseTypes para o template
+  ReleaseTypes = ReleaseTypes;
 
   constructor(
-    private reportService: ReportService,
-    private transactionService: TransactionService,
+    private dashboardService: DashboardService,
     private fixedExpenseService: FixedExpenseService,
     private router: Router,
   ) {
@@ -104,43 +117,27 @@ export class DashboardPage implements OnInit, OnDestroy {
   async ngOnInit() {
     this.currentMonth = moment().format('MMMM YYYY');
     await this.loadData();
-
-    // Observar mudanças nas transações
-    this.transactionSubscription = this.transactionService.transactions$.subscribe(async () => {
-      await this.loadData();
-    });
   }
 
   async ionViewWillEnter() {
-    // Recarregar dados sempre que voltar para a página
     await this.loadData();
   }
 
   ngOnDestroy() {
-    if (this.transactionSubscription) {
-      this.transactionSubscription.unsubscribe();
-    }
-    // Destruir gráficos
-    if (this.pieChart) this.pieChart.destroy();
     if (this.barChart) this.barChart.destroy();
+    if (this.pieChart) this.pieChart.destroy();
   }
 
   async loadData() {
     try {
-      // Carregar resumo do mês atual
-      this.summary = await this.reportService.getMonthlyReport(
-        this.currentMonthNumber,
-        this.currentYear,
-      );
+      // Carregar dados do dashboard da API
+      this.dashboardData = await this.dashboardService.getDashboardData();
+      this.recentTransactions = this.dashboardData.transactions.slice(0, 5);
 
-      // Carregar transações recentes
-      this.recentTransactions = await this.transactionService.getTransactionsByMonth(
-        this.currentMonthNumber,
-        this.currentYear,
-      );
-      this.recentTransactions = this.recentTransactions.slice(0, 5);
+      // Calcular despesas por categoria
+      this.expensesByCategory = this.calculateExpensesByCategory(this.dashboardData.transactions);
 
-      // Carregar próximas despesas (próximos 7 dias)
+      // Carregar próximas despesas fixas (próximos 7 dias)
       const paymentStatus = await this.fixedExpenseService.getMonthlyPaymentStatus();
       this.upcomingExpenses = paymentStatus
         .filter(status => !status.isPaid && status.daysUntilDue <= 7)
@@ -156,8 +153,52 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
   }
 
+  private calculateExpensesByCategory(transactions: Transaction[]): CategorySummary[] {
+    // Filtrar apenas despesas (saída)
+    const expenses = transactions.filter(t => t.release_type === ReleaseTypes.EXPENSE);
+
+    // Agrupar por categoria
+    const grouped = new Map<string, { total: number; icon: string }>();
+
+    expenses.forEach(t => {
+      const categoryName = t.category_name || 'Sem categoria';
+      const value = typeof t.value === 'string' ? parseFloat(t.value) : t.value;
+
+      if (grouped.has(categoryName)) {
+        const current = grouped.get(categoryName)!;
+        current.total += value;
+      } else {
+        grouped.set(categoryName, {
+          total: value,
+          icon: t.category_icon || '📦',
+        });
+      }
+    });
+
+    // Calcular total geral
+    const totalExpenses = Array.from(grouped.values()).reduce((sum, cat) => sum + cat.total, 0);
+
+    // Converter para array e calcular percentuais
+    const result: CategorySummary[] = [];
+    let colorIndex = 0;
+
+    grouped.forEach((data, categoryName) => {
+      result.push({
+        categoryName,
+        categoryIcon: data.icon,
+        total: data.total,
+        percentage: totalExpenses > 0 ? (data.total / totalExpenses) * 100 : 0,
+        color: this.categoryColors[colorIndex % this.categoryColors.length],
+      });
+      colorIndex++;
+    });
+
+    // Ordenar por valor (maior primeiro)
+    return result.sort((a, b) => b.total - a.total);
+  }
+
   renderBarChart() {
-    if (!this.summary || !this.barChartRef) return;
+    if (!this.dashboardData || !this.barChartRef) return;
 
     const canvas = this.barChartRef.nativeElement;
     const ctx = canvas.getContext('2d');
@@ -174,7 +215,7 @@ export class DashboardPage implements OnInit, OnDestroy {
         labels: ['Receitas', 'Despesas'],
         datasets: [
           {
-            data: [this.summary.totalIncome, this.summary.totalExpense],
+            data: [this.dashboardData.total_incomes, this.dashboardData.total_expenses],
             backgroundColor: ['#10b981', '#ef4444'],
             borderRadius: 8,
             barThickness: 60,
@@ -237,19 +278,18 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   renderPieChart() {
-    if (!this.summary || !this.pieChartRef) return;
+    if (!this.expensesByCategory.length || !this.pieChartRef) return;
 
     const canvas = this.pieChartRef.nativeElement;
     const ctx = canvas.getContext('2d');
 
     if (!ctx) return;
 
-    // Destruir gráfico anterior se existir
     if (this.pieChart) {
       this.pieChart.destroy();
     }
 
-    const data = this.summary.expensesByCategory.slice(0, 8);
+    const data = this.expensesByCategory.slice(0, 8);
 
     const config: ChartConfiguration = {
       type: 'doughnut',
@@ -311,8 +351,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   getBalanceColor(): string {
-    if (!this.summary) return 'medium';
-    return this.summary.balance >= 0 ? 'success' : 'danger';
+    if (!this.dashboardData) return 'medium';
+    return this.dashboardData.balance >= 0 ? 'success' : 'danger';
   }
 
   formatCurrency(value: number): string {
@@ -323,16 +363,20 @@ export class DashboardPage implements OnInit, OnDestroy {
     return moment(date).format('DD/MM/YYYY');
   }
 
-  getTransactionIcon(type: ReleaseTypes): string {
+  getTransactionIcon(type: ReleaseTypes | string): string {
     return type === ReleaseTypes.INCOME ? 'arrow-up' : 'arrow-down';
   }
 
-  getTransactionColor(type: ReleaseTypes): string {
+  getTransactionColor(type: ReleaseTypes | string): string {
     return type === ReleaseTypes.INCOME ? 'success' : 'danger';
   }
 
-  getTransactionClass(type: ReleaseTypes): string {
+  getTransactionClass(type: ReleaseTypes | string): string {
     return type === ReleaseTypes.INCOME ? 'income' : 'expense';
+  }
+
+  formatTransactionValue(value: string | number): number {
+    return typeof value === 'string' ? parseFloat(value) : value;
   }
 
   goToTransactions(type: ReleaseTypes) {
@@ -340,9 +384,6 @@ export class DashboardPage implements OnInit, OnDestroy {
       state: { openModalType: type },
     });
   }
-
-  // Expor ReleaseTypes para o template
-  ReleaseTypes = ReleaseTypes;
 
   getDaysLabel(expense: {
     expense: Release;
@@ -352,7 +393,6 @@ export class DashboardPage implements OnInit, OnDestroy {
   }): string {
     const days = expense.daysUntilDue;
     if (expense.expense?.current_month_payment_status === 'pago') return 'Pagamento realizado';
-    if (expense.expense.category_name)
     if (days < 0) return `Atrasada (${Math.abs(days)}d)`;
     if (days === 0) return 'Vence hoje';
     if (days === 1) return 'Vence amanhã';
@@ -360,7 +400,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   getExpenseColor(item: any): string {
-    if (item?.expense?.current_month_payment_status === null)  {
+    if (item?.expense?.current_month_payment_status === null) {
       if (item.isOverdue) return 'danger';
       if (item.daysUntilDue === 0) return 'warning';
       if (item.daysUntilDue <= 3) return 'warning';

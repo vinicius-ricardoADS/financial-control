@@ -39,8 +39,8 @@ export class ReportService {
     const income = transactions.filter((t) => t.release_type === ReleaseTypes.INCOME);
     const expenses = transactions.filter((t) => t.release_type === ReleaseTypes.EXPENSE);
 
-    const totalIncome = income.reduce((sum, t) => sum + t.value, 0);
-    const totalExpense = expenses.reduce((sum, t) => sum + t.value, 0);
+    const totalIncome = income.reduce((sum, t) => sum + parseFloat(t.value), 0);
+    const totalExpense = expenses.reduce((sum, t) => sum + parseFloat(t.value), 0);
 
     // Agrupar por categoria
     const expensesByCategory = this.groupByCategory(expenses, categories, ReleaseTypes.EXPENSE);
@@ -117,10 +117,22 @@ export class ReportService {
     };
   }
 
-  async getYearlyReport(year: number): Promise<FinancialSummary[]> {
+  async getYearlyReport(year: number, upToMonth?: number): Promise<FinancialSummary[]> {
     const reports: FinancialSummary[] = [];
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
 
-    for (let month = 1; month <= 12; month++) {
+    // Se for o ano atual, limita até o mês atual
+    // Se foi passado upToMonth, usa esse valor
+    // Caso contrário, busca todos os 12 meses
+    let maxMonth = 12;
+    if (upToMonth) {
+      maxMonth = upToMonth;
+    } else if (year === currentYear) {
+      maxMonth = currentMonth;
+    }
+
+    for (let month = 1; month <= maxMonth; month++) {
       const report = await this.getMonthlyReport(month, year);
       reports.push(report);
     }
@@ -129,42 +141,42 @@ export class ReportService {
   }
 
   async getCategoryReport(
-    categoryId: string,
-    startDate: Date,
-    endDate: Date,
+    categoryName: string,
+    month: number,
+    year: number,
   ): Promise<{
     total: number;
     transactions: number;
     average: number;
     trend: 'up' | 'down' | 'stable';
   }> {
-    const transactions = await this.transactionService.getFilteredTransactions({
-      categoryId,
-      startDate,
-      endDate,
-    });
+    const allTransactions = await this.transactionService.getTransactionsByMonth(month, year);
+    const transactions = allTransactions.filter(t => t.category_name === categoryName);
 
-    const total = transactions.reduce((sum, t) => sum + t.value, 0);
-    const days = moment(endDate).diff(moment(startDate), 'days') + 1;
-    const average = total / Math.max(days, 1);
+    const total = transactions.reduce((sum, t) => sum + parseFloat(t.value), 0);
+    const daysInMonth = moment({ year, month: month - 1 }).daysInMonth();
+    const average = total / Math.max(daysInMonth, 1);
 
     // Calcular tendência (comparar primeira metade com segunda metade)
-    const midPoint = moment(startDate).add(days / 2, 'days');
-    const firstHalf = transactions.filter((t) =>
-      moment(t.date).isBefore(midPoint),
-    );
-    const secondHalf = transactions.filter((t) =>
-      moment(t.date).isSameOrAfter(midPoint),
-    );
+    const midDay = Math.floor(daysInMonth / 2);
+    const firstHalf = transactions.filter((t) => {
+      const day = moment(t.date).date();
+      return day <= midDay;
+    });
+    const secondHalf = transactions.filter((t) => {
+      const day = moment(t.date).date();
+      return day > midDay;
+    });
 
-    const firstHalfTotal = firstHalf.reduce((sum, t) => sum + t.value, 0);
-    const secondHalfTotal = secondHalf.reduce((sum, t) => sum + t.value, 0);
+    const firstHalfTotal = firstHalf.reduce((sum, t) => sum + parseFloat(t.value), 0);
+    const secondHalfTotal = secondHalf.reduce((sum, t) => sum + parseFloat(t.value), 0);
 
     let trend: 'up' | 'down' | 'stable' = 'stable';
-    const change = ((secondHalfTotal - firstHalfTotal) / firstHalfTotal) * 100;
-
-    if (change > 10) trend = 'up';
-    else if (change < -10) trend = 'down';
+    if (firstHalfTotal > 0) {
+      const change = ((secondHalfTotal - firstHalfTotal) / firstHalfTotal) * 100;
+      if (change > 10) trend = 'up';
+      else if (change < -10) trend = 'down';
+    }
 
     return {
       total,
@@ -179,19 +191,19 @@ export class ReportService {
     categories: any[],
     type: ReleaseTypes,
   ): CategoryExpense[] | CategoryIncome[] {
-    const grouped = _.groupBy(transactions, 'categoryId');
-    const total = transactions.reduce((sum, t) => sum + t.amount, 0);
+    const grouped = _.groupBy(transactions, 'category_name');
+    const total = transactions.reduce((sum, t) => sum + parseFloat(t.value), 0);
 
-    return Object.keys(grouped).map((categoryId) => {
-      const items = grouped[categoryId];
-      const category = categories.find((c) => c.id === categoryId);
-      const categoryTotal = items.reduce((sum, t) => sum + t.amount, 0);
+    return Object.keys(grouped).map((categoryName) => {
+      const items = grouped[categoryName];
+      const category = categories.find((c) => c.category === categoryName);
+      const categoryTotal = items.reduce((sum, t) => sum + parseFloat(t.value), 0);
 
       const result: any = {
-        categoryId,
-        categoryName: category?.name || 'Sem categoria',
+        categoryId: category?.id || categoryName,
+        categoryName: categoryName || 'Sem categoria',
         color: category?.color || '#999999',
-        icon: category?.icon || 'help',
+        icon: items[0]?.category_icon || category?.icon || 'help',
         total: categoryTotal,
         percentage: total > 0 ? (categoryTotal / total) * 100 : 0,
         transactionCount: items.length,

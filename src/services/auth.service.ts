@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { StorageService } from './storage.service';
 import { User } from '../models/user.model';
 
 interface JwtPayload {
@@ -19,12 +18,12 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private storage: StorageService) {
+  constructor() {
     this.loadUserFromToken();
   }
 
-  private async loadUserFromToken(): Promise<void> {
-    const token = await this.getToken();
+  private loadUserFromToken(): void {
+    const token = this.getToken();
     if (token) {
       const user = this.decodeToken(token);
       this.currentUserSubject.next(user);
@@ -45,14 +44,14 @@ export class AuthService {
     }
   }
 
-  async saveToken(token: string): Promise<void> {
-    await this.storage.set(this.TOKEN_KEY, token);
+  saveToken(token: string): void {
+    localStorage.setItem(this.TOKEN_KEY, token);
     const user = this.decodeToken(token);
     this.currentUserSubject.next(user);
   }
 
-  async getToken(): Promise<string | null> {
-    return await this.storage.get(this.TOKEN_KEY);
+  getToken(): string | null {
+    return localStorage.getItem(this.TOKEN_KEY);
   }
 
   getCurrentUser(): User | null {
@@ -63,18 +62,18 @@ export class AuthService {
     return this.currentUserSubject.value?.id ?? null;
   }
 
-  async isAuthenticated(): Promise<boolean> {
-    const token = await this.getToken();
+  isAuthenticated(): boolean {
+    const token = this.getToken();
     return !!token;
   }
 
-  async logout(): Promise<void> {
-    await this.storage.remove(this.TOKEN_KEY);
+  logout(): void {
+    localStorage.removeItem(this.TOKEN_KEY);
     this.currentUserSubject.next(null);
   }
 
-  async clearAllData(): Promise<void> {
-    await this.storage.clear();
+  clearAllData(): void {
+    localStorage.clear();
     this.currentUserSubject.next(null);
   }
 }

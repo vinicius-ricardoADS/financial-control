@@ -49,7 +49,7 @@
     </ion-card>
 
     <!-- Cards de Resumo -->
-    <div class="summary-cards" *ngIf="summary">
+    <div class="summary-cards" *ngIf="dashboardData">
       <!-- Receitas -->
       <ion-card class="summary-card income-card">
         <ion-card-content>
@@ -58,7 +58,7 @@
           </div>
           <div class="card-info">
             <p class="card-label">Receitas</p>
-            <h2 class="card-value">{{ formatCurrency(summary.totalIncome) }}</h2>
+            <h2 class="card-value">{{ formatCurrency(dashboardData.total_incomes) }}</h2>
           </div>
         </ion-card-content>
       </ion-card>
@@ -71,27 +71,27 @@
           </div>
           <div class="card-info">
             <p class="card-label">Despesas</p>
-            <h2 class="card-value">{{ formatCurrency(summary.totalExpense) }}</h2>
+            <h2 class="card-value">{{ formatCurrency(dashboardData.total_expenses) }}</h2>
           </div>
         </ion-card-content>
       </ion-card>
 
       <!-- Saldo -->
-      <ion-card class="summary-card balance-card" [class.negative]="summary.balance < 0">
+      <ion-card class="summary-card balance-card" [class.negative]="dashboardData.balance < 0">
         <ion-card-content>
           <div class="card-icon">
             <ion-icon name="wallet"></ion-icon>
           </div>
           <div class="card-info">
             <p class="card-label">Saldo</p>
-            <h2 class="card-value">{{ formatCurrency(summary.balance) }}</h2>
+            <h2 class="card-value">{{ formatCurrency(dashboardData.balance) }}</h2>
           </div>
         </ion-card-content>
       </ion-card>
     </div>
 
     <!-- Gráfico de Receitas vs Despesas -->
-    <ion-card *ngIf="summary">
+    <ion-card *ngIf="dashboardData">
       <ion-card-header>
         <ion-card-title>Visão Geral do Mês</ion-card-title>
       </ion-card-header>
@@ -103,7 +103,7 @@
     </ion-card>
 
     <!-- Gráfico de Despesas por Categoria -->
-    <ion-card *ngIf="summary && summary.expensesByCategory.length > 0">
+    <ion-card *ngIf="expensesByCategory.length > 0">
       <ion-card-header>
         <ion-card-title>Despesas por Categoria</ion-card-title>
       </ion-card-header>
@@ -129,12 +129,12 @@
             ></ion-icon>
             <ion-label>
               <h3>{{ transaction.description }}</h3>
-              <p>{{ transaction.category?.category }} • {{ formatDate(transaction.date) }}</p>
+              <p>{{ transaction.category_name }} • {{ formatDate(transaction.date) }}</p>
             </ion-label>
             <ion-label slot="end" class="amount-label">
               <h2 [class]="getTransactionClass(transaction.release_type)">
                 {{ transaction.release_type === ReleaseTypes.INCOME ? '+' : '-' }}
-                {{ formatCurrency(transaction.value) }}
+                {{ formatCurrency(formatTransactionValue(transaction.value)) }}
               </h2>
             </ion-label>
           </ion-item>
@@ -143,7 +143,7 @@
     </ion-card>
 
     <!-- Mensagem quando não há dados -->
-    <ion-card *ngIf="!summary || summary.transactionCount === 0">
+    <ion-card *ngIf="!dashboardData || dashboardData.transactions.length === 0">
       <ion-card-content class="empty-state">
         <ion-icon name="wallet" size="large"></ion-icon>
         <p>Nenhuma transação registrada este mês</p>

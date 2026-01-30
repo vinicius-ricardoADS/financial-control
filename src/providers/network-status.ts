@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Network } from '@capacitor/network';
-import { BehaviorSubject, Observable, from, map } from 'rxjs';
-import { StorageKeys } from 'src/enums/storage-keys';
-import { LocalStorageProvider } from './storage/local-storage.provider';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 // Default time for cache expiration
 const DEFAULT_TIME = 5 * 60 * 60 * 1000; // 5 hours
+const CACHE_TTL_KEY = 'cache-ttl-timeout';
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +14,7 @@ export class NetworkStatusProvider {
   private cacheEvent$ = new BehaviorSubject<boolean>(false);
   private timeout: NodeJS.Timeout | null = null;
 
-  constructor(private readonly localStorage: LocalStorageProvider) {
+  constructor() {
     this.initializeNetworkListener();
     this.handleCacheTimeout();
   }
@@ -35,8 +34,8 @@ export class NetworkStatusProvider {
     }, timeout);
 
     if (timeout === DEFAULT_TIME && !this.cacheEvent$.value) {
-      this.localStorage.setData(
-        StorageKeys.CACHE_TTL_TIMEOUT,
+      localStorage.setItem(
+        CACHE_TTL_KEY,
         (new Date().getTime() + timeout).toString(),
       );
     }
@@ -61,21 +60,18 @@ export class NetworkStatusProvider {
 
     if (this.timeout) {
       clearTimeout(this.timeout);
-
       this.timeout = null;
     }
   }
 
   private handleCacheTimeout() {
     const now = new Date().getTime();
-    from(this.localStorage.getData(StorageKeys.CACHE_TTL_TIMEOUT))
-      .pipe(map((timestamp) => Number(timestamp)))
-      .subscribe({
-        next: (timestamp) => {
-          timestamp && timestamp > now
-            ? this.setCachable(timestamp - now)
-            : this.localStorage.remove(StorageKeys.CACHE_TTL_TIMEOUT);
-        },
-      });
+    const timestamp = Number(localStorage.getItem(CACHE_TTL_KEY));
+
+    if (timestamp && timestamp > now) {
+      this.setCachable(timestamp - now);
+    } else {
+      localStorage.removeItem(CACHE_TTL_KEY);
+    }
   }
 }

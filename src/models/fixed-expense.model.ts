@@ -15,13 +15,13 @@ export enum ActiveStatus {
 }
 
 export enum PaymentStatus {
-  PENDING = 1,
-  PAID = 2,
+  PENDING = 'pendente',
+  PAID = 'pago',
 }
 
 export enum ReleaseTypes {
-  INCOME = '1',
-  EXPENSE = '2',
+  INCOME = 'entrada',
+  EXPENSE = 'saida',
 }
 
 export interface Release {

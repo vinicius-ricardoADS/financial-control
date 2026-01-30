@@ -1,12 +1,12 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <ion-title>Transações</ion-title>
+    <ion-title>Lançamentos</ion-title>
   </ion-toolbar>
   <ion-toolbar>
     <ion-searchbar
       [(ngModel)]="searchTerm"
       (ionInput)="onSearchChange($event)"
-      placeholder="Buscar transações..."
+      placeholder="Buscar lançamentos..."
       animated="true"
     ></ion-searchbar>
   </ion-toolbar>
@@ -26,167 +26,47 @@
 </ion-header>
 
 <ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
   <div class="transactions-container">
     <ion-list *ngIf="filteredTransactions.length > 0">
-      <ion-item-sliding *ngFor="let transaction of filteredTransactions">
-        <ion-item lines="full">
-          <ion-icon
-            [name]="getTransactionIcon(transaction.release_type)"
-            [color]="getTransactionColor(transaction.release_type)"
-            slot="start"
-          ></ion-icon>
-          <ion-label>
-            <h2>{{ transaction.description }}</h2>
-            <p>{{ transaction.category?.category }} • {{ formatDate(transaction.date) }}</p>
-            <p *ngIf="transaction.notes" class="notes">{{ transaction.notes }}</p>
-          </ion-label>
-          <ion-label slot="end" class="amount-label">
-            <h2 [class]="getTransactionClass(transaction.release_type)">
-              {{ transaction.release_type === ReleaseTypes.INCOME ? '+' : '-' }}
-              {{ formatCurrency(transaction.value) }}
-            </h2>
-          </ion-label>
-        </ion-item>
-
-        <ion-item-options side="end">
-          <ion-item-option color="primary" (click)="openEditModal(transaction)">
-            <ion-icon slot="icon-only" name="pencil"></ion-icon>
-          </ion-item-option>
-          <ion-item-option color="danger" (click)="deleteTransaction(transaction)">
-            <ion-icon slot="icon-only" name="trash"></ion-icon>
-          </ion-item-option>
-        </ion-item-options>
-      </ion-item-sliding>
+      <ion-item *ngFor="let transaction of filteredTransactions" lines="full">
+        <div class="transaction-icon" slot="start">
+          <span class="category-icon">{{ transaction.category_icon }}</span>
+        </div>
+        <ion-label>
+          <h2>{{ transaction.description }}</h2>
+          <p>{{ transaction.category_name }} • {{ formatDate(transaction.date) }}</p>
+          <p class="transaction-meta">
+            <span class="recurrence-badge">{{ getRecurrenceLabel(transaction.recurrence_type) }}</span>
+            <span
+              class="status-badge"
+              [class.paid]="transaction.payment_status === 'pago'"
+              [class.pending]="transaction.payment_status !== 'pago'">
+              {{ getPaymentStatusLabel(transaction.payment_status) }}
+            </span>
+          </p>
+          <p *ngIf="transaction.notes" class="notes">{{ transaction.notes }}</p>
+        </ion-label>
+        <ion-label slot="end" class="amount-label">
+          <h2 [class]="getTransactionClass(transaction.release_type)">
+            {{ transaction.release_type === ReleaseTypes.INCOME ? '+' : '-' }}
+            {{ formatCurrency(transaction.value) }}
+          </h2>
+          <p *ngIf="transaction.payment_method" class="payment-method">
+            {{ transaction.payment_method }}
+          </p>
+        </ion-label>
+      </ion-item>
     </ion-list>
 
     <!-- Estado vazio -->
     <div class="empty-state" *ngIf="filteredTransactions.length === 0">
       <ion-icon name="search" size="large"></ion-icon>
-      <p>Nenhuma transação encontrada</p>
-      <p class="empty-subtitle">Adicione uma nova transação usando o botão +</p>
+      <p>Nenhum lançamento encontrado</p>
+      <p class="empty-subtitle">Nenhum lançamento para este mês</p>
     </div>
   </div>
-
-  <!-- FAB com opções -->
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button color="primary">
-      <ion-icon name="add"></ion-icon>
-    </ion-fab-button>
-    <ion-fab-list side="top">
-      <ion-fab-button
-        color="success"
-        (click)="openAddModalWithType(ReleaseTypes.INCOME)"
-        data-desc="Receita">
-        <ion-icon name="cash-outline"></ion-icon>
-      </ion-fab-button>
-      <ion-fab-button
-        color="danger"
-        (click)="openAddModalWithType(ReleaseTypes.EXPENSE)"
-        data-desc="Despesa">
-        <ion-icon name="card-outline"></ion-icon>
-      </ion-fab-button>
-    </ion-fab-list>
-  </ion-fab>
-
-  <!-- Modal de Adicionar/Editar -->
-  <ion-modal [isOpen]="isModalOpen" (willDismiss)="closeModal()">
-    <ng-template>
-      <ion-header>
-        <ion-toolbar color="primary">
-          <ion-title>{{ isEditMode ? 'Editar' : 'Nova' }} Transação</ion-title>
-          <ion-buttons slot="end">
-            <ion-button (click)="closeModal()">
-              <ion-icon name="close"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-
-      <ion-content class="ion-padding">
-        <form>
-          <!-- Tipo -->
-          <div class="type-selector">
-            <ion-segment [(ngModel)]="formData.release_type" name="type" color="primary">
-              <ion-segment-button [value]="ReleaseTypes.EXPENSE">
-                <ion-icon name="card-outline"></ion-icon>
-                <ion-label>Despesa</ion-label>
-              </ion-segment-button>
-              <ion-segment-button [value]="ReleaseTypes.INCOME">
-                <ion-icon name="cash-outline"></ion-icon>
-                <ion-label>Receita</ion-label>
-              </ion-segment-button>
-            </ion-segment>
-          </div>
-
-          <!-- Valor -->
-          <ion-item>
-            <ion-label position="stacked">Valor *</ion-label>
-            <ion-input
-              type="number"
-              [(ngModel)]="formData.value"
-              name="value"
-              placeholder="0.00"
-              inputmode="decimal"
-            ></ion-input>
-          </ion-item>
-
-          <!-- Descrição -->
-          <ion-item>
-            <ion-label position="stacked">Descrição *</ion-label>
-            <ion-input
-              [(ngModel)]="formData.description"
-              name="description"
-              placeholder="Ex: Supermercado"
-            ></ion-input>
-          </ion-item>
-
-          <!-- Categoria -->
-          <ion-item>
-            <ion-label position="stacked">Categoria *</ion-label>
-            <ion-select
-              [(ngModel)]="formData.categoryId"
-              name="category"
-              placeholder="Selecione uma categoria"
-            >
-              <ion-select-option value="Entrada">
-                Entrada
-              </ion-select-option>
-              <ion-select-option value="Saída">
-                Saída
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-
-          <!-- Data -->
-          <ion-item>
-            <ion-label position="stacked">Data</ion-label>
-            <ion-input
-              type="date"
-              [(ngModel)]="formData.date"
-              name="date"
-            ></ion-input>
-          </ion-item>
-
-          <!-- Notas -->
-          <ion-item>
-            <ion-label position="stacked">Notas</ion-label>
-            <ion-textarea
-              [(ngModel)]="formData.notes"
-              name="notes"
-              placeholder="Observações adicionais..."
-              rows="3"
-            ></ion-textarea>
-          </ion-item>
-
-          <!-- Botões -->
-          <div class="form-buttons">
-            <ion-button expand="block" color="primary" (click)="saveTransaction()">
-              <ion-icon name="checkmark" slot="start"></ion-icon>
-              {{ isEditMode ? 'Atualizar' : 'Adicionar' }}
-            </ion-button>
-          </div>
-        </form>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
 </ion-content>

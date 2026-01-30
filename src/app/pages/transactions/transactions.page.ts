@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import {
   IonContent,
   IonHeader,
@@ -11,39 +10,21 @@ import {
   IonItem,
   IonLabel,
   IonIcon,
-  IonFab,
-  IonFabButton,
-  IonFabList,
   IonSegment,
   IonSegmentButton,
   IonSearchbar,
-  IonItemSliding,
-  IonItemOptions,
-  IonItemOption,
-  IonModal,
-  IonButton,
-  IonInput,
-  IonSelect,
-  IonSelectOption,
-  IonTextarea,
-  IonButtons,
-  AlertController,
-  ToastController,
+  IonRefresher,
+  IonRefresherContent,
 } from '@ionic/angular/standalone';
 import { TransactionService } from '../../../services/transaction.service';
-import { CategoryService } from '../../../services/category.service';
-import { Transaction, TransactionCreate } from '../../../models/transaction.model';
-import { Category } from '../../../models/category.model';
+import { Transaction } from '../../../models/transaction.model';
+import { RecurrenceTypes } from '../../../models/transactions.model';
 import moment from 'moment';
 import { addIcons } from 'ionicons';
 import {
   search,
   arrowUp,
   arrowDown,
-  trash,
-  pencil,
-  close,
-  checkmark,
   cashOutline,
   cardOutline,
 } from 'ionicons/icons';
@@ -65,83 +46,46 @@ import { ReleaseTypes } from 'src/models/fixed-expense.model';
     IonItem,
     IonLabel,
     IonIcon,
-    IonFab,
-    IonFabButton,
-    IonFabList,
     IonSegment,
     IonSegmentButton,
     IonSearchbar,
-    IonItemSliding,
-    IonItemOptions,
-    IonItemOption,
-    IonModal,
-    IonButton,
-    IonInput,
-    IonSelect,
-    IonSelectOption,
-    IonTextarea,
-    IonButtons,
+    IonRefresher,
+    IonRefresherContent,
   ],
 })
 export class TransactionsPage implements OnInit {
   transactions: Transaction[] = [];
   filteredTransactions: Transaction[] = [];
-  categories: Category[] = [];
 
-  filterType: 'all' | ReleaseTypes = 'all';
+  filterType: 'all' | ReleaseTypes | string = 'all';
   searchTerm: string = '';
 
-  // Expor ReleaseTypes para o template
+  // Expor ReleaseTypes e RecurrenceTypes para o template
   ReleaseTypes = ReleaseTypes;
+  RecurrenceTypes = RecurrenceTypes;
 
-  // Modal de adicionar/editar
-  isModalOpen = false;
-  isEditMode = false;
-  currentTransaction: Transaction | null = null;
-
-  formData: TransactionCreate = {
-    release_type: ReleaseTypes.EXPENSE,
-    value: 0,
-    categoryId: '',
-    description: '',
-    date: this.getTodayDateString(),
-    notes: '',
-  };
+  currentMonth: number = new Date().getMonth() + 1;
+  currentYear: number = new Date().getFullYear();
 
   constructor(
     private transactionService: TransactionService,
-    private categoryService: CategoryService,
-    private alertCtrl: AlertController,
-    private toastCtrl: ToastController,
-    private router: Router,
   ) {
-    addIcons({ search, arrowUp, arrowDown, trash, pencil, close, checkmark, cashOutline, cardOutline });
-
-    // Verificar se foi passado um tipo para abrir o modal
-    const navigation = this.router.getCurrentNavigation();
-    const state = navigation?.extras?.state;
-    if (state && state['openModalType']) {
-      setTimeout(() => {
-        this.openAddModalWithType(state['openModalType']);
-      }, 300);
-    }
+    addIcons({ search, arrowUp, arrowDown, cashOutline, cardOutline });
   }
 
   async ngOnInit() {
-    await this.loadCategories();
+    await this.loadData();
   }
 
   async ionViewWillEnter() {
     await this.loadData();
   }
 
-  private async loadCategories() {
-    this.categories = await this.categoryService.getAllCategories();
-  }
-
   async loadData() {
-    this.transactions = await this.transactionService.getAllTransactions();
-    this.categories = await this.categoryService.getAllCategories();
+    this.transactions = await this.transactionService.getTransactionsByMonth(
+      this.currentMonth,
+      this.currentYear
+    );
     this.applyFilters();
   }
 
@@ -159,7 +103,7 @@ export class TransactionsPage implements OnInit {
       filtered = filtered.filter(
         (t) =>
           t.description.toLowerCase().includes(term) ||
-          t.category?.category.toLowerCase().includes(term) ||
+          t.category_name?.toLowerCase().includes(term) ||
           t.notes?.toLowerCase().includes(term),
       );
     }
@@ -172,6 +116,12 @@ export class TransactionsPage implements OnInit {
     this.filteredTransactions = filtered;
   }
 
+  async handleRefresh(event: any) {
+    await this.transactionService.refreshTransactionsByMonth(this.currentMonth, this.currentYear);
+    await this.loadData();
+    event.target.complete();
+  }
+
   onFilterChange(event: any) {
     this.filterType = event.detail.value;
     this.applyFilters();
@@ -182,149 +132,42 @@ export class TransactionsPage implements OnInit {
     this.applyFilters();
   }
 
-  openAddModal() {
-    this.openAddModalWithType(ReleaseTypes.EXPENSE);
-  }
-
-  openAddModalWithType(type: ReleaseTypes) {
-    this.isEditMode = false;
-    this.currentTransaction = null;
-    this.formData = {
-      release_type: type,
-      value: 0,
-      categoryId: '',
-      description: '',
-      date: this.getTodayDateString(),
-      notes: '',
-    };
-    this.isModalOpen = true;
-  }
-
-  openEditModal(transaction: Transaction) {
-    this.isEditMode = true;
-    this.currentTransaction = transaction;
-    this.formData = {
-      release_type: transaction.release_type,
-      value: transaction.value,
-      categoryId: transaction.categoryId,
-      description: transaction.description,
-      date: this.convertToDateInputFormat(transaction.date),
-      notes: transaction.notes,
-    };
-    this.isModalOpen = true;
-  }
-
-  closeModal() {
-    this.isModalOpen = false;
-  }
-
-  async saveTransaction() {
-    // Validação
-    if (!this.formData.description || !this.formData.categoryId || this.formData.value <= 0) {
-      const toast = await this.toastCtrl.create({
-        message: 'Preencha todos os campos obrigatórios',
-        duration: 2000,
-        color: 'warning',
-      });
-      await toast.present();
-      return;
-    }
-
-    try {
-      if (this.isEditMode && this.currentTransaction) {
-        await this.transactionService.updateTransaction(
-          this.currentTransaction.id,
-          this.formData,
-        );
-        const toast = await this.toastCtrl.create({
-          message: 'Transação atualizada com sucesso!',
-          duration: 2000,
-          color: 'success',
-        });
-        await toast.present();
-      } else {
-        await this.transactionService.addTransaction(this.formData);
-        const toast = await this.toastCtrl.create({
-          message: 'Transação adicionada com sucesso!',
-          duration: 2000,
-          color: 'success',
-        });
-        await toast.present();
-      }
-
-      this.closeModal();
-
-      // Pequeno delay para garantir que o storage foi atualizado
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      await this.loadData();
-    } catch (error) {
-      console.error('Erro ao salvar transação:', error);
-      const toast = await this.toastCtrl.create({
-        message: 'Erro ao salvar transação',
-        duration: 2000,
-        color: 'danger',
-      });
-      await toast.present();
-    }
-  }
-
-  async deleteTransaction(transaction: Transaction) {
-    const alert = await this.alertCtrl.create({
-      header: 'Confirmar exclusão',
-      message: `Deseja realmente excluir a transação "${transaction.description}"?`,
-      buttons: [
-        {
-          text: 'Cancelar',
-          role: 'cancel',
-        },
-        {
-          text: 'Excluir',
-          role: 'destructive',
-          handler: async () => {
-            await this.transactionService.deleteTransaction(transaction.id);
-            const toast = await this.toastCtrl.create({
-              message: 'Transação excluída com sucesso!',
-              duration: 2000,
-              color: 'success',
-            });
-            await toast.present();
-            await this.loadData();
-          },
-        },
-      ],
-    });
-
-    await alert.present();
-  }
-
-  formatCurrency(value: number): string {
-    return `R$ ${value.toFixed(2).replace('.', ',')}`;
+  formatCurrency(value: string | number): string {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    return `R$ ${numValue.toFixed(2).replace('.', ',')}`;
   }
 
   formatDate(date: string | Date): string {
     return moment(date).format('DD/MM/YYYY');
   }
 
-  getTransactionIcon(type: ReleaseTypes): string {
+  getTransactionIcon(type: ReleaseTypes | string): string {
     return type === ReleaseTypes.INCOME ? 'arrow-up' : 'arrow-down';
   }
 
-  getTransactionColor(type: ReleaseTypes): string {
+  getTransactionColor(type: ReleaseTypes | string): string {
     return type === ReleaseTypes.INCOME ? 'success' : 'danger';
   }
 
-  getTransactionClass(type: ReleaseTypes): string {
+  getTransactionClass(type: ReleaseTypes | string): string {
     return type === ReleaseTypes.INCOME ? 'income' : 'expense';
   }
 
-  // Retorna a data de hoje no formato YYYY-MM-DD para o input HTML
-  getTodayDateString(): string {
-    return moment().format('YYYY-MM-DD');
+  getRecurrenceLabel(type: RecurrenceTypes | string): string {
+    switch (type) {
+      case RecurrenceTypes.FIXED: return 'Fixa';
+      case RecurrenceTypes.VARIABLE: return 'Variável';
+      case RecurrenceTypes.RECURRENCE: return 'Recorrente';
+      case RecurrenceTypes.LOOSE: return 'Avulsa';
+      default: return type as string;
+    }
   }
 
-  // Converte uma data para o formato YYYY-MM-DD para o input HTML
-  convertToDateInputFormat(date: string | Date): string {
-    return moment(date).format('YYYY-MM-DD');
+  getPaymentStatusLabel(status: string): string {
+    return status === 'pago' ? 'Pago' : 'Pendente';
+  }
+
+  getPaymentStatusColor(status: string): string {
+    return status === 'pago' ? 'success' : 'warning';
   }
 }
