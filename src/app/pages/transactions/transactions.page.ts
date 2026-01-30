@@ -27,6 +27,9 @@ import {
   IonDatetime,
   IonDatetimeButton,
   IonPopover,
+  IonChip,
+  IonBadge,
+  IonNote,
 } from '@ionic/angular/standalone';
 import { TransactionService } from '../../../services/transaction.service';
 import { CategoryService } from '../../../services/category.service';
@@ -34,6 +37,7 @@ import { Transaction, TransactionCreate } from '../../../models/transaction.mode
 import { Category } from '../../../models/category.model';
 import { RecurrenceTypes, RecurrenceTypesId } from '../../../models/transactions.model';
 import moment from 'moment';
+import 'moment/locale/pt-br';
 import { addIcons } from 'ionicons';
 import {
   search,
@@ -43,8 +47,26 @@ import {
   cardOutline,
   add,
   close,
+  calendarOutline,
+  filterOutline,
+  chevronBack,
+  chevronForward,
+  walletOutline,
+  trendingUp,
+  trendingDown,
 } from 'ionicons/icons';
 import { ReleaseTypes, ReleaseTypesId, PaymentStatusId } from 'src/models/fixed-expense.model';
+
+moment.locale('pt-br');
+
+interface MonthGroup {
+  monthKey: string;
+  monthLabel: string;
+  transactions: Transaction[];
+  totalIncome: number;
+  totalExpense: number;
+  balance: number;
+}
 
 @Component({
   selector: 'app-transactions',
@@ -79,15 +101,46 @@ import { ReleaseTypes, ReleaseTypesId, PaymentStatusId } from 'src/models/fixed-
     IonDatetime,
     IonDatetimeButton,
     IonPopover,
+    IonChip,
+    IonBadge,
+    IonNote,
   ],
 })
 export class TransactionsPage implements OnInit {
-  transactions: Transaction[] = [];
+  allTransactions: Transaction[] = [];
   filteredTransactions: Transaction[] = [];
+  groupedTransactions: MonthGroup[] = [];
   categories: Category[] = [];
 
+  // Filtros
   filterType: 'all' | ReleaseTypes | string = 'all';
   searchTerm: string = '';
+  selectedYear: number = new Date().getFullYear();
+  selectedMonth: number | null = null; // null = todos os meses
+
+  // Anos disponíveis para seleção
+  availableYears: number[] = [];
+
+  // Meses para chips
+  months = [
+    { value: 1, label: 'Jan' },
+    { value: 2, label: 'Fev' },
+    { value: 3, label: 'Mar' },
+    { value: 4, label: 'Abr' },
+    { value: 5, label: 'Mai' },
+    { value: 6, label: 'Jun' },
+    { value: 7, label: 'Jul' },
+    { value: 8, label: 'Ago' },
+    { value: 9, label: 'Set' },
+    { value: 10, label: 'Out' },
+    { value: 11, label: 'Nov' },
+    { value: 12, label: 'Dez' },
+  ];
+
+  // Totais gerais
+  totalIncome: number = 0;
+  totalExpense: number = 0;
+  totalBalance: number = 0;
 
   // Expor enums para o template
   ReleaseTypes = ReleaseTypes;
@@ -95,9 +148,6 @@ export class TransactionsPage implements OnInit {
   RecurrenceTypes = RecurrenceTypes;
   RecurrenceTypesId = RecurrenceTypesId;
   PaymentStatusId = PaymentStatusId;
-
-  currentMonth: number = new Date().getMonth() + 1;
-  currentYear: number = new Date().getFullYear();
 
   // Modal state
   isModalOpen: boolean = false;
@@ -110,7 +160,11 @@ export class TransactionsPage implements OnInit {
     private transactionService: TransactionService,
     private categoryService: CategoryService,
   ) {
-    addIcons({ search, arrowUp, arrowDown, cashOutline, cardOutline, add, close });
+    addIcons({
+      search, arrowUp, arrowDown, cashOutline, cardOutline, add, close,
+      calendarOutline, filterOutline, chevronBack, chevronForward,
+      walletOutline, trendingUp, trendingDown
+    });
   }
 
   async ngOnInit() {
@@ -123,46 +177,176 @@ export class TransactionsPage implements OnInit {
 
   async loadData() {
     const [transactions, categories] = await Promise.all([
-      this.transactionService.getTransactionsByMonth(this.currentMonth, this.currentYear),
+      this.transactionService.getAllTransactions(),
       this.categoryService.getAllCategories(),
     ]);
-    this.transactions = transactions;
-    console.log('Loaded transactions:', this.transactions);
+    this.allTransactions = transactions;
     this.categories = categories;
+
+    // Extrair anos disponíveis das transações
+    this.extractAvailableYears();
+
     this.applyFilters();
   }
 
+  extractAvailableYears() {
+    const years = new Set<number>();
+    const currentYear = new Date().getFullYear();
+    years.add(currentYear);
+
+    this.allTransactions.forEach(t => {
+      const year = moment(t.date).year();
+      years.add(year);
+    });
+
+    this.availableYears = Array.from(years).sort((a, b) => b - a);
+  }
+
   applyFilters() {
-    let filtered = [...this.transactions];
+    let filtered = [...this.allTransactions];
+
+    // Filtro por ano
+    filtered = filtered.filter(t => moment(t.date).year() === this.selectedYear);
+
+    // Filtro por mês (se selecionado)
+    if (this.selectedMonth !== null) {
+      filtered = filtered.filter(t => moment(t.date).month() + 1 === this.selectedMonth);
+    }
 
     // Filtro por tipo
     if (this.filterType !== 'all') {
-      filtered = filtered.filter((t) => t.release_type === this.filterType);
+      filtered = filtered.filter(t => t.release_type === this.filterType);
     }
 
     // Filtro por busca
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (t) =>
-          t.description.toLowerCase().includes(term) ||
-          t.category_name?.toLowerCase().includes(term) ||
-          t.notes?.toLowerCase().includes(term),
+      filtered = filtered.filter(t =>
+        t.description.toLowerCase().includes(term) ||
+        t.category_name?.toLowerCase().includes(term) ||
+        t.notes?.toLowerCase().includes(term)
       );
     }
 
     // Ordenar por data (mais recente primeiro)
-    filtered.sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
+    filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     this.filteredTransactions = filtered;
+
+    // Calcular totais
+    this.calculateTotals();
+
+    // Agrupar por mês
+    this.groupByMonth();
+  }
+
+  calculateTotals() {
+    this.totalIncome = this.filteredTransactions
+      .filter(t => t.release_type === ReleaseTypes.INCOME)
+      .reduce((sum, t) => sum + parseFloat(t.value as string), 0);
+
+    this.totalExpense = this.filteredTransactions
+      .filter(t => t.release_type === ReleaseTypes.EXPENSE)
+      .reduce((sum, t) => sum + parseFloat(t.value as string), 0);
+
+    this.totalBalance = this.totalIncome - this.totalExpense;
+  }
+
+  groupByMonth() {
+    const groups = new Map<string, MonthGroup>();
+
+    this.filteredTransactions.forEach(t => {
+      const date = moment(t.date);
+      const monthKey = date.format('YYYY-MM');
+      const monthLabel = date.format('MMMM [de] YYYY');
+
+      if (!groups.has(monthKey)) {
+        groups.set(monthKey, {
+          monthKey,
+          monthLabel: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
+          transactions: [],
+          totalIncome: 0,
+          totalExpense: 0,
+          balance: 0,
+        });
+      }
+
+      const group = groups.get(monthKey)!;
+      group.transactions.push(t);
+
+      const value = parseFloat(t.value as string);
+      if (t.release_type === ReleaseTypes.INCOME) {
+        group.totalIncome += value;
+      } else {
+        group.totalExpense += value;
+      }
+      group.balance = group.totalIncome - group.totalExpense;
+    });
+
+    // Ordenar grupos por data (mais recente primeiro)
+    this.groupedTransactions = Array.from(groups.values())
+      .sort((a, b) => b.monthKey.localeCompare(a.monthKey));
   }
 
   async handleRefresh(event: any) {
-    await this.transactionService.refreshTransactionsByMonth(this.currentMonth, this.currentYear);
+    await this.transactionService.refreshTransactions();
     await this.loadData();
     event.target.complete();
+  }
+
+  // Navegação de ano
+  previousYear() {
+    this.selectedYear--;
+    this.applyFilters();
+  }
+
+  nextYear() {
+    this.selectedYear++;
+    this.applyFilters();
+  }
+
+  canGoToPreviousYear(): boolean {
+    // Permite ir até 5 anos para trás do ano mais antigo com transações
+    const minYear = this.availableYears.length > 0
+      ? Math.min(...this.availableYears)
+      : new Date().getFullYear();
+    return this.selectedYear > minYear - 5;
+  }
+
+  canGoToNextYear(): boolean {
+    // Permite ir até o ano atual + 1
+    const maxYear = new Date().getFullYear() + 1;
+    return this.selectedYear < maxYear;
+  }
+
+  // Seleção de mês
+  selectMonth(month: number | null) {
+    this.selectedMonth = this.selectedMonth === month ? null : month;
+    this.applyFilters();
+  }
+
+  isMonthSelected(month: number): boolean {
+    return this.selectedMonth === month;
+  }
+
+  isCurrentMonth(month: number): boolean {
+    const now = new Date();
+    return this.selectedYear === now.getFullYear() && month === now.getMonth() + 1;
+  }
+
+  hasTransactionsInMonth(month: number): boolean {
+    return this.allTransactions.some(t => {
+      const date = moment(t.date);
+      return date.year() === this.selectedYear && date.month() + 1 === month;
+    });
+  }
+
+  getMonthFullName(month: number): string {
+    const monthNames = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return monthNames[month - 1] || '';
   }
 
   onFilterChange(event: any) {
@@ -182,6 +366,10 @@ export class TransactionsPage implements OnInit {
 
   formatDate(date: string | Date): string {
     return moment(date).format('DD/MM/YYYY');
+  }
+
+  formatShortDate(date: string | Date): string {
+    return moment(date).format('DD MMM');
   }
 
   getTransactionIcon(type: ReleaseTypes | string): string {

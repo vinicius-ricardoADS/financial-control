@@ -2,6 +2,37 @@
   <ion-toolbar color="primary">
     <ion-title>Lançamentos</ion-title>
   </ion-toolbar>
+
+  <!-- Seletor de Ano -->
+  <ion-toolbar class="year-toolbar">
+    <div class="year-selector">
+      <ion-button fill="clear" size="small" (click)="previousYear()" [disabled]="!canGoToPreviousYear()">
+        <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+      </ion-button>
+      <span class="year-label">{{ selectedYear }}</span>
+      <ion-button fill="clear" size="small" (click)="nextYear()" [disabled]="!canGoToNextYear()">
+        <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
+      </ion-button>
+    </div>
+  </ion-toolbar>
+
+  <!-- Seletor de Meses em Grid -->
+  <ion-toolbar class="months-toolbar">
+    <div class="months-grid">
+      <button
+        *ngFor="let month of months"
+        class="month-btn"
+        [class.selected]="isMonthSelected(month.value)"
+        [class.has-data]="hasTransactionsInMonth(month.value)"
+        [class.current]="isCurrentMonth(month.value)"
+        (click)="selectMonth(month.value)">
+        <span class="month-label">{{ month.label }}</span>
+        <span class="month-indicator" *ngIf="hasTransactionsInMonth(month.value)"></span>
+      </button>
+    </div>
+  </ion-toolbar>
+
+  <!-- Busca -->
   <ion-toolbar>
     <ion-searchbar
       [(ngModel)]="searchTerm"
@@ -10,8 +41,10 @@
       animated="true"
     ></ion-searchbar>
   </ion-toolbar>
-  <ion-toolbar>
-    <ion-segment [(ngModel)]="filterType" (ionChange)="onFilterChange($event)">
+
+  <!-- Segmento de Tipos - CORRIGIDO -->
+  <ion-toolbar class="segment-toolbar">
+    <ion-segment [(ngModel)]="filterType" (ionChange)="onFilterChange($event)" mode="ios">
       <ion-segment-button value="all">
         <ion-label>Todas</ion-label>
       </ion-segment-button>
@@ -31,42 +64,95 @@
   </ion-refresher>
 
   <div class="transactions-container">
-    <ion-list *ngIf="filteredTransactions.length > 0">
-      <ion-item *ngFor="let transaction of filteredTransactions" lines="full">
-        <div class="transaction-icon" slot="start">
-          <span class="category-icon">{{ transaction.category_icon }}</span>
+    <!-- Card de Resumo -->
+    <div class="summary-cards" *ngIf="filteredTransactions.length > 0">
+      <div class="summary-card income">
+        <div class="summary-icon">
+          <ion-icon name="trending-up"></ion-icon>
         </div>
-        <ion-label>
-          <h2>{{ transaction.description }}</h2>
-          <p>{{ transaction.category_name }} • {{ formatDate(transaction.date) }}</p>
-          <p class="transaction-meta">
-            <span class="recurrence-badge">{{ getRecurrenceLabel(transaction.recurrence_type) }}</span>
-            <span
-              class="status-badge"
-              [class.paid]="transaction.payment_status === 'pago'"
-              [class.pending]="transaction.payment_status !== 'pago'">
-              {{ getPaymentStatusLabel(transaction.payment_status) }}
-            </span>
-          </p>
-          <p *ngIf="transaction.notes" class="notes">{{ transaction.notes }}</p>
-        </ion-label>
-        <ion-label slot="end" class="amount-label">
-          <h2 [class]="getTransactionClass(transaction.release_type)">
-            {{ transaction.release_type === ReleaseTypes.INCOME ? '+' : '-' }}
-            {{ formatCurrency(transaction.value) }}
-          </h2>
-          <p *ngIf="transaction.payment_method" class="payment-method">
-            {{ transaction.payment_method }}
-          </p>
-        </ion-label>
-      </ion-item>
-    </ion-list>
+        <div class="summary-info">
+          <span class="summary-label">Receitas</span>
+          <span class="summary-value">{{ formatCurrency(totalIncome) }}</span>
+        </div>
+      </div>
+      <div class="summary-card expense">
+        <div class="summary-icon">
+          <ion-icon name="trending-down"></ion-icon>
+        </div>
+        <div class="summary-info">
+          <span class="summary-label">Despesas</span>
+          <span class="summary-value">{{ formatCurrency(totalExpense) }}</span>
+        </div>
+      </div>
+      <div class="summary-card balance" [class.positive]="totalBalance >= 0" [class.negative]="totalBalance < 0">
+        <div class="summary-icon">
+          <ion-icon name="wallet-outline"></ion-icon>
+        </div>
+        <div class="summary-info">
+          <span class="summary-label">Saldo</span>
+          <span class="summary-value">{{ formatCurrency(totalBalance) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista Agrupada por Mês -->
+    <div class="month-groups" *ngIf="groupedTransactions.length > 0">
+      <div class="month-group" *ngFor="let group of groupedTransactions">
+        <!-- Header do Mês -->
+        <div class="month-header">
+          <div class="month-title">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <span>{{ group.monthLabel }}</span>
+          </div>
+          <div class="month-summary">
+            <span class="month-income">+{{ formatCurrency(group.totalIncome) }}</span>
+            <span class="month-expense">-{{ formatCurrency(group.totalExpense) }}</span>
+          </div>
+        </div>
+
+        <!-- Transações do Mês -->
+        <ion-list>
+          <ion-item *ngFor="let transaction of group.transactions" lines="full" class="transaction-item">
+            <div class="transaction-icon" slot="start">
+              <span class="category-icon">{{ transaction.category_icon }}</span>
+            </div>
+            <ion-label>
+              <h2>{{ transaction.description }}</h2>
+              <p>{{ transaction.category_name }} • {{ formatShortDate(transaction.date) }}</p>
+              <p class="transaction-meta">
+                <span class="recurrence-badge">{{ getRecurrenceLabel(transaction.recurrence_type) }}</span>
+                <span
+                  class="status-badge"
+                  [class.paid]="transaction.payment_status === 'pago'"
+                  [class.pending]="transaction.payment_status !== 'pago'">
+                  {{ getPaymentStatusLabel(transaction.payment_status) }}
+                </span>
+              </p>
+            </ion-label>
+            <ion-label slot="end" class="amount-label">
+              <h2 [class]="getTransactionClass(transaction.release_type)">
+                {{ transaction.release_type === ReleaseTypes.INCOME ? '+' : '-' }}
+                {{ formatCurrency(transaction.value) }}
+              </h2>
+              <p *ngIf="transaction.payment_method" class="payment-method">
+                {{ transaction.payment_method }}
+              </p>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </div>
+    </div>
 
     <!-- Estado vazio -->
     <div class="empty-state" *ngIf="filteredTransactions.length === 0">
       <ion-icon name="search" size="large"></ion-icon>
       <p>Nenhum lançamento encontrado</p>
-      <p class="empty-subtitle">Nenhum lançamento para este mês</p>
+      <p class="empty-subtitle">
+        {{ selectedMonth !== null ? 'Nenhum lançamento para este mês' : 'Nenhum lançamento para este ano' }}
+      </p>
+      <ion-button fill="outline" size="small" *ngIf="selectedMonth !== null" (click)="selectMonth(null)">
+        Ver todos os meses
+      </ion-button>
     </div>
   </div>
 

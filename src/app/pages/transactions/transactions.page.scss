@@ -1,186 +1,420 @@
-.transactions-container {
-  min-height: 100%;
-  padding: 8px 0 80px 0;
+// Header Toolbars
+.year-toolbar {
+  --background: var(--ion-color-primary);
+
+  .year-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    .year-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    ion-button {
+      --color: #fff;
+      margin: 0;
+    }
+  }
 }
 
-ion-list {
-  background: transparent;
-  padding: 0 12px;
+.months-toolbar {
+  --background: var(--app-bg-secondary);
+  --padding-start: 0;
+  --padding-end: 0;
+  --min-height: auto;
 
-  > ion-item {
-    margin-bottom: 8px;
-    --padding-start: 16px;
-    --inner-padding-end: 16px;
-    --background: var(--app-bg-secondary);
-    --border-color: var(--app-border);
+  .months-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    padding: 10px 12px;
+
+    .month-btn {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 4px;
+      border: none;
+      border-radius: 10px;
+      background: var(--app-bg-tertiary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 44px;
+
+      .month-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--app-text-secondary);
+        transition: color 0.2s ease;
+      }
+
+      .month-indicator {
+        position: absolute;
+        bottom: 4px;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--ion-color-primary);
+      }
+
+      &.has-data {
+        .month-label {
+          color: var(--app-text-primary);
+        }
+      }
+
+      &.current {
+        border: 1px solid var(--ion-color-primary);
+
+        .month-label {
+          color: var(--ion-color-primary);
+        }
+      }
+
+      &.selected {
+        background: var(--ion-color-primary);
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.4);
+
+        .month-label {
+          color: #fff;
+          font-weight: 700;
+        }
+
+        .month-indicator {
+          background: #fff;
+        }
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+  }
+
+  .month-filter-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 12px 10px;
+    font-size: 13px;
+    color: var(--app-text-secondary);
+
+    strong {
+      color: var(--ion-color-primary);
+    }
+
+    ion-button {
+      --padding-start: 4px;
+      --padding-end: 4px;
+      margin: 0;
+      height: 24px;
+
+      ion-icon {
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+.segment-toolbar {
+  --background: var(--app-bg-secondary);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+
+  ion-segment {
+    --background: var(--app-bg-tertiary);
+    border-radius: 10px;
+    min-height: 40px;
+
+    ion-segment-button {
+      --indicator-color: var(--ion-color-primary);
+      --color: var(--app-text-secondary);
+      --color-checked: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      min-height: 36px;
+      text-transform: none;
+      letter-spacing: 0;
+
+      ion-label {
+        margin: 0;
+      }
+    }
+  }
+}
+
+// Transactions Container
+.transactions-container {
+  min-height: 100%;
+  padding: 0 0 80px 0;
+}
+
+// Summary Cards
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px;
+
+  .summary-card {
+    background: var(--app-bg-secondary);
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--app-border);
 
-    .transaction-icon {
+    .summary-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: var(--app-bg-tertiary);
-      margin-right: 12px;
 
-      .category-icon {
-        font-size: 24px;
+      ion-icon {
+        font-size: 18px;
       }
     }
 
-    ion-label {
-      h2 {
+    .summary-info {
+      text-align: center;
+
+      .summary-label {
+        display: block;
+        font-size: 10px;
+        color: var(--app-text-tertiary);
+        text-transform: uppercase;
         font-weight: 600;
-        color: var(--app-text-primary);
-        margin-bottom: 4px;
-        font-size: 16px;
+        margin-bottom: 2px;
       }
 
-      p {
+      .summary-value {
+        display: block;
         font-size: 13px;
-        color: var(--app-text-secondary);
-        margin-top: 2px;
-        font-weight: 500;
-
-        &.transaction-meta {
-          display: flex;
-          gap: 8px;
-          margin-top: 6px;
-
-          .recurrence-badge,
-          .status-badge {
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-          }
-
-          .recurrence-badge {
-            background: var(--app-bg-tertiary);
-            color: var(--app-text-secondary);
-          }
-
-          .status-badge {
-            &.paid {
-              background: rgba(16, 185, 129, 0.2);
-              color: var(--app-success);
-            }
-
-            &.pending {
-              background: rgba(245, 158, 11, 0.2);
-              color: var(--app-warning);
-            }
-          }
-        }
-
-        &.notes {
-          font-style: italic;
-          color: var(--app-text-tertiary);
-          font-size: 12px;
-          margin-top: 6px;
-        }
+        font-weight: 700;
       }
     }
 
-    .amount-label {
-      text-align: right;
+    &.income {
+      .summary-icon {
+        background: rgba(16, 185, 129, 0.15);
 
-      h2 {
-        font-weight: 700;
-        font-size: 16px;
-        margin-bottom: 2px;
-
-        &.income {
+        ion-icon {
           color: var(--app-success);
         }
+      }
 
-        &.expense {
+      .summary-value {
+        color: var(--app-success);
+      }
+    }
+
+    &.expense {
+      .summary-icon {
+        background: rgba(239, 68, 68, 0.15);
+
+        ion-icon {
           color: var(--app-danger);
         }
       }
 
-      p.payment-method {
-        font-size: 11px;
-        color: var(--app-text-tertiary);
-      }
-    }
-  }
-
-  ion-item-sliding {
-    margin-bottom: 8px;
-
-    ion-item {
-      --padding-start: 16px;
-      --inner-padding-end: 16px;
-      --background: var(--app-bg-secondary);
-      --border-color: var(--app-border);
-      margin: 0 12px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-
-      ion-label {
-        h2,
-        h3 {
-          font-weight: 600;
-          color: var(--app-text-primary);
-          margin-bottom: 6px;
-          font-size: 16px;
-        }
-
-        p {
-          font-size: 14px;
-          color: var(--app-text-secondary);
-          margin-top: 4px;
-          font-weight: 500;
-
-          &.notes {
-            font-style: italic;
-            color: var(--app-text-tertiary);
-            font-size: 13px;
-            margin-top: 6px;
-          }
-        }
-      }
-
-      .amount-label {
-        text-align: right;
-
-        h2 {
-          font-weight: 700;
-          font-size: 18px;
-
-          &.income {
-            color: var(--app-success);
-          }
-
-          &.expense {
-            color: var(--app-danger);
-          }
-        }
-      }
-
-      ion-icon[slot="start"] {
-        font-size: 32px;
+      .summary-value {
+        color: var(--app-danger);
       }
     }
 
-    ion-item-options {
-      ion-item-option {
-        min-height: 64px;
+    &.balance {
+      .summary-icon {
+        background: rgba(99, 102, 241, 0.15);
+
+        ion-icon {
+          color: var(--ion-color-primary);
+        }
+      }
+
+      &.positive .summary-value {
+        color: var(--app-success);
+      }
+
+      &.negative .summary-value {
+        color: var(--app-danger);
       }
     }
   }
 }
 
+// Month Groups
+.month-groups {
+  padding: 0 12px;
+
+  .month-group {
+    margin-bottom: 20px;
+
+    .month-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 4px;
+      border-bottom: 1px solid var(--app-border);
+      margin-bottom: 8px;
+
+      .month-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        ion-icon {
+          font-size: 18px;
+          color: var(--ion-color-primary);
+        }
+
+        span {
+          font-size: 15px;
+          font-weight: 700;
+          color: var(--app-text-primary);
+        }
+      }
+
+      .month-summary {
+        display: flex;
+        gap: 12px;
+        font-size: 12px;
+        font-weight: 600;
+
+        .month-income {
+          color: var(--app-success);
+        }
+
+        .month-expense {
+          color: var(--app-danger);
+        }
+      }
+    }
+
+    ion-list {
+      background: transparent;
+      padding: 0;
+
+      .transaction-item {
+        margin-bottom: 8px;
+        --padding-start: 12px;
+        --inner-padding-end: 12px;
+        --background: var(--app-bg-secondary);
+        --border-color: var(--app-border);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+        .transaction-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          background: var(--app-bg-tertiary);
+          margin-right: 10px;
+
+          .category-icon {
+            font-size: 20px;
+          }
+        }
+
+        ion-label {
+          h2 {
+            font-weight: 600;
+            color: var(--app-text-primary);
+            margin-bottom: 2px;
+            font-size: 15px;
+          }
+
+          p {
+            font-size: 12px;
+            color: var(--app-text-secondary);
+            margin-top: 2px;
+            font-weight: 500;
+
+            &.transaction-meta {
+              display: flex;
+              gap: 6px;
+              margin-top: 4px;
+
+              .recurrence-badge,
+              .status-badge {
+                font-size: 10px;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-weight: 600;
+              }
+
+              .recurrence-badge {
+                background: var(--app-bg-tertiary);
+                color: var(--app-text-secondary);
+              }
+
+              .status-badge {
+                &.paid {
+                  background: rgba(16, 185, 129, 0.2);
+                  color: var(--app-success);
+                }
+
+                &.pending {
+                  background: rgba(245, 158, 11, 0.2);
+                  color: var(--app-warning);
+                }
+              }
+            }
+          }
+        }
+
+        .amount-label {
+          text-align: right;
+
+          h2 {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 2px;
+
+            &.income {
+              color: var(--app-success);
+            }
+
+            &.expense {
+              color: var(--app-danger);
+            }
+          }
+
+          p.payment-method {
+            font-size: 10px;
+            color: var(--app-text-tertiary);
+          }
+        }
+      }
+    }
+  }
+}
+
+// Empty State
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
+  min-height: 50vh;
   text-align: center;
   padding: 40px 20px;
   background: var(--app-bg-secondary);
@@ -189,7 +423,7 @@ ion-list {
   margin: 16px;
 
   ion-icon {
-    font-size: 80px;
+    font-size: 64px;
     color: var(--app-text-tertiary);
     margin-bottom: 16px;
   }
@@ -206,32 +440,21 @@ ion-list {
       font-weight: 500;
     }
   }
+
+  ion-button {
+    margin-top: 16px;
+  }
 }
 
+// FAB
 ion-fab {
   margin-bottom: 16px;
   margin-right: 16px;
 
   ion-fab-button {
     --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-    width: 60px;
-    height: 60px;
-  }
-
-  ion-fab-button[data-desc]::before {
-    position: absolute;
-    content: attr(data-desc);
-    right: 70px;
-    background: var(--app-bg-tertiary);
-    color: var(--app-text-primary);
-    padding: 10px 16px;
-    border-radius: 8px;
-    white-space: nowrap;
-    font-size: 14px;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    pointer-events: none;
-    border: 1px solid var(--app-border);
+    width: 56px;
+    height: 56px;
   }
 }
 
