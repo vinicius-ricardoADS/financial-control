@@ -23,15 +23,23 @@ import {
   IonSelect,
   IonSelectOption,
   IonButtons,
+  IonDatetime,
+  IonDatetimeButton,
+  IonPopover,
+  IonSegment,
+  IonSegmentButton,
+  IonNote,
   ToastController,
   AlertController,
 } from '@ionic/angular/standalone';
 import { FixedExpenseService } from '../../../services/fixed-expense.service';
 import { CategoryService } from '../../../services/category.service';
-import { Release, ReleasesCreate, ReleaseTypes, ActiveStatus } from '../../../models/fixed-expense.model';
+import { TransactionService } from '../../../services/transaction.service';
+import { Release, ReleasesCreate, ReleaseTypes, ReleaseTypesId, ActiveStatus } from '../../../models/fixed-expense.model';
+import { Transaction } from '../../../models/transaction.model';
 import { Category } from '../../../models/category.model';
 import { addIcons } from 'ionicons';
-import { add, trash, pencil, close, checkmark, notifications, checkmarkCircle, alertCircle, timeOutline } from 'ionicons/icons';
+import { add, trash, pencil, close, checkmark, notifications, checkmarkCircle, alertCircle, timeOutline, calendarOutline, infiniteOutline, stopwatchOutline } from 'ionicons/icons';
 import moment from 'moment';
 
 @Component({
@@ -63,6 +71,12 @@ import moment from 'moment';
     IonSelect,
     IonSelectOption,
     IonButtons,
+    IonDatetime,
+    IonDatetimeButton,
+    IonPopover,
+    IonSegment,
+    IonSegmentButton,
+    IonNote,
   ],
 })
 export class FixedExpensesPage implements OnInit {
@@ -79,7 +93,10 @@ export class FixedExpensesPage implements OnInit {
     isOverdue: boolean;
   }> = new Map();
 
-  formData: ReleasesCreate = {
+  // Transações do mês para cruzamento
+  currentMonthTransactions: Transaction[] = [];
+
+  formData: any = {
     description: '',
     notes: '',
     is_active: true,
@@ -87,12 +104,17 @@ export class FixedExpensesPage implements OnInit {
     payment_day: 1,
     category_id: '',
     category_name: '',
-    release_type_id: ReleaseTypes.EXPENSE,
+    release_type_id: ReleaseTypesId.EXPENSE,
     release_type: '',
     payment_method: '',
     notifications: true,
     notifyDaysBefore: 3,
+    start_date: null,
+    end_date: null,
   };
+
+  // Controle para mostrar/esconder campo de data de término
+  hasEndDate = false;
 
   // Expor ActiveStatus para o template
   ActiveStatus = ActiveStatus;
@@ -100,10 +122,11 @@ export class FixedExpensesPage implements OnInit {
   constructor(
     private expenseService: FixedExpenseService,
     private categoryService: CategoryService,
+    private transactionService: TransactionService,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
   ) {
-    addIcons({ add, trash, pencil, close, checkmark, notifications, checkmarkCircle, alertCircle, timeOutline });
+    addIcons({ add, trash, pencil, close, checkmark, notifications, checkmarkCircle, alertCircle, timeOutline, calendarOutline, infiniteOutline, stopwatchOutline });
   }
 
   async ngOnInit() {
@@ -120,6 +143,11 @@ export class FixedExpensesPage implements OnInit {
   }
 
   async loadData() {
+    // Carregar transações do mês atual para cruzamento
+    const currentMonth = new Date().getMonth() + 1;
+    const currentYear = new Date().getFullYear();
+    this.currentMonthTransactions = await this.transactionService.getTransactionsByMonth(currentMonth, currentYear);
+
     this.expenses = await this.expenseService.getAllExpenses();
     console.log('Despesas fixas carregadas:', this.expenses);
 
@@ -143,6 +171,7 @@ export class FixedExpensesPage implements OnInit {
   openAddModal() {
     this.isEditMode = false;
     this.currentExpense = null;
+    this.hasEndDate = false;
     this.formData = {
       description: '',
       notes: '',
@@ -151,9 +180,11 @@ export class FixedExpensesPage implements OnInit {
       value: 0,
       category_id: '',
       payment_day: 1,
-      release_type_id: ReleaseTypes.EXPENSE,
+      release_type_id: ReleaseTypesId.EXPENSE,
       notifications: true,
       notifyDaysBefore: 3,
+      start_date: moment().format('YYYY-MM-DD'),
+      end_date: null,
     };
     this.isModalOpen = true;
   }
@@ -161,6 +192,7 @@ export class FixedExpensesPage implements OnInit {
   openEditModal(expense: Release) {
     this.isEditMode = true;
     this.currentExpense = expense;
+    this.hasEndDate = !!expense.end_date;
     this.formData = {
       description: expense.description,
       notes: expense.notes,
@@ -174,13 +206,15 @@ export class FixedExpensesPage implements OnInit {
       release_type: expense.release_type,
       notifications: expense.notifications,
       notifyDaysBefore: expense.notifyDaysBefore,
+      start_date: expense.start_date || moment().format('YYYY-MM-DD'),
+      end_date: expense.end_date || null,
     };
     this.isModalOpen = true;
   }
 
-  getReleaseTypeIdByType(releaseType?: string): ReleaseTypes {
-    if (!releaseType) return ReleaseTypes.EXPENSE;
-    return releaseType === 'entrada' ? ReleaseTypes.INCOME : ReleaseTypes.EXPENSE;
+  getReleaseTypeIdByType(releaseType?: string): ReleaseTypesId {
+    if (!releaseType) return ReleaseTypesId.EXPENSE;
+    return releaseType === 'entrada' ? ReleaseTypesId.INCOME : ReleaseTypesId.EXPENSE;
   }
 
   getCategoryIdByName(categoryName?: string): string {
@@ -191,6 +225,32 @@ export class FixedExpensesPage implements OnInit {
 
   closeModal() {
     this.isModalOpen = false;
+    this.hasEndDate = false;
+  }
+
+  onHasEndDateChange(event: any) {
+    this.hasEndDate = event.detail.value === 'yes';
+    if (!this.hasEndDate) {
+      this.formData.end_date = null;
+    }
+  }
+
+  onStartDateChange(event: any) {
+    const value = event.detail.value;
+    if (value) {
+      this.formData.start_date = moment(value).format('YYYY-MM-DD');
+    }
+  }
+
+  onEndDateChange(event: any) {
+    const value = event.detail.value;
+    if (value) {
+      this.formData.end_date = moment(value).format('YYYY-MM-DD');
+    }
+  }
+
+  getMinEndDate(): string {
+    return this.formData.start_date || moment().format('YYYY-MM-DD');
   }
 
   async saveExpense() {
@@ -204,11 +264,32 @@ export class FixedExpensesPage implements OnInit {
       return;
     }
 
+    // Validar data de término se o usuário marcou que tem fim
+    if (this.hasEndDate && !this.formData.end_date) {
+      const toast = await this.toastCtrl.create({
+        message: 'Informe a data de término do lançamento',
+        duration: 2000,
+        color: 'warning',
+      });
+      await toast.present();
+      return;
+    }
+
+    // Garantir que os IDs sejam numéricos e incluir datas
+    const dataToSend = {
+      ...this.formData,
+      category_id: Number(this.formData.category_id),
+      release_type_id: Number(this.formData.release_type_id),
+      value: Number(this.formData.value),
+      start_date: this.formData.start_date || null,
+      end_date: this.hasEndDate ? this.formData.end_date : null,
+    };
+
     try {
       if (this.isEditMode && this.currentExpense) {
-        await this.expenseService.updateExpense(this.currentExpense.id, this.formData);
+        await this.expenseService.updateExpense(this.currentExpense.id, dataToSend);
       } else {
-        await this.expenseService.addExpense(this.formData);
+        await this.expenseService.addExpense(dataToSend);
       }
 
       const toast = await this.toastCtrl.create({
@@ -270,8 +351,34 @@ export class FixedExpensesPage implements OnInit {
     return expense.is_active === ActiveStatus.ACTIVE;
   }
 
+  /**
+   * Verifica se o lançamento fixo já existe como transação no mês atual
+   */
+  hasMatchingTransaction(expense: Release): boolean {
+    // Se já tem um release_id associado, já foi convertido
+    if (expense.current_month_release_id) {
+      return true;
+    }
+
+    // Cruzar com transações do mês pela descrição e categoria
+    return this.currentMonthTransactions.some(transaction => {
+      const descriptionMatch = transaction.description.toLowerCase() === expense.description.toLowerCase();
+      const categoryMatch = transaction.category_name?.toLowerCase() === expense.category_name?.toLowerCase();
+      const valueMatch = Math.abs(parseFloat(transaction.value as string) - expense.value) < 0.01;
+
+      // Considera match se descrição E categoria coincidirem, OU descrição E valor coincidirem
+      return descriptionMatch && (categoryMatch || valueMatch);
+    });
+  }
+
   isCurrentMonthPaid(expense: Release): boolean {
-    return expense.current_month_payment_status === 'pago';
+    // Verificar pelo status da API
+    if (expense.current_month_payment_status === 'pago') {
+      return true;
+    }
+
+    // Verificar se já existe uma transação correspondente no mês
+    return this.hasMatchingTransaction(expense);
   }
 
   getDayOfMonthLabel(day: number): string {
@@ -287,27 +394,29 @@ export class FixedExpensesPage implements OnInit {
   }
 
   getStatusBadgeColor(expense: Release): string {
-    if (expense?.current_month_payment_status === null) {
-      const status = this.getPaymentStatus(expense.id);
-      if (status.isPaid) return 'success';
-      if (status.isOverdue) return 'danger';
-      if (status.daysUntilDue <= 3) return 'warning';
+    // Primeiro verificar se já foi pago (via API ou transação correspondente)
+    if (this.isCurrentMonthPaid(expense)) {
+      return 'success';
     }
-    const status = this.isCurrentMonthPaid(expense);
-    if (status) return 'success';
+
+    // Se não está pago, verificar dias até vencimento
+    const status = this.getPaymentStatus(expense.id);
+    if (status.isOverdue) return 'danger';
+    if (status.daysUntilDue <= 3) return 'warning';
     return 'medium';
   }
 
   getStatusLabel(expense: Release): string {
-    if (expense?.current_month_payment_status === null) {
-      const status = this.getPaymentStatus(expense.id);
-      if (status.isPaid) return 'Pagamento concluído';
-      if (status.isOverdue) return `Atrasada (${Math.abs(status.daysUntilDue)}d)`;
-      if (status.daysUntilDue === 0) return 'Vence hoje';
-      if (status.daysUntilDue > 0) return `${status.daysUntilDue}d`;
+    // Primeiro verificar se já foi pago (via API ou transação correspondente)
+    if (this.isCurrentMonthPaid(expense)) {
+      return 'Pagamento concluído';
     }
-    const status = this.isCurrentMonthPaid(expense);
-    if (status) return 'Pagamento concluído';
+
+    // Se não está pago, mostrar dias até vencimento
+    const status = this.getPaymentStatus(expense.id);
+    if (status.isOverdue) return `Atrasada (${Math.abs(status.daysUntilDue)}d)`;
+    if (status.daysUntilDue === 0) return 'Vence hoje';
+    if (status.daysUntilDue > 0) return `${status.daysUntilDue}d`;
     return 'Pendente';
   }
 

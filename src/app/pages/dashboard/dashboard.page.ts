@@ -138,9 +138,21 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.expensesByCategory = this.calculateExpensesByCategory(this.dashboardData.transactions);
 
       // Carregar próximas despesas fixas (próximos 7 dias)
+      // Filtrar apenas lançamentos que ainda não viraram transação no mês atual
       const paymentStatus = await this.fixedExpenseService.getMonthlyPaymentStatus();
       this.upcomingExpenses = paymentStatus
-        .filter(status => !status.isPaid && status.daysUntilDue <= 7)
+        .filter(status => {
+          // Se já existe uma transação associada no mês atual, não mostrar
+          if (status.expense.current_month_release_id) {
+            return false;
+          }
+          // Se já está marcado como pago no mês atual, não mostrar
+          if (status.expense.current_month_payment_status === 'pago') {
+            return false;
+          }
+          // Mostrar apenas os que vencem em até 7 dias
+          return status.daysUntilDue <= 7;
+        })
         .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
 
       // Renderizar gráficos

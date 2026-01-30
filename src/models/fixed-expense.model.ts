@@ -56,6 +56,8 @@ export interface Release {
   notifications: boolean;
   notifyDaysBefore: number;
   paymentHistory: PaymentRecord[];
+  start_date?: string | null;
+  end_date?: string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -74,4 +76,6 @@ export interface ReleasesCreate {
   is_active?: boolean;
   notifyDaysBefore?: number;
   status?: PaymentStatus;
+  start_date?: string | null;
+  end_date?: string | null;
 }

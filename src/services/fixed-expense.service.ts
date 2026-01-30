@@ -6,8 +6,10 @@ import {
   Release,
   ReleasesCreate,
   ReleaseTypes,
+  ReleaseTypesId,
   ActiveStatus,
   PaymentStatus,
+  PaymentStatusId,
 } from '../models/fixed-expense.model';
 import { CategoryService } from './category.service';
 import { NotificationService } from './notification.service';
@@ -125,12 +127,14 @@ export class FixedExpenseService {
     const categoryId = expense.category_id
       || await this.getCategoryIdByName(expense.category_name);
 
-    const releaseTypeId = expense.release_type_id
-      || (expense.release_type === 'entrada' ? ReleaseTypes.INCOME : ReleaseTypes.EXPENSE);
+    // Determinar o ID numérico do tipo de lançamento
+    const releaseTypeId = expense.release_type === 'entrada' || expense.release_type_id === ReleaseTypes.INCOME
+      ? ReleaseTypesId.INCOME
+      : ReleaseTypesId.EXPENSE;
 
-    const updateData: ReleasesCreate = {
+    const updateData = {
       release_type_id: releaseTypeId,
-      category_id: categoryId,
+      category_id: Number(categoryId),
       description: expense.description,
       value: expense.value,
       payment_day: expense.payment_day,
@@ -139,7 +143,7 @@ export class FixedExpenseService {
       is_active: newActiveState,
     };
 
-    await this.updateExpense(id, updateData);
+    await this.updateExpense(id, updateData as any);
 
     // Se desativou, cancelar notificações. Se ativou, reagendar
     if (!newActiveState) {
@@ -173,19 +177,21 @@ export class FixedExpenseService {
     const categoryId = expense.category_id
       || await this.getCategoryIdByName(expense.category_name);
 
-    const releaseTypeId = expense.release_type_id
-      || (expense.release_type === 'entrada' ? ReleaseTypes.INCOME : ReleaseTypes.EXPENSE);
+    // Determinar o ID numérico do tipo de lançamento
+    const releaseTypeId = expense.release_type === 'entrada' || expense.release_type_id === ReleaseTypes.INCOME
+      ? ReleaseTypesId.INCOME
+      : ReleaseTypesId.EXPENSE;
 
-    const paymentData: ReleasesCreate = {
+    const paymentData = {
       release_type_id: releaseTypeId,
-      category_id: categoryId,
+      category_id: Number(categoryId),
       description: expense.description,
       value: expense.value,
       payment_day: expense.payment_day,
       payment_method: expense.payment_method || '',
       notes: expense.notes || '',
       is_active: expense.is_active === ActiveStatus.ACTIVE,
-      status: PaymentStatus.PAID,
+      status: PaymentStatusId.PAID,
     };
 
     await firstValueFrom(
@@ -247,10 +253,12 @@ export class FixedExpenseService {
   }
 
   /**
-   * Verifica se uma despesa está paga
+   * Verifica se uma despesa está paga no mês atual
    */
   isExpensePaid(expense: Release): boolean {
-    return expense.status === PaymentStatus.PAID;
+    // Verificar pelo status do mês atual ou se já existe uma transação associada
+    return expense.current_month_payment_status === PaymentStatus.PAID
+      || !!expense.current_month_release_id;
   }
 
   /**

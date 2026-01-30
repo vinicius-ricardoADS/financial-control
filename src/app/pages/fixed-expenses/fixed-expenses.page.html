@@ -108,10 +108,10 @@
           <ion-item>
             <ion-label position="stacked">Tipo de lançamento *</ion-label>
             <ion-select [(ngModel)]="formData.release_type_id" name="release_type_id">
-              <ion-select-option value="1">
+              <ion-select-option [value]="1">
                 Entrada
               </ion-select-option>
-              <ion-select-option value="2">
+              <ion-select-option [value]="2">
                 Saída
               </ion-select-option>
             </ion-select>
@@ -143,6 +143,57 @@
               </ion-select-option>
             </ion-select>
           </ion-item>
+
+          <!-- Seção de Duração do Lançamento -->
+          <div class="duration-section">
+            <div class="section-header">
+              <ion-icon name="calendar-outline"></ion-icon>
+              <span>Duração do Lançamento</span>
+            </div>
+
+            <div class="duration-question">
+              <p class="question-text">Este lançamento tem data de término?</p>
+              <ion-segment [value]="hasEndDate ? 'yes' : 'no'" (ionChange)="onHasEndDateChange($event)">
+                <ion-segment-button value="no">
+                  <ion-icon name="infinite-outline"></ion-icon>
+                  <ion-label>Sem fim</ion-label>
+                </ion-segment-button>
+                <ion-segment-button value="yes">
+                  <ion-icon name="stopwatch-outline"></ion-icon>
+                  <ion-label>Com fim</ion-label>
+                </ion-segment-button>
+              </ion-segment>
+            </div>
+
+            <!-- Campo de Data de Término (aparece apenas se hasEndDate for true) -->
+            <div class="end-date-container" [class.visible]="hasEndDate">
+              <div class="date-field">
+                <ion-label class="date-label">
+                  <ion-icon name="calendar-outline"></ion-icon>
+                  Data de término *
+                </ion-label>
+                <ion-datetime-button datetime="endDatePicker"></ion-datetime-button>
+                <ion-popover [keepContentsMounted]="true">
+                  <ng-template>
+                    <ion-datetime
+                      id="endDatePicker"
+                      presentation="date"
+                      [min]="getMinEndDate()"
+                      [value]="formData.end_date"
+                      (ionChange)="onEndDateChange($event)"
+                      locale="pt-BR"
+                      [showDefaultButtons]="true"
+                      doneText="Confirmar"
+                      cancelText="Cancelar"
+                    ></ion-datetime>
+                  </ng-template>
+                </ion-popover>
+              </div>
+              <ion-note class="end-date-hint">
+                O lançamento será desativado automaticamente após esta data
+              </ion-note>
+            </div>
+          </div>
 
           <div class="form-buttons">
             <ion-button expand="block" color="primary" (click)="saveExpense()">
