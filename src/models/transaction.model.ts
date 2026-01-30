@@ -20,14 +20,17 @@ export interface Transaction {
 }
 
 export interface TransactionCreate {
-  release_type: ReleaseTypes | string;
-  recurrence_type: RecurrenceTypes | string;
+  release_type_id: number;
   category_id: number;
-  value: number | string;
+  recurrence_type_id?: number;
+  payment_status_id: number;
   description: string;
-  date?: string;
-  payment_method?: string;
+  value: number;
+  date: string;
+  payment_method: string;
   notes?: string;
+  created_at?: string;
+  payment_date?: string;
 }
 
 export interface TransactionFilter {

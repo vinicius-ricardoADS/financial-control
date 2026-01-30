@@ -19,9 +19,19 @@ export enum PaymentStatus {
   PAID = 'pago',
 }
 
+export enum PaymentStatusId {
+  PENDING = 1,
+  PAID = 2,
+}
+
 export enum ReleaseTypes {
   INCOME = 'entrada',
   EXPENSE = 'saida',
+}
+
+export enum ReleaseTypesId {
+  INCOME = 1,
+  EXPENSE = 2,
 }
 
 export interface Release {

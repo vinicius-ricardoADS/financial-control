@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import {
   Transaction,
+  TransactionCreate,
   TransactionFilter,
 } from '../models/transaction.model';
 import { ReleaseTypes } from '../models/fixed-expense.model';
@@ -124,5 +125,20 @@ export class TransactionService {
    */
   async refreshTransactionsByMonth(month: number, year: number): Promise<Transaction[]> {
     return this.getTransactionsByMonth(month, year);
+  }
+
+  /**
+   * Cria uma nova transação/release
+   */
+  async createTransaction(data: TransactionCreate): Promise<Transaction> {
+    const transaction = await firstValueFrom(
+      this.http.post<Transaction>(`${this.apiUrl}/release`, data)
+    );
+
+    // Atualiza o cache local
+    const currentTransactions = this.transactionsSubject.value;
+    this.transactionsSubject.next([transaction, ...currentTransactions]);
+
+    return transaction;
   }
 }

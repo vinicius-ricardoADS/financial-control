@@ -15,10 +15,24 @@ import {
   IonSearchbar,
   IonRefresher,
   IonRefresherContent,
+  IonFab,
+  IonFabButton,
+  IonModal,
+  IonButtons,
+  IonButton,
+  IonInput,
+  IonSelect,
+  IonSelectOption,
+  IonTextarea,
+  IonDatetime,
+  IonDatetimeButton,
+  IonPopover,
 } from '@ionic/angular/standalone';
 import { TransactionService } from '../../../services/transaction.service';
-import { Transaction } from '../../../models/transaction.model';
-import { RecurrenceTypes } from '../../../models/transactions.model';
+import { CategoryService } from '../../../services/category.service';
+import { Transaction, TransactionCreate } from '../../../models/transaction.model';
+import { Category } from '../../../models/category.model';
+import { RecurrenceTypes, RecurrenceTypesId } from '../../../models/transactions.model';
 import moment from 'moment';
 import { addIcons } from 'ionicons';
 import {
@@ -27,8 +41,10 @@ import {
   arrowDown,
   cashOutline,
   cardOutline,
+  add,
+  close,
 } from 'ionicons/icons';
-import { ReleaseTypes } from 'src/models/fixed-expense.model';
+import { ReleaseTypes, ReleaseTypesId, PaymentStatusId } from 'src/models/fixed-expense.model';
 
 @Component({
   selector: 'app-transactions',
@@ -51,26 +67,50 @@ import { ReleaseTypes } from 'src/models/fixed-expense.model';
     IonSearchbar,
     IonRefresher,
     IonRefresherContent,
+    IonFab,
+    IonFabButton,
+    IonModal,
+    IonButtons,
+    IonButton,
+    IonInput,
+    IonSelect,
+    IonSelectOption,
+    IonTextarea,
+    IonDatetime,
+    IonDatetimeButton,
+    IonPopover,
   ],
 })
 export class TransactionsPage implements OnInit {
   transactions: Transaction[] = [];
   filteredTransactions: Transaction[] = [];
+  categories: Category[] = [];
 
   filterType: 'all' | ReleaseTypes | string = 'all';
   searchTerm: string = '';
 
-  // Expor ReleaseTypes e RecurrenceTypes para o template
+  // Expor enums para o template
   ReleaseTypes = ReleaseTypes;
+  ReleaseTypesId = ReleaseTypesId;
   RecurrenceTypes = RecurrenceTypes;
+  RecurrenceTypesId = RecurrenceTypesId;
+  PaymentStatusId = PaymentStatusId;
 
   currentMonth: number = new Date().getMonth() + 1;
   currentYear: number = new Date().getFullYear();
 
+  // Modal state
+  isModalOpen: boolean = false;
+  isSubmitting: boolean = false;
+
+  // Form data
+  formData: Partial<TransactionCreate> = this.getEmptyFormData();
+
   constructor(
     private transactionService: TransactionService,
+    private categoryService: CategoryService,
   ) {
-    addIcons({ search, arrowUp, arrowDown, cashOutline, cardOutline });
+    addIcons({ search, arrowUp, arrowDown, cashOutline, cardOutline, add, close });
   }
 
   async ngOnInit() {
@@ -82,10 +122,12 @@ export class TransactionsPage implements OnInit {
   }
 
   async loadData() {
-    this.transactions = await this.transactionService.getTransactionsByMonth(
-      this.currentMonth,
-      this.currentYear
-    );
+    const [transactions, categories] = await Promise.all([
+      this.transactionService.getTransactionsByMonth(this.currentMonth, this.currentYear),
+      this.categoryService.getAllCategories(),
+    ]);
+    this.transactions = transactions;
+    this.categories = categories;
     this.applyFilters();
   }
 
@@ -169,5 +211,80 @@ export class TransactionsPage implements OnInit {
 
   getPaymentStatusColor(status: string): string {
     return status === 'pago' ? 'success' : 'warning';
+  }
+
+  // Modal methods
+  private getEmptyFormData(): Partial<TransactionCreate> {
+    return {
+      release_type_id: ReleaseTypesId.EXPENSE,
+      category_id: undefined,
+      recurrence_type_id: RecurrenceTypesId.LOOSE,
+      payment_status_id: PaymentStatusId.PENDING,
+      description: '',
+      value: undefined,
+      date: moment().format('YYYY-MM-DD'),
+      payment_method: '',
+      notes: '',
+    };
+  }
+
+  openModal() {
+    this.formData = this.getEmptyFormData();
+    this.isModalOpen = true;
+  }
+
+  closeModal() {
+    this.isModalOpen = false;
+    this.formData = this.getEmptyFormData();
+  }
+
+  onDateChange(event: any) {
+    const value = event.detail.value;
+    if (value) {
+      this.formData.date = moment(value).format('YYYY-MM-DD');
+    }
+  }
+
+  isFormValid(): boolean {
+    return !!(
+      this.formData.release_type_id &&
+      this.formData.category_id &&
+      this.formData.payment_status_id &&
+      this.formData.description &&
+      this.formData.description.length >= 6 &&
+      this.formData.value &&
+      this.formData.value > 0 &&
+      this.formData.date &&
+      this.formData.payment_method &&
+      this.formData.payment_method.length >= 3
+    );
+  }
+
+  async submitTransaction() {
+    if (!this.isFormValid() || this.isSubmitting) return;
+
+    this.isSubmitting = true;
+
+    try {
+      const data: TransactionCreate = {
+        release_type_id: this.formData.release_type_id!,
+        category_id: Number(this.formData.category_id),
+        recurrence_type_id: this.formData.recurrence_type_id,
+        payment_status_id: this.formData.payment_status_id!,
+        description: this.formData.description!,
+        value: Number(this.formData.value),
+        date: this.formData.date!,
+        payment_method: this.formData.payment_method!,
+        notes: this.formData.notes || undefined,
+      };
+
+      await this.transactionService.createTransaction(data);
+      this.closeModal();
+      await this.loadData();
+    } catch (error) {
+      console.error('Erro ao criar lançamento:', error);
+    } finally {
+      this.isSubmitting = false;
+    }
   }
 }
