@@ -11,22 +11,47 @@ import {
   IonCardContent,
   IonButton,
   IonIcon,
-  IonSelect,
-  IonSelectOption,
   IonLabel,
   IonItem,
+  IonRefresher,
+  IonRefresherContent,
+  IonSkeletonText,
   ToastController,
 } from '@ionic/angular/standalone';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { ReportService } from '../../../services/report.service';
 import { TransactionService } from '../../../services/transaction.service';
 import { ExportService } from '../../../services/export.service';
-import { FinancialSummary, MonthlyComparison } from '../../../models/financial-summary.model';
+import {
+  MonthlyComparisonResponse,
+  YearEvolutionResponse,
+  ComparativeResponse,
+  ReportTransaction,
+} from '../../../models/financial-summary.model';
 import moment from 'moment';
+import 'moment/locale/pt-br';
 import { addIcons } from 'ionicons';
-import { download, image, document } from 'ionicons/icons';
+import {
+  download,
+  document,
+  trendingUp,
+  trendingDown,
+  wallet,
+  arrowUp,
+  arrowDown,
+  alertCircle,
+  checkmarkCircle,
+} from 'ionicons/icons';
 
 Chart.register(...registerables);
+moment.locale('pt-br');
+
+interface CategoryTotal {
+  name: string;
+  icon: string;
+  total: number;
+  percentage: number;
+}
 
 @Component({
   selector: 'app-reports',
@@ -45,28 +70,34 @@ Chart.register(...registerables);
     IonCardContent,
     IonButton,
     IonIcon,
-    IonSelect,
-    IonSelectOption,
     IonLabel,
     IonItem,
+    IonRefresher,
+    IonRefresherContent,
+    IonSkeletonText,
   ],
 })
 export class ReportsPage implements OnInit, OnDestroy {
-  @ViewChild('lineChart') lineChartRef!: ElementRef;
-  @ViewChild('barChart') barChartRef!: ElementRef;
-  @ViewChild('pieChartReport') pieChartReportRef!: ElementRef;
+  @ViewChild('evolutionChart') evolutionChartRef!: ElementRef;
 
-  currentYear = new Date().getFullYear();
-  currentMonth = new Date().getMonth() + 1;
-  selectedYear = this.currentYear;
+  // Dados dos endpoints
+  monthlyComparison: MonthlyComparisonResponse | null = null;
+  yearEvolution: YearEvolutionResponse | null = null;
+  comparative: ComparativeResponse | null = null;
 
-  yearlyData: FinancialSummary[] = [];
-  monthlyComparison: MonthlyComparison | null = null;
+  // Estado
+  isLoading = true;
+  evolutionChart: Chart | null = null;
 
-  lineChart: Chart | null = null;
-  barChart: Chart | null = null;
-  pieChart: Chart | null = null;
+  // Métricas calculadas
+  savingsRate = 0;
+  expenseDifference = 0;
+  incomeDifference = 0;
+  topExpenseCategory: CategoryTotal | null = null;
+  expensesByCategory: CategoryTotal[] = [];
 
+  // Expor Math para o template
+  Math = Math;
 
   constructor(
     private reportService: ReportService,
@@ -74,7 +105,17 @@ export class ReportsPage implements OnInit, OnDestroy {
     private exportService: ExportService,
     private toastCtrl: ToastController,
   ) {
-    addIcons({ download, image, document });
+    addIcons({
+      download,
+      document,
+      trendingUp,
+      trendingDown,
+      wallet,
+      arrowUp,
+      arrowDown,
+      alertCircle,
+      checkmarkCircle,
+    });
   }
 
   async ngOnInit() {
@@ -86,188 +127,254 @@ export class ReportsPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Destruir gráficos
-    if (this.lineChart) this.lineChart.destroy();
-    if (this.barChart) this.barChart.destroy();
-    if (this.pieChart) this.pieChart.destroy();
+    if (this.evolutionChart) this.evolutionChart.destroy();
   }
 
   async loadData() {
+    this.isLoading = true;
+
     try {
-      this.yearlyData = await this.reportService.getYearlyReport(this.selectedYear);
-      this.monthlyComparison = await this.reportService.getMonthlyComparison(
-        this.currentMonth,
-        this.currentYear,
-      );
+      const [monthly, evolution, comparative] = await Promise.all([
+        this.reportService.getMonthlyComparisonFromAPI(),
+        this.reportService.getYearEvolution(),
+        this.reportService.getComparative(),
+      ]);
+
+      this.monthlyComparison = monthly;
+      this.yearEvolution = evolution;
+      this.comparative = comparative;
+
+      this.calculateMetrics();
 
       setTimeout(() => {
-        this.renderLineChart();
-        this.renderBarChart();
-        this.renderPieChart();
+        this.renderEvolutionChart();
       }, 200);
     } catch (error) {
       console.error('Erro ao carregar relatórios:', error);
+    } finally {
+      this.isLoading = false;
     }
   }
 
-  renderLineChart() {
-    if (!this.lineChartRef) return;
+  calculateMetrics() {
+    if (!this.comparative) return;
 
-    const canvas = this.lineChartRef.nativeElement;
+    const current = this.comparative.current_month;
+    const previous = this.comparative.previous_month;
+
+    // Taxa de poupança do mês atual
+    if (current.total_incomes > 0) {
+      this.savingsRate = ((current.total_incomes - current.total_expenses) / current.total_incomes) * 100;
+    }
+
+    // Diferença de gastos em relação ao mês anterior
+    this.expenseDifference = current.total_expenses - previous.total_expenses;
+    this.incomeDifference = current.total_incomes - previous.total_incomes;
+
+    // Calcular gastos por categoria
+    this.calculateExpensesByCategory(current.expenses);
+  }
+
+  calculateExpensesByCategory(expenses: ReportTransaction[]) {
+    const categoryMap = new Map<string, { icon: string; total: number }>();
+
+    expenses.forEach(expense => {
+      const key = expense.category_name;
+      if (categoryMap.has(key)) {
+        categoryMap.get(key)!.total += expense.value;
+      } else {
+        categoryMap.set(key, { icon: expense.category_icon, total: expense.value });
+      }
+    });
+
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.value, 0);
+
+    this.expensesByCategory = Array.from(categoryMap.entries())
+      .map(([name, data]) => ({
+        name,
+        icon: data.icon,
+        total: data.total,
+        percentage: totalExpenses > 0 ? (data.total / totalExpenses) * 100 : 0,
+      }))
+      .sort((a, b) => b.total - a.total);
+
+    this.topExpenseCategory = this.expensesByCategory[0] || null;
+  }
+
+  renderEvolutionChart() {
+    if (!this.evolutionChartRef || !this.yearEvolution) return;
+
+    const canvas = this.evolutionChartRef.nativeElement;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    if (this.lineChart) this.lineChart.destroy();
+    if (this.evolutionChart) this.evolutionChart.destroy();
 
-    const months = this.yearlyData.map((d) => moment().month(d.period.month - 1).format('MMM'));
-    const income = this.yearlyData.map((d) => d.totalIncome);
-    const expenses = this.yearlyData.map((d) => d.totalExpense);
+    const months = this.yearEvolution.months;
+    const labels = months.map(m => this.getMonthShortName(m.month));
+    const incomes = months.map(m => m.total_incomes);
+    const expenses = months.map(m => m.total_expenses);
+    const balances = months.map(m => m.total_incomes - m.total_expenses);
 
     const config: ChartConfiguration = {
       type: 'line',
       data: {
-        labels: months,
+        labels,
         datasets: [
           {
             label: 'Receitas',
-            data: income,
-            borderColor: '#2ecc71',
-            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+            data: incomes,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true,
             tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: '#10b981',
           },
           {
             label: 'Despesas',
             data: expenses,
-            borderColor: '#e74c3c',
-            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            fill: true,
             tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: '#ef4444',
+          },
+          {
+            label: 'Saldo',
+            data: balances,
+            borderColor: '#3b82f6',
+            backgroundColor: 'transparent',
+            borderDash: [5, 5],
+            tension: 0.4,
+            pointRadius: 3,
+            pointBackgroundColor: '#3b82f6',
           },
         ],
       },
       options: {
         responsive: true,
+        maintainAspectRatio: true,
+        interaction: {
+          intersect: false,
+          mode: 'index',
+        },
         plugins: {
-          legend: { position: 'bottom' },
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#94a3b8',
+              padding: 16,
+              usePointStyle: true,
+            },
+          },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            titleColor: '#f1f5f9',
+            bodyColor: '#cbd5e1',
+            borderColor: '#475569',
+            borderWidth: 1,
+            padding: 12,
+            callbacks: {
+              label: (context) => `${context.dataset.label}: ${this.formatCurrency(context.parsed.y)}`,
+            },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: '#334155' },
+            ticks: {
+              color: '#94a3b8',
+              callback: (value) => this.formatCurrencyShort(value as number),
+            },
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: '#94a3b8' },
+          },
         },
       },
     };
 
-    this.lineChart = new Chart(ctx, config);
+    this.evolutionChart = new Chart(ctx, config);
   }
 
-  renderBarChart() {
-    if (!this.barChartRef || !this.monthlyComparison) return;
-
-    const canvas = this.barChartRef.nativeElement;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    if (this.barChart) this.barChart.destroy();
-
-    const config: ChartConfiguration = {
-      type: 'bar',
-      data: {
-        labels: ['Mês Anterior', 'Mês Atual'],
-        datasets: [
-          {
-            label: 'Receitas',
-            data: [
-              this.monthlyComparison.previousMonth.totalIncome,
-              this.monthlyComparison.currentMonth.totalIncome,
-            ],
-            backgroundColor: '#2ecc71',
-          },
-          {
-            label: 'Despesas',
-            data: [
-              this.monthlyComparison.previousMonth.totalExpense,
-              this.monthlyComparison.currentMonth.totalExpense,
-            ],
-            backgroundColor: '#e74c3c',
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'bottom' },
-        },
-      },
-    };
-
-    this.barChart = new Chart(ctx, config);
+  async handleRefresh(event: any) {
+    await this.loadData();
+    event.target.complete();
   }
 
-  renderPieChart() {
-    if (!this.pieChartReportRef || !this.monthlyComparison) return;
-
-    const canvas = this.pieChartReportRef.nativeElement;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    if (this.pieChart) this.pieChart.destroy();
-
-    const data = this.monthlyComparison.currentMonth.expensesByCategory.slice(0, 8);
-
-    const config: ChartConfiguration = {
-      type: 'pie',
-      data: {
-        labels: data.map((c) => c.categoryName),
-        datasets: [
-          {
-            data: data.map((c) => c.total),
-            backgroundColor: data.map((c) => c.color),
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'right' },
-        },
-      },
-    };
-
-    this.pieChart = new Chart(ctx, config);
-  }
-
-  async exportPDF() {
-    try {
-      if (!this.monthlyComparison) return;
-
-      const transactions = await this.transactionService.getTransactionsByMonth(
-        this.currentMonth,
-        this.currentYear,
-      );
-
-      await this.exportService.exportToPDF(
-        this.monthlyComparison.currentMonth,
-        transactions,
-      );
-
-      const toast = await this.toastCtrl.create({
-        message: 'PDF exportado com sucesso!',
-        duration: 2000,
-        color: 'success',
-      });
-      await toast.present();
-    } catch (error) {
-      console.error('Erro ao exportar PDF:', error);
-      const toast = await this.toastCtrl.create({
-        message: 'Erro ao exportar PDF',
-        duration: 2000,
-        color: 'danger',
-      });
-      await toast.present();
-    }
-  }
-
+  // Helpers de formatação
   formatCurrency(value: number): string {
     return `R$ ${value.toFixed(2).replace('.', ',')}`;
   }
 
-  formatPercentage(value: number): string {
+  formatCurrencyShort(value: number): string {
+    if (value >= 1000) {
+      return `R$ ${(value / 1000).toFixed(1)}k`;
+    }
+    return `R$ ${value.toFixed(0)}`;
+  }
+
+  formatDifference(value: number): string {
     const sign = value >= 0 ? '+' : '';
-    return `${sign}${value.toFixed(1)}%`;
+    return `${sign}${this.formatCurrency(value)}`;
+  }
+
+  formatPercentage(value: number): string {
+    return `${value.toFixed(1)}%`;
+  }
+
+  getMonthShortName(month: number): string {
+    return moment().month(month - 1).format('MMM');
+  }
+
+  getMonthFullName(month: number): string {
+    return moment().month(month - 1).format('MMMM');
+  }
+
+  getCurrentMonthName(): string {
+    if (!this.comparative) return '';
+    const m = this.comparative.current_month;
+    return `${this.getMonthFullName(m.month)}/${m.year}`;
+  }
+
+  getPreviousMonthName(): string {
+    if (!this.comparative) return '';
+    const m = this.comparative.previous_month;
+    return `${this.getMonthFullName(m.month)}/${m.year}`;
+  }
+
+  getBalance(month: { total_incomes: number; total_expenses: number }): number {
+    return month.total_incomes - month.total_expenses;
+  }
+
+  getSavingsRateClass(): string {
+    if (this.savingsRate >= 20) return 'excellent';
+    if (this.savingsRate >= 10) return 'good';
+    if (this.savingsRate >= 0) return 'warning';
+    return 'danger';
+  }
+
+  getSavingsRateLabel(): string {
+    if (this.savingsRate >= 20) return 'Excelente!';
+    if (this.savingsRate >= 10) return 'Bom';
+    if (this.savingsRate >= 0) return 'Atenção';
+    return 'Negativo';
+  }
+
+  async exportPDF() {
+    try {
+      const toast = await this.toastCtrl.create({
+        message: 'Exportação em desenvolvimento',
+        duration: 2000,
+        color: 'warning',
+      });
+      await toast.present();
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+    }
   }
 }

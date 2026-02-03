@@ -1,14 +1,20 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import {
   FinancialSummary,
   CategoryExpense,
   CategoryIncome,
   MonthlyComparison,
+  MonthlyComparisonResponse,
+  YearEvolutionResponse,
+  ComparativeResponse,
 } from '../models/financial-summary.model';
 import { TransactionService } from './transaction.service';
 import { CategoryService } from './category.service';
 import { FixedExpenseService } from './fixed-expense.service';
 import { ReleaseTypes } from '../models/fixed-expense.model';
+import { environment } from '../environments/environment';
 import moment from 'moment';
 import * as _ from 'lodash';
 
@@ -16,7 +22,10 @@ import * as _ from 'lodash';
   providedIn: 'root',
 })
 export class ReportService {
+  private readonly apiUrl = `${environment.api}`;
+
   constructor(
+    private http: HttpClient,
     private transactionService: TransactionService,
     private categoryService: CategoryService,
     private fixedExpenseService: FixedExpenseService,
@@ -222,5 +231,32 @@ export class ReportService {
   private calculatePercentageChange(oldValue: number, newValue: number): number {
     if (oldValue === 0) return newValue > 0 ? 100 : 0;
     return ((newValue - oldValue) / oldValue) * 100;
+  }
+
+  /**
+   * Busca comparação mensal do endpoint da API
+   */
+  async getMonthlyComparisonFromAPI(): Promise<MonthlyComparisonResponse> {
+    return firstValueFrom(
+      this.http.get<MonthlyComparisonResponse>(`${this.apiUrl}/reportMonthlycomparison`)
+    );
+  }
+
+  /**
+   * Busca evolução do ano do endpoint da API
+   */
+  async getYearEvolution(): Promise<YearEvolutionResponse> {
+    return firstValueFrom(
+      this.http.get<YearEvolutionResponse>(`${this.apiUrl}/reportEvolutionyear`)
+    );
+  }
+
+  /**
+   * Busca comparativo mês anterior vs atual do endpoint da API
+   */
+  async getComparative(): Promise<ComparativeResponse> {
+    return firstValueFrom(
+      this.http.get<ComparativeResponse>(`${this.apiUrl}/reportComparative`)
+    );
   }
 }

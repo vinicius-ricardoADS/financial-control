@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import {
   IonContent,
   IonHeader,
@@ -171,6 +172,7 @@ export class TransactionsPage implements OnInit {
     private transactionService: TransactionService,
     private categoryService: CategoryService,
     private alertCtrl: AlertController,
+    private router: Router,
   ) {
     addIcons({
       search, arrowUp, arrowDown, cashOutline, cardOutline, add, close,
@@ -185,6 +187,22 @@ export class TransactionsPage implements OnInit {
 
   async ionViewWillEnter() {
     await this.loadData();
+
+    // Verificar se veio do Dashboard com intenção de abrir o modal
+    const navigation = this.router.getCurrentNavigation();
+    const state = navigation?.extras?.state || history.state;
+
+    if (state?.openModalType) {
+      const type = state.openModalType;
+      this.formData = this.getEmptyFormData();
+      this.formData.release_type_id = type === ReleaseTypes.INCOME ? ReleaseTypesId.INCOME : ReleaseTypesId.EXPENSE;
+      this.isEditMode = false;
+      this.currentTransaction = null;
+      this.isModalOpen = true;
+
+      // Limpar o state para não abrir novamente ao voltar
+      history.replaceState({}, '');
+    }
   }
 
   async loadData() {

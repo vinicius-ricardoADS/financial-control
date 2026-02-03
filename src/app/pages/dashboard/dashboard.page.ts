@@ -392,7 +392,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   goToTransactions(type: ReleaseTypes) {
-    this.router.navigate(['/transactions'], {
+    this.router.navigate(['/home/transactions'], {
       state: { openModalType: type },
     });
   }
