@@ -91,19 +91,26 @@ export class FixedExpenseService {
   }
 
   async updateExpense(id: string, updates: Partial<ReleasesCreate>): Promise<void> {
-    const updatedExpense = await firstValueFrom(
+    const response = await firstValueFrom(
       this.http.put<any>(`${this.apiUrl}/${id}`, updates)
     );
 
-    const expense: Release = updatedExpense?.data
+    // A API pode retornar { data: Release } ou Release diretamente
+    const updatedExpense: Release = response?.data || response;
 
-    const expenses = this.expensesSubject.value.map((e) =>
-      e.id === id ? expense : e
-    );
-    this.expensesSubject.next(expenses);
+    if (updatedExpense && updatedExpense.id) {
+      // Atualizar o cache local com o item atualizado
+      const expenses = this.expensesSubject.value.map((e) =>
+        e.id === id ? updatedExpense : e
+      );
+      this.expensesSubject.next(expenses);
 
-    // Reagendar notificação com novos dados
-    await this.notificationService.scheduleExpenseNotification(updatedExpense);
+      // Reagendar notificação com novos dados
+      await this.notificationService.scheduleExpenseNotification(updatedExpense);
+    } else {
+      // Se não conseguiu obter dados válidos, força refresh do servidor
+      await this.refreshExpenses();
+    }
   }
 
   async deleteExpense(id: string): Promise<void> {
@@ -141,9 +148,14 @@ export class FixedExpenseService {
       payment_method: expense.payment_method || '',
       notes: expense.notes || '',
       is_active: newActiveState,
+      start_date: expense.start_date || moment().format('YYYY-MM-DD'),
+      end_date: expense.end_date || '',
     };
 
     await this.updateExpense(id, updateData as any);
+
+    // Forçar refresh para garantir dados atualizados
+    await this.refreshExpenses();
 
     // Se desativou, cancelar notificações. Se ativou, reagendar
     if (!newActiveState) {
@@ -192,6 +204,8 @@ export class FixedExpenseService {
       notes: expense.notes || '',
       is_active: expense.is_active === ActiveStatus.ACTIVE,
       status: PaymentStatusId.PAID,
+      start_date: expense.start_date || moment().format('YYYY-MM-DD'),
+      end_date: expense.end_date || '',
     };
 
     await firstValueFrom(

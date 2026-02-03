@@ -53,6 +53,25 @@ export class ExportService {
 
   constructor() {}
 
+  /**
+   * Remove acentos e caracteres especiais para evitar problemas de encoding no PDF
+   */
+  private normalizeText(text: string): string {
+    if (!text) return '';
+    return text
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+      .replace(/[^\x00-\x7F]/g, '');   // Remove outros caracteres especiais
+  }
+
+  /**
+   * Capitaliza a primeira letra
+   */
+  private capitalize(text: string): string {
+    if (!text) return '';
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
   async exportToPDF(data: PDFExportData): Promise<void> {
     this.doc = new jsPDF();
     this.pageWidth = this.doc.internal.pageSize.getWidth();
@@ -78,35 +97,35 @@ export class ExportService {
     const current = data.comparative.current_month;
     const monthName = moment().month(current.month - 1).format('MMMM');
 
-    // Fundo do cabeçalho
+    // Fundo do cabeçalho (maior para acomodar textos maiores)
     this.doc.setFillColor(...COLORS.primary);
-    this.doc.rect(0, 0, this.pageWidth, 45, 'F');
+    this.doc.rect(0, 0, this.pageWidth, 52, 'F');
 
     // Título principal
     this.doc.setTextColor(...COLORS.white);
-    this.doc.setFontSize(24);
+    this.doc.setFontSize(26);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Relatório Financeiro', this.margin, 22);
+    this.doc.text('Relatorio Financeiro', this.margin, 22);
 
-    // Subtítulo com período
-    this.doc.setFontSize(12);
+    // Subtítulo com período (tamanho maior)
+    this.doc.setFontSize(16);
     this.doc.setFont('helvetica', 'normal');
     this.doc.text(
-      `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} de ${current.year}`,
+      `${this.capitalize(this.normalizeText(monthName))} de ${current.year}`,
       this.margin,
-      32
+      36
     );
 
-    // Data de geração
-    this.doc.setFontSize(9);
+    // Data de geração (tamanho maior)
+    this.doc.setFontSize(11);
     this.doc.text(
-      `Gerado em ${moment().format('DD/MM/YYYY [às] HH:mm')}`,
+      `Gerado em ${moment().format('DD/MM/YYYY [as] HH:mm')}`,
       this.pageWidth - this.margin,
-      32,
+      36,
       { align: 'right' }
     );
 
-    this.yPosition = 55;
+    this.yPosition = 62;
   }
 
   private renderExecutiveSummary(data: PDFExportData) {
@@ -241,9 +260,9 @@ export class ExportService {
       startY: this.yPosition,
       head: [[
         '',
-        previousMonthName.toUpperCase(),
-        currentMonthName.toUpperCase(),
-        'VARIAÇÃO'
+        this.normalizeText(previousMonthName.toUpperCase()),
+        this.normalizeText(currentMonthName.toUpperCase()),
+        'VARIACAO'
       ]],
       body: [
         [
@@ -305,11 +324,11 @@ export class ExportService {
     categories.forEach((category, index) => {
       const rowY = this.yPosition + (index * 12);
 
-      // Nome da categoria com emoji
+      // Nome da categoria (sem emoji para evitar problemas de encoding)
       this.doc.setTextColor(...COLORS.dark);
-      this.doc.setFontSize(9);
+      this.doc.setFontSize(10);
       this.doc.setFont('helvetica', 'normal');
-      this.doc.text(`${category.icon} ${category.name}`, this.margin, rowY + 4);
+      this.doc.text(this.normalizeText(category.name), this.margin, rowY + 4);
 
       // Barra de progresso
       const barWidth = (category.percentage / maxPercentage) * barMaxWidth;
@@ -341,7 +360,7 @@ export class ExportService {
     if (!data.yearEvolution) return;
 
     this.checkPageBreak(70);
-    this.renderSectionTitle(`Evolução Anual - ${data.yearEvolution.year}`);
+    this.renderSectionTitle(`Evolucao Anual - ${data.yearEvolution.year}`);
 
     const months = data.yearEvolution.months;
 
@@ -355,7 +374,7 @@ export class ExportService {
 
     autoTable(this.doc, {
       startY: this.yPosition,
-      head: [['MÊS', 'RECEITAS', 'DESPESAS', 'SALDO']],
+      head: [['MES', 'RECEITAS', 'DESPESAS', 'SALDO']],
       body: tableData,
       theme: 'striped',
       headStyles: {
@@ -402,8 +421,8 @@ export class ExportService {
 
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(9);
-    this.doc.text(`Média Mensal de Receitas: ${this.formatCurrency(avgMonthlyIncome)}`, this.margin + 5, this.yPosition + 15);
-    this.doc.text(`Média Mensal de Despesas: ${this.formatCurrency(avgMonthlyExpense)}`, this.margin + 5, this.yPosition + 22);
+    this.doc.text(`Media Mensal de Receitas: ${this.formatCurrency(avgMonthlyIncome)}`, this.margin + 5, this.yPosition + 15);
+    this.doc.text(`Media Mensal de Despesas: ${this.formatCurrency(avgMonthlyExpense)}`, this.margin + 5, this.yPosition + 22);
 
     this.doc.text(`Total de Receitas: ${this.formatCurrency(totalIncomes)}`, this.pageWidth / 2, this.yPosition + 15);
     this.doc.text(`Total de Despesas: ${this.formatCurrency(totalExpenses)}`, this.pageWidth / 2, this.yPosition + 22);
@@ -413,7 +432,7 @@ export class ExportService {
 
   private renderTransactionsList(data: PDFExportData) {
     this.checkPageBreak(60);
-    this.renderSectionTitle('Transações do Mês Atual');
+    this.renderSectionTitle('Transacoes do Mes Atual');
 
     const current = data.comparative.current_month;
     const allTransactions = [...current.incomes, ...current.expenses]
@@ -423,17 +442,19 @@ export class ExportService {
     if (allTransactions.length === 0) {
       this.doc.setTextColor(...COLORS.gray);
       this.doc.setFontSize(10);
-      this.doc.text('Nenhuma transação registrada no período.', this.margin, this.yPosition + 5);
+      this.doc.text('Nenhuma transacao registrada no periodo.', this.margin, this.yPosition + 5);
       this.yPosition += 15;
       return;
     }
 
     const tableData = allTransactions.map(t => {
       const isIncome = current.incomes.includes(t);
+      const desc = this.normalizeText(t.description);
+      const catName = this.normalizeText(t.category_name);
       return [
         moment(t.date).format('DD/MM'),
-        t.description.length > 25 ? t.description.substring(0, 25) + '...' : t.description,
-        `${t.category_icon} ${t.category_name}`,
+        desc.length > 25 ? desc.substring(0, 25) + '...' : desc,
+        catName,
         isIncome ? 'Receita' : 'Despesa',
         (isIncome ? '+' : '-') + this.formatCurrency(t.value),
       ];
@@ -441,7 +462,7 @@ export class ExportService {
 
     autoTable(this.doc, {
       startY: this.yPosition,
-      head: [['DATA', 'DESCRIÇÃO', 'CATEGORIA', 'TIPO', 'VALOR']],
+      head: [['DATA', 'DESCRICAO', 'CATEGORIA', 'TIPO', 'VALOR']],
       body: tableData,
       theme: 'striped',
       headStyles: {
@@ -490,7 +511,7 @@ export class ExportService {
 
   private renderFinancialTips(data: PDFExportData) {
     this.checkPageBreak(50);
-    this.renderSectionTitle('Análise e Recomendações');
+    this.renderSectionTitle('Analise e Recomendacoes');
 
     const tips = this.generateTips(data);
 
@@ -510,11 +531,11 @@ export class ExportService {
 
       this.doc.setTextColor(...COLORS.primary);
       this.doc.setFontSize(10);
-      this.doc.text('•', this.margin + 5, tipY);
+      this.doc.text('-', this.margin + 5, tipY);
 
       this.doc.setTextColor(...COLORS.dark);
       this.doc.setFontSize(9);
-      this.doc.text(tip, this.margin + 12, tipY);
+      this.doc.text(this.normalizeText(tip), this.margin + 12, tipY);
     });
 
     this.yPosition += tips.length * 12 + 20;
@@ -525,35 +546,36 @@ export class ExportService {
     const current = data.comparative.current_month;
     const previous = data.comparative.previous_month;
 
-    // Análise da taxa de poupança
+    // Analise da taxa de poupanca
     if (data.savingsRate >= 20) {
-      tips.push('Parabéns! Você está economizando mais de 20% da sua renda.');
+      tips.push('Parabens! Voce esta economizando mais de 20% da sua renda.');
     } else if (data.savingsRate >= 10) {
-      tips.push('Boa taxa de poupança! Tente aumentar para 20% se possível.');
+      tips.push('Boa taxa de poupanca! Tente aumentar para 20% se possivel.');
     } else if (data.savingsRate >= 0) {
-      tips.push('Atenção: sua taxa de poupança está baixa. Revise seus gastos.');
+      tips.push('Atencao: sua taxa de poupanca esta baixa. Revise seus gastos.');
     } else {
-      tips.push('Alerta: você está gastando mais do que ganha. Revise urgentemente seus gastos.');
+      tips.push('Alerta: voce esta gastando mais do que ganha. Revise urgentemente seus gastos.');
     }
 
-    // Análise de despesas vs mês anterior
+    // Analise de despesas vs mes anterior
     const expenseDiff = current.total_expenses - previous.total_expenses;
     if (expenseDiff > 0) {
       const percentChange = (expenseDiff / previous.total_expenses) * 100;
-      tips.push(`Suas despesas aumentaram ${percentChange.toFixed(1)}% em relação ao mês anterior.`);
+      tips.push(`Suas despesas aumentaram ${percentChange.toFixed(1)}% em relacao ao mes anterior.`);
     } else if (expenseDiff < 0) {
-      tips.push('Bom trabalho! Você reduziu suas despesas em relação ao mês anterior.');
+      tips.push('Bom trabalho! Voce reduziu suas despesas em relacao ao mes anterior.');
     }
 
     // Categoria com maior gasto
     if (data.expensesByCategory.length > 0) {
       const top = data.expensesByCategory[0];
-      tips.push(`Sua maior despesa é com "${top.name}" (${top.percentage.toFixed(1)}% do total).`);
+      const catName = this.normalizeText(top.name);
+      tips.push(`Sua maior despesa e com "${catName}" (${top.percentage.toFixed(1)}% do total).`);
     }
 
     // Dica geral
     if (tips.length < 4) {
-      tips.push('Mantenha um registro diário de suas despesas para melhor controle.');
+      tips.push('Mantenha um registro diario de suas despesas para melhor controle.');
     }
 
     return tips;
@@ -561,16 +583,16 @@ export class ExportService {
 
   private renderSectionTitle(title: string) {
     this.doc.setTextColor(...COLORS.dark);
-    this.doc.setFontSize(12);
+    this.doc.setFontSize(14);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.text(title, this.margin, this.yPosition);
+    this.doc.text(this.normalizeText(title), this.margin, this.yPosition);
 
-    // Linha abaixo do título
+    // Linha abaixo do titulo
     this.doc.setDrawColor(...COLORS.primary);
     this.doc.setLineWidth(0.5);
-    this.doc.line(this.margin, this.yPosition + 2, this.margin + 40, this.yPosition + 2);
+    this.doc.line(this.margin, this.yPosition + 2, this.margin + 50, this.yPosition + 2);
 
-    this.yPosition += 10;
+    this.yPosition += 12;
   }
 
   private renderFooter() {
@@ -584,19 +606,19 @@ export class ExportService {
       this.doc.setLineWidth(0.5);
       this.doc.line(this.margin, this.pageHeight - 15, this.pageWidth - this.margin, this.pageHeight - 15);
 
-      // Texto do rodapé
+      // Texto do rodape
       this.doc.setTextColor(...COLORS.gray);
       this.doc.setFontSize(8);
       this.doc.setFont('helvetica', 'normal');
 
       this.doc.text(
-        'Relatório gerado automaticamente pelo app Financial Control',
+        'Relatorio gerado automaticamente pelo app Financial Control',
         this.margin,
         this.pageHeight - 8
       );
 
       this.doc.text(
-        `Página ${i} de ${pageCount}`,
+        `Pagina ${i} de ${pageCount}`,
         this.pageWidth - this.margin,
         this.pageHeight - 8,
         { align: 'right' }
