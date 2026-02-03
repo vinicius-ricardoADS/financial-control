@@ -41,6 +41,7 @@ import {
   arrowDown,
   alertCircle,
   checkmarkCircle,
+  documentText,
 } from 'ionicons/icons';
 
 Chart.register(...registerables);
@@ -108,6 +109,7 @@ export class ReportsPage implements OnInit, OnDestroy {
     addIcons({
       download,
       document,
+      documentText,
       trendingUp,
       trendingDown,
       wallet,
@@ -365,16 +367,61 @@ export class ReportsPage implements OnInit, OnDestroy {
     return 'Negativo';
   }
 
+  isExporting = false;
+
   async exportPDF() {
-    try {
+    if (!this.comparative || !this.yearEvolution) {
       const toast = await this.toastCtrl.create({
-        message: 'Exportação em desenvolvimento',
+        message: 'Aguarde o carregamento dos dados',
         duration: 2000,
         color: 'warning',
       });
       await toast.present();
+      return;
+    }
+
+    this.isExporting = true;
+
+    // Toast de início
+    const loadingToast = await this.toastCtrl.create({
+      message: 'Gerando relatório PDF...',
+      duration: 10000,
+      color: 'primary',
+      icon: 'document-text',
+    });
+    await loadingToast.present();
+
+    try {
+      await this.exportService.exportToPDF({
+        comparative: this.comparative,
+        yearEvolution: this.yearEvolution,
+        expensesByCategory: this.expensesByCategory,
+        savingsRate: this.savingsRate,
+      });
+
+      await loadingToast.dismiss();
+
+      const successToast = await this.toastCtrl.create({
+        message: 'Relatório PDF gerado com sucesso!',
+        duration: 3000,
+        color: 'success',
+        icon: 'checkmark-circle',
+      });
+      await successToast.present();
     } catch (error) {
       console.error('Erro ao exportar PDF:', error);
+
+      await loadingToast.dismiss();
+
+      const errorToast = await this.toastCtrl.create({
+        message: 'Erro ao gerar o relatório. Tente novamente.',
+        duration: 3000,
+        color: 'danger',
+        icon: 'alert-circle',
+      });
+      await errorToast.present();
+    } finally {
+      this.isExporting = false;
     }
   }
 }

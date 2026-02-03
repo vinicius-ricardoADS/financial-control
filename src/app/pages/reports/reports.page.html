@@ -191,12 +191,25 @@
         </div>
       </section>
 
-      <!-- SEÇÃO 5: Exportar -->
+      <!-- SEÇÃO 5: Exportar Relatório -->
       <section class="export-section">
-        <ion-button expand="block" fill="outline" (click)="exportPDF()">
-          <ion-icon name="document" slot="start"></ion-icon>
-          Exportar Relatório PDF
-        </ion-button>
+        <div class="export-card">
+          <div class="export-icon">
+            <ion-icon name="document-text"></ion-icon>
+          </div>
+          <div class="export-content">
+            <h3>Exportar Relatório</h3>
+            <p>Gere um PDF completo com resumo financeiro, comparativos, categorias e análises personalizadas.</p>
+          </div>
+          <ion-button
+            expand="block"
+            (click)="exportPDF()"
+            [disabled]="isExporting || isLoading">
+            <ion-icon name="download" slot="start" *ngIf="!isExporting"></ion-icon>
+            <span *ngIf="!isExporting">Gerar PDF</span>
+            <span *ngIf="isExporting">Gerando...</span>
+          </ion-button>
+        </div>
       </section>
     </ng-container>
   </div>
