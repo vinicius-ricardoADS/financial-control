@@ -141,4 +141,34 @@ export class TransactionService {
 
     return transaction;
   }
+
+  /**
+   * Deleta uma transação/release
+   */
+  async deleteTransaction(id: number): Promise<void> {
+    await firstValueFrom(
+      this.http.delete(`${this.apiUrl}/release/${id}`)
+    );
+
+    // Remove do cache local
+    const currentTransactions = this.transactionsSubject.value;
+    this.transactionsSubject.next(currentTransactions.filter(t => t.id !== id));
+  }
+
+  /**
+   * Atualiza uma transação/release
+   */
+  async updateTransaction(id: number, data: TransactionCreate): Promise<Transaction> {
+    const transaction = await firstValueFrom(
+      this.http.put<Transaction>(`${this.apiUrl}/release/${id}`, data)
+    );
+
+    // Atualiza o cache local
+    const currentTransactions = this.transactionsSubject.value;
+    this.transactionsSubject.next(
+      currentTransactions.map(t => t.id === id ? transaction : t)
+    );
+
+    return transaction;
+  }
 }

@@ -30,6 +30,10 @@ import {
   IonChip,
   IonBadge,
   IonNote,
+  IonItemSliding,
+  IonItemOptions,
+  IonItemOption,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { TransactionService } from '../../../services/transaction.service';
 import { CategoryService } from '../../../services/category.service';
@@ -54,6 +58,8 @@ import {
   walletOutline,
   trendingUp,
   trendingDown,
+  trash,
+  pencil,
 } from 'ionicons/icons';
 import { ReleaseTypes, ReleaseTypesId, PaymentStatusId } from 'src/models/fixed-expense.model';
 
@@ -104,6 +110,9 @@ interface MonthGroup {
     IonChip,
     IonBadge,
     IonNote,
+    IonItemSliding,
+    IonItemOptions,
+    IonItemOption,
   ],
 })
 export class TransactionsPage implements OnInit {
@@ -116,7 +125,7 @@ export class TransactionsPage implements OnInit {
   filterType: 'all' | ReleaseTypes | string = 'all';
   searchTerm: string = '';
   selectedYear: number = new Date().getFullYear();
-  selectedMonth: number | null = null; // null = todos os meses
+  selectedMonth: number | null = new Date().getMonth() + 1; // Mês atual (1-12)
 
   // Anos disponíveis para seleção
   availableYears: number[] = [];
@@ -152,6 +161,8 @@ export class TransactionsPage implements OnInit {
   // Modal state
   isModalOpen: boolean = false;
   isSubmitting: boolean = false;
+  isEditMode: boolean = false;
+  currentTransaction: Transaction | null = null;
 
   // Form data
   formData: Partial<TransactionCreate> = this.getEmptyFormData();
@@ -159,11 +170,12 @@ export class TransactionsPage implements OnInit {
   constructor(
     private transactionService: TransactionService,
     private categoryService: CategoryService,
+    private alertCtrl: AlertController,
   ) {
     addIcons({
       search, arrowUp, arrowDown, cashOutline, cardOutline, add, close,
       calendarOutline, filterOutline, chevronBack, chevronForward,
-      walletOutline, trendingUp, trendingDown
+      walletOutline, trendingUp, trendingDown, trash, pencil
     });
   }
 
@@ -418,12 +430,48 @@ export class TransactionsPage implements OnInit {
   }
 
   openModal() {
+    this.isEditMode = false;
+    this.currentTransaction = null;
     this.formData = this.getEmptyFormData();
     this.isModalOpen = true;
   }
 
+  openEditModal(transaction: Transaction) {
+    this.isEditMode = true;
+    this.currentTransaction = transaction;
+    this.formData = {
+      release_type_id: transaction.release_type === ReleaseTypes.INCOME ? ReleaseTypesId.INCOME : ReleaseTypesId.EXPENSE,
+      category_id: this.getCategoryIdByName(transaction.category_name),
+      recurrence_type_id: this.getRecurrenceTypeId(transaction.recurrence_type),
+      payment_status_id: transaction.payment_status === 'pago' ? PaymentStatusId.PAID : PaymentStatusId.PENDING,
+      description: transaction.description,
+      value: parseFloat(transaction.value as string),
+      date: moment(transaction.date).format('YYYY-MM-DD'),
+      payment_method: transaction.payment_method || '',
+      notes: transaction.notes || '',
+    };
+    this.isModalOpen = true;
+  }
+
+  private getCategoryIdByName(categoryName?: string): number | undefined {
+    if (!categoryName) return undefined;
+    const category = this.categories.find(cat => cat.category === categoryName);
+    return category ? Number(category.id) : undefined;
+  }
+
+  private getRecurrenceTypeId(recurrenceType?: string): RecurrenceTypesId {
+    switch (recurrenceType) {
+      case RecurrenceTypes.FIXED: return RecurrenceTypesId.FIXED;
+      case RecurrenceTypes.VARIABLE: return RecurrenceTypesId.VARIABLE;
+      case RecurrenceTypes.RECURRENCE: return RecurrenceTypesId.RECURRENCE;
+      default: return RecurrenceTypesId.LOOSE;
+    }
+  }
+
   closeModal() {
     this.isModalOpen = false;
+    this.isEditMode = false;
+    this.currentTransaction = null;
     this.formData = this.getEmptyFormData();
   }
 
@@ -467,13 +515,42 @@ export class TransactionsPage implements OnInit {
         notes: this.formData.notes || undefined,
       };
 
-      await this.transactionService.createTransaction(data);
+      if (this.isEditMode && this.currentTransaction) {
+        await this.transactionService.updateTransaction(this.currentTransaction.id, data);
+      } else {
+        await this.transactionService.createTransaction(data);
+      }
+
       this.closeModal();
+      await this.transactionService.refreshTransactions();
       await this.loadData();
     } catch (error) {
-      console.error('Erro ao criar lançamento:', error);
+      console.error(`Erro ao ${this.isEditMode ? 'atualizar' : 'criar'} lançamento:`, error);
     } finally {
       this.isSubmitting = false;
     }
+  }
+
+  async deleteTransaction(transaction: Transaction) {
+    const alert = await this.alertCtrl.create({
+      header: 'Confirmar exclusão',
+      message: `Deseja realmente excluir "${transaction.description}"?`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Excluir',
+          role: 'destructive',
+          handler: async () => {
+            try {
+              await this.transactionService.deleteTransaction(transaction.id);
+              await this.loadData();
+            } catch (error) {
+              console.error('Erro ao excluir lançamento:', error);
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 }

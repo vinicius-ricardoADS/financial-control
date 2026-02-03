@@ -187,7 +187,7 @@ export class FixedExpenseService {
       category_id: Number(categoryId),
       description: expense.description,
       value: expense.value,
-      payment_day: expense.payment_day,
+      payment_day: new Date().getDate(), // Dia real do pagamento (hoje)
       payment_method: expense.payment_method || '',
       notes: expense.notes || '',
       is_active: expense.is_active === ActiveStatus.ACTIVE,
