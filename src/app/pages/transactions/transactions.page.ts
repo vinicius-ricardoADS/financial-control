@@ -35,6 +35,7 @@ import {
   IonItemOptions,
   IonItemOption,
   AlertController,
+  ActionSheetController,
 } from '@ionic/angular/standalone';
 import { TransactionService } from '../../../services/transaction.service';
 import { CategoryService } from '../../../services/category.service';
@@ -172,6 +173,7 @@ export class TransactionsPage implements OnInit {
     private transactionService: TransactionService,
     private categoryService: CategoryService,
     private alertCtrl: AlertController,
+    private actionSheetCtrl: ActionSheetController,
     private router: Router,
   ) {
     addIcons({
@@ -570,5 +572,35 @@ export class TransactionsPage implements OnInit {
       ],
     });
     await alert.present();
+  }
+
+  async showTransactionOptions(transaction: Transaction) {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: transaction.description,
+      subHeader: `${this.formatCurrency(transaction.value)} • ${this.formatDate(transaction.date)}`,
+      buttons: [
+        {
+          text: 'Editar',
+          icon: 'pencil',
+          handler: () => {
+            this.openEditModal(transaction);
+          },
+        },
+        {
+          text: 'Excluir',
+          icon: 'trash',
+          role: 'destructive',
+          handler: () => {
+            this.deleteTransaction(transaction);
+          },
+        },
+        {
+          text: 'Cancelar',
+          icon: 'close',
+          role: 'cancel',
+        },
+      ],
+    });
+    await actionSheet.present();
   }
 }

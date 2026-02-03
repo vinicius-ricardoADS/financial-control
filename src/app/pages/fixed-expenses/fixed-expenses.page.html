@@ -6,57 +6,41 @@
 
 <ion-content>
   <div class="expenses-container">
-    <ion-list *ngIf="expenses.length > 0">
-      <ion-item-sliding *ngFor="let expense of expenses">
-        <ion-item lines="full">
-          <ion-label>
-            <h2>
-              {{ expense.description }}
-              <ion-badge [color]="getStatusBadgeColor(expense)" style="margin-left: 8px;">
-                {{ getStatusLabel(expense) }}
-              </ion-badge>
-            </h2>
-            <p>{{ expense?.category_name }} • {{ getDayOfMonthLabel(expense.payment_day) }}</p>
-            <p [style.color]="getColor(expense)" class="amount">{{ expense.value }}</p>
-          </ion-label>
-          <div slot="end" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <ion-toggle
-              [checked]="isExpenseActive(expense)"
-              (ionChange)="toggleActive(expense)"
-            ></ion-toggle>
-            <ion-button
-              *ngIf="isExpenseActive(expense) && !isCurrentMonthPaid(expense)"
-              size="small"
-              fill="solid"
-              color="success"
-              (click)="markAsPaid(expense, $event)">
-              <ion-icon slot="start" name="checkmark-circle"></ion-icon>
-              Pagar
-            </ion-button>
-            <ion-badge
-              *ngIf="isExpenseActive(expense) && isCurrentMonthPaid(expense)"
-              color="success">
-              <ion-icon name="checkmark-circle"></ion-icon>
-              Pago
-            </ion-badge>
-          </div>
-        </ion-item>
+    <!-- Dica para o usuário -->
+    <div class="hint-banner" *ngIf="expenses.length > 0">
+      <ion-icon name="information-circle-outline"></ion-icon>
+      <span>Toque em um lançamento para ver as opções</span>
+    </div>
 
-        <ion-item-options side="end">
-          <ion-item-option
-            *ngIf="isExpenseActive(expense) && !isCurrentMonthPaid(expense)"
+    <ion-list *ngIf="expenses.length > 0">
+      <ion-item
+        *ngFor="let expense of expenses"
+        lines="full"
+        button
+        detail="false"
+        (click)="showExpenseOptions(expense)"
+        [class.inactive]="!isExpenseActive(expense)">
+        <ion-label>
+          <h2>
+            {{ expense.description }}
+            <ion-badge [color]="getStatusBadgeColor(expense)" style="margin-left: 8px;">
+              {{ getStatusLabel(expense) }}
+            </ion-badge>
+          </h2>
+          <p>{{ expense?.category_name }} • {{ getDayOfMonthLabel(expense.payment_day) }}</p>
+          <p [style.color]="getColor(expense)" class="amount">{{ formatCurrency(expense.value) }}</p>
+        </ion-label>
+        <div slot="end" class="status-indicator">
+          <ion-badge *ngIf="!isExpenseActive(expense)" color="medium">Inativo</ion-badge>
+          <ion-badge
+            *ngIf="isExpenseActive(expense) && isCurrentMonthPaid(expense)"
             color="success"
-            (click)="markAsPaid(expense)">
-            <ion-icon slot="icon-only" name="checkmark-circle"></ion-icon>
-          </ion-item-option>
-          <ion-item-option color="primary" (click)="openEditModal(expense)">
-            <ion-icon slot="icon-only" name="pencil"></ion-icon>
-          </ion-item-option>
-          <ion-item-option color="danger" (click)="deleteExpense(expense)">
-            <ion-icon slot="icon-only" name="trash"></ion-icon>
-          </ion-item-option>
-        </ion-item-options>
-      </ion-item-sliding>
+            class="paid-badge">
+            <ion-icon name="checkmark-circle"></ion-icon>
+            Pago
+          </ion-badge>
+        </div>
+      </ion-item>
     </ion-list>
 
     <div class="empty-state" *ngIf="expenses.length === 0">

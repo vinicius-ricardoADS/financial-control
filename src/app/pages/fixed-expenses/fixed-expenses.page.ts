@@ -31,6 +31,7 @@ import {
   IonNote,
   ToastController,
   AlertController,
+  ActionSheetController,
 } from '@ionic/angular/standalone';
 import { FixedExpenseService } from '../../../services/fixed-expense.service';
 import { CategoryService } from '../../../services/category.service';
@@ -39,7 +40,7 @@ import { Release, ReleasesCreate, ReleaseTypes, ReleaseTypesId, ActiveStatus } f
 import { Transaction } from '../../../models/transaction.model';
 import { Category } from '../../../models/category.model';
 import { addIcons } from 'ionicons';
-import { add, trash, pencil, close, checkmark, notifications, checkmarkCircle, alertCircle, timeOutline, calendarOutline, infiniteOutline, stopwatchOutline } from 'ionicons/icons';
+import { add, trash, pencil, close, checkmark, notifications, checkmarkCircle, alertCircle, timeOutline, calendarOutline, infiniteOutline, stopwatchOutline, informationCircleOutline } from 'ionicons/icons';
 import moment from 'moment';
 
 @Component({
@@ -125,8 +126,9 @@ export class FixedExpensesPage implements OnInit {
     private transactionService: TransactionService,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
+    private actionSheetCtrl: ActionSheetController,
   ) {
-    addIcons({ add, trash, pencil, close, checkmark, notifications, checkmarkCircle, alertCircle, timeOutline, calendarOutline, infiniteOutline, stopwatchOutline });
+    addIcons({ add, trash, pencil, close, checkmark, notifications, checkmarkCircle, alertCircle, timeOutline, calendarOutline, infiniteOutline, stopwatchOutline, informationCircleOutline });
   }
 
   async ngOnInit() {
@@ -472,5 +474,70 @@ export class FixedExpensesPage implements OnInit {
     });
 
     await alert.present();
+  }
+
+  async showExpenseOptions(expense: Release) {
+    const isPaid = this.isCurrentMonthPaid(expense);
+    const isActive = this.isExpenseActive(expense);
+
+    const buttons: any[] = [];
+
+    // Opção de marcar como pago (apenas se não estiver pago)
+    if (!isPaid && isActive) {
+      buttons.push({
+        text: 'Pagar',
+        icon: 'checkmark-circle',
+        handler: () => {
+          this.markAsPaid(expense);
+        },
+      });
+    }
+
+    // Opção de editar
+    buttons.push({
+      text: 'Editar',
+      icon: 'pencil',
+      handler: () => {
+        this.openEditModal(expense);
+      },
+    });
+
+    // Opção de ativar/desativar
+    buttons.push({
+      text: isActive ? 'Desativar recorrência' : 'Ativar recorrência',
+      icon: isActive ? 'close' : 'checkmark',
+      handler: () => {
+        this.toggleActive(expense);
+      },
+    });
+
+    // Opção de excluir
+    buttons.push({
+      text: 'Excluir',
+      icon: 'trash',
+      role: 'destructive',
+      handler: () => {
+        this.deleteExpense(expense);
+      },
+    });
+
+    // Botão de cancelar
+    buttons.push({
+      text: 'Cancelar',
+      icon: 'close',
+      role: 'cancel',
+    });
+
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: expense.description,
+      subHeader: `R$ ${expense.value.toFixed(2).replace('.', ',')} • Dia ${expense.payment_day}`,
+      buttons,
+    });
+
+    await actionSheet.present();
+  }
+
+  formatCurrency(value: number): string {
+    return `R$ ${value.toFixed(2).replace('.', ',')}`;
   }
 }

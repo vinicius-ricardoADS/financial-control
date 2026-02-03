@@ -112,43 +112,39 @@
 
         <!-- Transações do Mês -->
         <ion-list>
-          <ion-item-sliding *ngFor="let transaction of group.transactions">
-            <ion-item lines="full" class="transaction-item">
-              <div class="transaction-icon" slot="start">
-                <span class="category-icon">{{ transaction.category_icon }}</span>
-              </div>
-              <ion-label>
-                <h2>{{ transaction.description }}</h2>
-                <p>{{ transaction.category_name }} • {{ formatShortDate(transaction.date) }}</p>
-                <p class="transaction-meta">
-                  <span class="recurrence-badge">{{ getRecurrenceLabel(transaction.recurrence_type) }}</span>
-                  <span
-                    class="status-badge"
-                    [class.paid]="transaction.payment_status === 'pago'"
-                    [class.pending]="transaction.payment_status !== 'pago'">
-                    {{ getPaymentStatusLabel(transaction.payment_status) }}
-                  </span>
-                </p>
-              </ion-label>
-              <ion-label slot="end" class="amount-label">
-                <h2 [class]="getTransactionClass(transaction.release_type)">
-                  {{ transaction.release_type === ReleaseTypes.INCOME ? '+' : '-' }}
-                  {{ formatCurrency(transaction.value) }}
-                </h2>
-                <p *ngIf="transaction.payment_method" class="payment-method">
-                  {{ transaction.payment_method }}
-                </p>
-              </ion-label>
-            </ion-item>
-            <ion-item-options side="end">
-              <ion-item-option color="primary" (click)="openEditModal(transaction)">
-                <ion-icon slot="icon-only" name="pencil"></ion-icon>
-              </ion-item-option>
-              <ion-item-option color="danger" (click)="deleteTransaction(transaction)">
-                <ion-icon slot="icon-only" name="trash"></ion-icon>
-              </ion-item-option>
-            </ion-item-options>
-          </ion-item-sliding>
+          <ion-item
+            *ngFor="let transaction of group.transactions"
+            lines="full"
+            class="transaction-item"
+            button
+            detail="false"
+            (click)="showTransactionOptions(transaction)">
+            <div class="transaction-icon" slot="start">
+              <span class="category-icon">{{ transaction.category_icon }}</span>
+            </div>
+            <ion-label>
+              <h2>{{ transaction.description }}</h2>
+              <p>{{ transaction.category_name }} • {{ formatShortDate(transaction.date) }}</p>
+              <p class="transaction-meta">
+                <span class="recurrence-badge">{{ getRecurrenceLabel(transaction.recurrence_type) }}</span>
+                <span
+                  class="status-badge"
+                  [class.paid]="transaction.payment_status === 'pago'"
+                  [class.pending]="transaction.payment_status !== 'pago'">
+                  {{ getPaymentStatusLabel(transaction.payment_status) }}
+                </span>
+              </p>
+            </ion-label>
+            <ion-label slot="end" class="amount-label">
+              <h2 [class]="getTransactionClass(transaction.release_type)">
+                {{ transaction.release_type === ReleaseTypes.INCOME ? '+' : '-' }}
+                {{ formatCurrency(transaction.value) }}
+              </h2>
+              <p *ngIf="transaction.payment_method" class="payment-method">
+                {{ transaction.payment_method }}
+              </p>
+            </ion-label>
+          </ion-item>
         </ion-list>
       </div>
     </div>

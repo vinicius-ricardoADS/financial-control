@@ -39,6 +39,8 @@ import {
   notifications,
   checkmarkCircle,
   alertCircle,
+  timeOutline,
+  add,
 } from 'ionicons/icons';
 
 Chart.register(...registerables);
@@ -111,7 +113,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     private fixedExpenseService: FixedExpenseService,
     private router: Router,
   ) {
-    addIcons({ trendingUp, trendingDown, wallet, arrowUp, arrowDown, cashOutline, cardOutline, notifications, checkmarkCircle, alertCircle });
+    addIcons({ trendingUp, trendingDown, wallet, arrowUp, arrowDown, cashOutline, cardOutline, notifications, checkmarkCircle, alertCircle, timeOutline, add });
   }
 
   async ngOnInit() {
