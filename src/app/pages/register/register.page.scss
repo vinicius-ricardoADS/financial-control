@@ -71,6 +71,24 @@ ion-card-content {
         --placeholder-opacity: 0.7;
         font-size: 16px;
       }
+
+      .password-toggle {
+        --color: var(--app-text-tertiary);
+        --padding-start: 8px;
+        --padding-end: 8px;
+        margin: 0;
+        height: 36px;
+        margin-top: auto;
+        margin-bottom: 8px;
+
+        &:hover {
+          --color: var(--app-accent);
+        }
+
+        ion-icon {
+          font-size: 20px;
+        }
+      }
     }
 
     .form-buttons {

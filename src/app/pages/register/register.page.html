@@ -49,10 +49,22 @@
             <ion-input
               [(ngModel)]="formData.password"
               name="password"
-              type="password"
+              [type]="showPassword ? 'text' : 'password'"
               placeholder="Mínimo 6 caracteres"
               autocomplete="new-password"
             ></ion-input>
+            <ion-button
+              fill="clear"
+              slot="end"
+              class="password-toggle"
+              (click)="showPassword = !showPassword"
+              type="button"
+            >
+              <ion-icon
+                slot="icon-only"
+                [name]="showPassword ? 'eye-off' : 'eye'"
+              ></ion-icon>
+            </ion-button>
           </ion-item>
 
           <ion-item class="form-item">
@@ -60,10 +72,22 @@
             <ion-input
               [(ngModel)]="confirmPassword"
               name="confirmPassword"
-              type="password"
+              [type]="showConfirmPassword ? 'text' : 'password'"
               placeholder="Digite a senha novamente"
               autocomplete="new-password"
             ></ion-input>
+            <ion-button
+              fill="clear"
+              slot="end"
+              class="password-toggle"
+              (click)="showConfirmPassword = !showConfirmPassword"
+              type="button"
+            >
+              <ion-icon
+                slot="icon-only"
+                [name]="showConfirmPassword ? 'eye-off' : 'eye'"
+              ></ion-icon>
+            </ion-button>
           </ion-item>
 
           <div class="form-buttons">

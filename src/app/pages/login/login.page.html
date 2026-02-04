@@ -32,10 +32,22 @@
             <ion-input
               [(ngModel)]="credentials.password"
               name="password"
-              type="password"
+              [type]="showPassword ? 'text' : 'password'"
               placeholder="Digite sua senha"
               autocomplete="current-password"
             ></ion-input>
+            <ion-button
+              fill="clear"
+              slot="end"
+              class="password-toggle"
+              (click)="showPassword = !showPassword"
+              type="button"
+            >
+              <ion-icon
+                slot="icon-only"
+                [name]="showPassword ? 'eye-off' : 'eye'"
+              ></ion-icon>
+            </ion-button>
           </ion-item>
 
           <div class="form-buttons">

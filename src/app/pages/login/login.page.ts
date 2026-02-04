@@ -18,7 +18,7 @@ import {
   IonSpinner,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { mail, lockClosed, personAdd, wallet } from 'ionicons/icons';
+import { mail, lockClosed, personAdd, wallet, eye, eyeOff } from 'ionicons/icons';
 import { UserService } from '../../../services/user.service';
 import { AuthService } from '../../../services/auth.service';
 import { LoginCredentials } from '../../../models/user.model';
@@ -52,6 +52,7 @@ export class LoginPage {
   };
 
   isLoading = false;
+  showPassword = false;
 
   constructor(
     private userService: UserService,
@@ -59,7 +60,7 @@ export class LoginPage {
     private toastCtrl: ToastController,
     private router: Router
   ) {
-    addIcons({ mail, lockClosed, personAdd, wallet });
+    addIcons({ mail, lockClosed, personAdd, wallet, eye, eyeOff });
   }
 
   async login() {
