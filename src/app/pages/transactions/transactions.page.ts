@@ -188,6 +188,8 @@ export class TransactionsPage implements OnInit {
   }
 
   async ionViewWillEnter() {
+    // Sempre buscar dados frescos da API ao entrar na tela
+    await this.transactionService.refreshTransactions();
     await this.loadData();
 
     // Verificar se veio do Dashboard com intenção de abrir o modal

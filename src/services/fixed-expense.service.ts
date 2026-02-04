@@ -217,8 +217,8 @@ export class FixedExpenseService {
   }
 
   async getUpcomingExpenses(daysAhead: number = 7): Promise<Release[]> {
-    const today = moment();
-    const futureDate = moment().add(daysAhead, 'days');
+    const today = moment().startOf('day');
+    const futureDate = moment().startOf('day').add(daysAhead, 'days');
     const activeExpenses = await this.getActiveExpenses();
 
     return activeExpenses.filter((expense) => {
@@ -228,10 +228,10 @@ export class FixedExpenseService {
         year: currentYear,
         month: currentMonth,
         day: expense.payment_day,
-      });
+      }).startOf('day');
 
-      // Se a data de vencimento já passou, verifica o próximo mês
-      if (dueDate.isBefore(today)) {
+      // Se a data de vencimento já passou (comparando apenas por dia), verifica o próximo mês
+      if (dueDate.isBefore(today, 'day')) {
         dueDate.add(1, 'month');
       }
 
@@ -300,7 +300,11 @@ export class FixedExpenseService {
         day: expense.payment_day,
       });
 
-      const daysUntilDue = dueDate.diff(now, 'days');
+      // Comparar apenas as datas (sem hora) para calcular dias até o vencimento
+      // Isso garante que no dia do vencimento, daysUntilDue = 0 (não negativo)
+      const today = moment().startOf('day');
+      const dueDateStart = dueDate.startOf('day');
+      const daysUntilDue = dueDateStart.diff(today, 'days');
       const isOverdue = !isPaid && daysUntilDue < 0;
 
       return {
