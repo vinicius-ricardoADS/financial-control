@@ -48,10 +48,14 @@
   --padding-end: 12px;
   --padding-top: 8px;
   --padding-bottom: 8px;
+
   ion-segment {
     --background: var(--app-bg-tertiary);
     border-radius: 10px;
     min-height: 40px;
+    width: 100%;
+    margin: 0 auto;
+
     ion-segment-button {
       --indicator-color: var(--ion-color-primary);
       --color: var(--app-text-secondary);
@@ -60,7 +64,13 @@
       font-weight: 600;
       min-height: 36px;
       text-transform: none;
-      ion-label { margin: 0; }
+      flex: 1;
+      min-width: 0;
+
+      ion-label {
+        margin: 0;
+        white-space: nowrap;
+      }
     }
   }
 }
