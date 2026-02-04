@@ -7,6 +7,8 @@ import {
   UserRegisterResponse,
   LoginCredentials,
   LoginResponse,
+  UserUpdate,
+  UserUpdateResponse,
 } from '../models/user.model';
 import { environment } from '../environments/environment';
 
@@ -37,6 +39,30 @@ export class UserService {
       return response.token;
     } catch (error) {
       console.error('Erro ao fazer login:', error);
+      throw error;
+    }
+  }
+
+  async updateUser(userData: UserUpdate): Promise<UserUpdateResponse> {
+    try {
+      const response = await firstValueFrom(
+        this.http.put<UserUpdateResponse>(`${environment.api}/user`, userData)
+      );
+      return response;
+    } catch (error) {
+      console.error('Erro ao atualizar usuário:', error);
+      throw error;
+    }
+  }
+
+  async getUserProfile(userId: number): Promise<User> {
+    try {
+      const response = await firstValueFrom(
+        this.http.get<{ user: User }>(`${environment.api}/user/${userId}`)
+      );
+      return response.user;
+    } catch (error) {
+      console.error('Erro ao buscar perfil do usuário:', error);
       throw error;
     }
   }

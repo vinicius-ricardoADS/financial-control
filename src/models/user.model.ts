@@ -22,3 +22,15 @@ export interface LoginCredentials {
 export interface LoginResponse {
   token: string;
 }
+
+export interface UserUpdate {
+  name?: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
+export interface UserUpdateResponse {
+  user: User;
+  token?: string;
+}

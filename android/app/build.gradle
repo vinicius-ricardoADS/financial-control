@@ -7,7 +7,7 @@ android {
         applicationId "io.ionic.starter"
         minSdkVersion 26
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
+        versionCode 2026020401
         versionName "1.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {

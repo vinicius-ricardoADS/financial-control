@@ -138,4 +138,10 @@ export class LoginPage {
   goToRegister() {
     this.router.navigate(['/register']);
   }
+
+  togglePassword(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showPassword = !this.showPassword;
+  }
 }

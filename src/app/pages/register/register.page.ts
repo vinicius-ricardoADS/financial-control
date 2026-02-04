@@ -172,4 +172,16 @@ export class RegisterPage {
   goBack() {
     this.router.navigate(['/login']);
   }
+
+  togglePassword(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPassword(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
 }

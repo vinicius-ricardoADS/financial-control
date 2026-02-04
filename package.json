@@ -17,7 +17,7 @@
     "start:android": "ng build && npx cap run android",
     "sync:android": "ng build && npx cap sync android",
     "build": "ng build",
-    "build:prd": "ng build --configuration production --aot --output-hashing=all",
+    "build:prd": "npm run build -- --configuration=production && npx cap sync android && npx cap open android",
     "watch": "ng build --watch --configuration development",
     "lint": "ng lint",
     "lint:fix": "ng lint --fix",
