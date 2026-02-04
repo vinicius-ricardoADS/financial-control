@@ -83,8 +83,8 @@ export class FixedExpenseService {
 
     // Notificação instantânea de despesa adicionada
     await this.notificationService.notifyFixedExpenseAdded(
-      newExpense.description,
-      newExpense.value,
+      data!.description,
+      data!.value,
     );
 
     return newExpense;

@@ -148,7 +148,15 @@ export class DashboardPage implements OnInit, OnDestroy {
           if (status.expense.current_month_release_id) {
             return false;
           }
-          // Se já está marcado como pago no mês atual, não mostrar
+
+          const isAlreadyInRecentTransactions = this.recentTransactions.some(tx => {
+            return tx.description === status.expense.description;
+          });
+          // Se já está em transações recentes, não mostrar
+          if (isAlreadyInRecentTransactions) {
+            return false;
+          }
+
           if (status.expense.current_month_payment_status === 'pago') {
             return false;
           }
