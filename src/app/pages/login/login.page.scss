@@ -112,6 +112,23 @@ ion-card-content {
         padding-left: 4px;
       }
 
+      .forgot-password-link {
+        display: block;
+        text-align: right;
+        margin-top: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--app-accent);
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+
+        &:hover {
+          color: #8b5cf6;
+          text-decoration: underline;
+        }
+      }
+
       .input-wrapper {
         position: relative;
         display: flex;

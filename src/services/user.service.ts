@@ -66,4 +66,15 @@ export class UserService {
       throw error;
     }
   }
+
+  async resetPassword(email: string, newPassword: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.api}/reset-password`, { email, newPassword })
+      );
+    } catch (error) {
+      console.error('Erro ao redefinir senha:', error);
+      throw error;
+    }
+  }
 }

@@ -139,6 +139,10 @@ export class LoginPage {
     this.router.navigate(['/register']);
   }
 
+  goToForgotPassword() {
+    this.router.navigate(['/forgot-password']);
+  }
+
   togglePassword(event: Event) {
     event.preventDefault();
     event.stopPropagation();
