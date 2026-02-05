@@ -81,12 +81,6 @@ export class FixedExpenseService {
     // Agendar notificação de lembrete
     await this.notificationService.scheduleExpenseNotification(newExpense);
 
-    // Notificação instantânea de despesa adicionada
-    await this.notificationService.notifyFixedExpenseAdded(
-      data!.description,
-      data!.value,
-    );
-
     return newExpense;
   }
 

@@ -85,6 +85,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   dashboardData: DashboardData | null = null;
   recentTransactions: Transaction[] = [];
+  recentTransactionsCompleted: Transaction[] = [];
   expensesByCategory: CategorySummary[] = [];
   upcomingExpenses: Array<{
     expense: Release;
@@ -135,6 +136,7 @@ export class DashboardPage implements OnInit, OnDestroy {
       // Carregar dados do dashboard da API
       this.dashboardData = await this.dashboardService.getDashboardData();
       this.recentTransactions = this.dashboardData.transactions.slice(0, 5);
+      this.recentTransactionsCompleted = this.dashboardData.transactions
 
       // Calcular despesas por categoria
       this.expensesByCategory = this.calculateExpensesByCategory(this.dashboardData.transactions);
@@ -149,7 +151,7 @@ export class DashboardPage implements OnInit, OnDestroy {
             return false;
           }
 
-          const isAlreadyInRecentTransactions = this.recentTransactions.some(tx => {
+          const isAlreadyInRecentTransactions = this.recentTransactionsCompleted.some(tx => {
             return tx.description === status.expense.description;
           });
           // Se já está em transações recentes, não mostrar
