@@ -414,7 +414,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     isOverdue: boolean;
   }): string {
     const days = expense.daysUntilDue;
-    if (expense.expense?.current_month_payment_status === 'pago') return 'Pagamento realizado';
+    if (expense.expense?.current_month_payment_status === 'pago') {
+      const isIncome = expense.expense?.release_type === 'entrada';
+      return isIncome ? 'Recebido' : 'Pagamento realizado';
+    }
     if (days < 0) return `Atrasada (${Math.abs(days)}d)`;
     if (days === 0) return 'Vence hoje';
     if (days === 1) return 'Vence amanhã';

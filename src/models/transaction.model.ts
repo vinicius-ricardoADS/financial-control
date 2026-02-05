@@ -17,6 +17,7 @@ export interface Transaction {
   payment_date?: string;
   notes?: string;
   created_at: string;
+  due_date?: string;
 }
 
 export interface TransactionCreate {

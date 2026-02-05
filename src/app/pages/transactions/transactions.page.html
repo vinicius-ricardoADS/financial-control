@@ -131,7 +131,7 @@
                   class="status-badge"
                   [class.paid]="transaction.payment_status === 'pago'"
                   [class.pending]="transaction.payment_status !== 'pago'">
-                  {{ getPaymentStatusLabel(transaction.payment_status) }}
+                  {{ getPaymentStatusLabel(transaction.payment_status, transaction.release_type) }}
                 </span>
               </p>
             </ion-label>
@@ -296,7 +296,7 @@
               interface="action-sheet"
             >
               <ion-select-option [value]="PaymentStatusId.PENDING">Pendente</ion-select-option>
-              <ion-select-option [value]="PaymentStatusId.PAID">Pago</ion-select-option>
+              <ion-select-option [value]="PaymentStatusId.PAID">{{ formData.release_type_id === ReleaseTypesId.INCOME ? 'Recebido' : 'Pago' }}</ion-select-option>
             </ion-select>
           </ion-item>
 

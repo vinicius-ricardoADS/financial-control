@@ -403,7 +403,8 @@ export class FixedExpensesPage implements OnInit {
   getStatusLabel(expense: Release): string {
     // Primeiro verificar se já foi pago (via API ou transação correspondente)
     if (this.isCurrentMonthPaid(expense)) {
-      return 'Pagamento concluído';
+      const isIncome = expense.release_type === ReleaseTypes.INCOME || expense.release_type_id === 'entrada';
+      return isIncome ? 'Recebido' : 'Pagamento concluído';
     }
 
     // Se não está pago, mostrar dias até vencimento
@@ -414,8 +415,8 @@ export class FixedExpensesPage implements OnInit {
     return 'Pendente';
   }
 
-  getColor(expense: any): string | null {
-    return expense?.category_name === 'Salário' ? '#85bb65' : null;
+  getColor(expense: Release): string | null {
+    return expense?.release_type === ReleaseTypes.INCOME ? '#85bb65' : null;
   }
 
   async markAsPaid(expense: Release, event?: Event) {
@@ -423,9 +424,13 @@ export class FixedExpensesPage implements OnInit {
       event.stopPropagation();
     }
 
+    const isIncome = expense.release_type === ReleaseTypes.INCOME || expense.release_type_id === 'entrada';
+
     const alert = await this.alertCtrl.create({
-      header: 'Marcar como paga',
-      message: `Confirma o pagamento de "${expense.description}" no valor de R$ ${expense.value}?`,
+      header: isIncome ? 'Marcar como recebido' : 'Marcar como paga',
+      message: isIncome
+        ? `Confirma o recebimento de "${expense.description}" no valor de R$ ${expense.value}?`
+        : `Confirma o pagamento de "${expense.description}" no valor de R$ ${expense.value}?`,
       inputs: [
         {
           name: 'notes',
@@ -445,7 +450,9 @@ export class FixedExpensesPage implements OnInit {
               );
 
               const toast = await this.toastCtrl.create({
-                message: 'Despesa marcada como paga e transação criada!',
+                message: isIncome
+                  ? 'Entrada marcada como recebida e transação criada!'
+                  : 'Despesa marcada como paga e transação criada!',
                 duration: 2000,
                 color: 'success',
               });
@@ -474,10 +481,11 @@ export class FixedExpensesPage implements OnInit {
 
     const buttons: any[] = [];
 
-    // Opção de marcar como pago (apenas se não estiver pago)
+    // Opção de marcar como pago/recebido (apenas se não estiver pago)
+    const isIncome = expense.release_type === ReleaseTypes.INCOME || expense.release_type_id === 'entrada';
     if (!isPaid && isActive) {
       buttons.push({
-        text: 'Pagar',
+        text: isIncome ? 'Receber' : 'Pagar',
         icon: 'checkmark-circle',
         handler: () => {
           this.markAsPaid(expense);

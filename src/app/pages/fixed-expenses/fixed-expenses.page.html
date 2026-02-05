@@ -37,7 +37,7 @@
             color="success"
             class="paid-badge">
             <ion-icon name="checkmark-circle"></ion-icon>
-            Pago
+            {{ expense.release_type === 'entrada' ? 'Recebido' : 'Pago' }}
           </ion-badge>
         </div>
       </ion-item>

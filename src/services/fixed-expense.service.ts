@@ -186,26 +186,10 @@ export class FixedExpenseService {
     const expense = await this.getExpenseById(expenseId);
     if (!expense) return;
 
-    const categoryId = expense.category_id
-      || await this.getCategoryIdByName(expense.category_name);
-
-    // Determinar o ID numérico do tipo de lançamento
-    const releaseTypeId = expense.release_type === 'entrada' || expense.release_type_id === ReleaseTypes.INCOME
-      ? ReleaseTypesId.INCOME
-      : ReleaseTypesId.EXPENSE;
-
     const paymentData = {
-      release_type_id: releaseTypeId,
-      category_id: Number(categoryId),
-      description: expense.description,
-      value: expense.value,
-      payment_day: new Date().getDate(), // Dia real do pagamento (hoje)
-      payment_method: expense.payment_method || '',
-      notes: expense.notes || '',
-      is_active: expense.is_active === ActiveStatus.ACTIVE,
-      status: PaymentStatusId.PAID,
-      start_date: expense.start_date || moment().format('YYYY-MM-DD'),
-      end_date: expense.end_date || '',
+      id: expenseId,
+      payment_day: new Date().getDate(), // Dia real do pagamento
+      status: PaymentStatusId.PAID
     };
 
     await firstValueFrom(
@@ -263,6 +247,7 @@ export class FixedExpenseService {
     await this.notificationService.notifyPaymentMarked(
       expense.description,
       expense.value,
+      expense.release_type,
     );
   }
 

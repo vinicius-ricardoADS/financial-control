@@ -428,8 +428,11 @@ export class TransactionsPage implements OnInit {
     }
   }
 
-  getPaymentStatusLabel(status: string): string {
-    return status === 'pago' ? 'Pago' : 'Pendente';
+  getPaymentStatusLabel(status: string, releaseType?: string): string {
+    if (status === 'pago') {
+      return releaseType === ReleaseTypes.INCOME ? 'Recebido' : 'Pago';
+    }
+    return 'Pendente';
   }
 
   getPaymentStatusColor(status: string): string {
@@ -510,7 +513,7 @@ export class TransactionsPage implements OnInit {
       this.formData.category_id &&
       this.formData.payment_status_id &&
       this.formData.description &&
-      this.formData.description.length >= 6 &&
+      this.formData.description !== '' &&
       this.formData.value &&
       this.formData.value > 0 &&
       this.formData.date &&
