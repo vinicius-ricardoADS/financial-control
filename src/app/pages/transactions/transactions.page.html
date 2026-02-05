@@ -205,9 +205,7 @@
               [(ngModel)]="formData.description"
               name="description"
               type="text"
-              placeholder="Mínimo 6 caracteres"
               required
-              minlength="6"
             ></ion-input>
           </ion-item>
 
@@ -284,19 +282,6 @@
               <ion-select-option [value]="RecurrenceTypesId.FIXED">Fixa</ion-select-option>
               <ion-select-option [value]="RecurrenceTypesId.VARIABLE">Variável</ion-select-option>
               <ion-select-option [value]="RecurrenceTypesId.RECURRENCE">Recorrente</ion-select-option>
-            </ion-select>
-          </ion-item>
-
-          <!-- Status de pagamento -->
-          <ion-item>
-            <ion-label position="stacked">Status de pagamento</ion-label>
-            <ion-select
-              [(ngModel)]="formData.payment_status_id"
-              name="payment_status_id"
-              interface="action-sheet"
-            >
-              <ion-select-option [value]="PaymentStatusId.PENDING">Pendente</ion-select-option>
-              <ion-select-option [value]="PaymentStatusId.PAID">{{ formData.release_type_id === ReleaseTypesId.INCOME ? 'Recebido' : 'Pago' }}</ion-select-option>
             </ion-select>
           </ion-item>
 
