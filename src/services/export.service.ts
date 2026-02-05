@@ -560,10 +560,19 @@ export class ExportService {
     // Analise de despesas vs mes anterior
     const expenseDiff = current.total_expenses - previous.total_expenses;
     if (expenseDiff > 0) {
-      const percentChange = (expenseDiff / previous.total_expenses) * 100;
-      tips.push(`Suas despesas aumentaram ${percentChange.toFixed(1)}% em relacao ao mes anterior.`);
+      if (previous.total_expenses > 0) {
+        const percentChange = (expenseDiff / previous.total_expenses) * 100;
+        tips.push(`Suas despesas aumentaram ${percentChange.toFixed(1)}% em relacao ao mes anterior.`);
+      } else {
+        tips.push(`Suas despesas este mes foram de ${this.formatCurrency(current.total_expenses)} (sem despesas no mes anterior para comparar).`);
+      }
     } else if (expenseDiff < 0) {
-      tips.push('Bom trabalho! Voce reduziu suas despesas em relacao ao mes anterior.');
+      if (previous.total_expenses > 0) {
+        const percentChange = (Math.abs(expenseDiff) / previous.total_expenses) * 100;
+        tips.push(`Bom trabalho! Voce reduziu suas despesas em ${percentChange.toFixed(1)}% em relacao ao mes anterior.`);
+      } else {
+        tips.push('Bom trabalho! Voce reduziu suas despesas em relacao ao mes anterior.');
+      }
     }
 
     // Categoria com maior gasto

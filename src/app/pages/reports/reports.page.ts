@@ -326,6 +326,7 @@ export class ReportsPage implements OnInit, OnDestroy {
   }
 
   formatPercentage(value: number): string {
+    if (!isFinite(value) || isNaN(value)) return '0.0%';
     return `${value.toFixed(1)}%`;
   }
 

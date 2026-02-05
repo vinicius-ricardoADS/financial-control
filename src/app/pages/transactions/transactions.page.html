@@ -133,6 +133,9 @@
                   [class.pending]="transaction.payment_status !== 'pago'">
                   {{ getPaymentStatusLabel(transaction.payment_status, transaction.release_type) }}
                 </span>
+                <span *ngIf="transaction.due_date" class="due-date-badge">
+                  Venc. {{ formatShortDate(transaction.due_date) }}
+                </span>
               </p>
             </ion-label>
             <ion-label slot="end" class="amount-label">

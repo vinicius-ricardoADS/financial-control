@@ -242,13 +242,6 @@ export class FixedExpenseService {
 
     // Marcar como paga via PATCH
     await this.markAsPaid(expenseId);
-
-    // Notificar pagamento marcado
-    await this.notificationService.notifyPaymentMarked(
-      expense.description,
-      expense.value,
-      expense.release_type,
-    );
   }
 
   /**
