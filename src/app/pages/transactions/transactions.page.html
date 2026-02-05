@@ -16,9 +16,16 @@
     </div>
   </ion-toolbar>
 
-  <!-- Seletor de Meses em Grid -->
+  <!-- Toggle de Filtro por Mês -->
   <ion-toolbar class="months-toolbar">
-    <div class="months-grid">
+    <button class="month-filter-toggle" (click)="toggleMonthFilter()">
+      <div class="toggle-left">
+        <ion-icon name="calendar-outline"></ion-icon>
+        <span>{{ selectedMonth !== null ? months[selectedMonth - 1].label + ' / ' + selectedYear : 'Todos os meses' }}</span>
+      </div>
+      <ion-icon [name]="isMonthFilterOpen ? 'chevron-up' : 'chevron-down'" class="toggle-icon"></ion-icon>
+    </button>
+    <div class="months-grid" [class.open]="isMonthFilterOpen">
       <button
         *ngFor="let month of months"
         class="month-btn"

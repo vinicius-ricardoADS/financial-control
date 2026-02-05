@@ -57,6 +57,8 @@ import {
   filterOutline,
   chevronBack,
   chevronForward,
+  chevronDown,
+  chevronUp,
   walletOutline,
   trendingUp,
   trendingDown,
@@ -127,7 +129,8 @@ export class TransactionsPage implements OnInit {
   filterType: 'all' | ReleaseTypes | string = 'all';
   searchTerm: string = '';
   selectedYear: number = new Date().getFullYear();
-  selectedMonth: number | null = new Date().getMonth() + 1; // Mês atual (1-12)
+  selectedMonth: number | null = null;
+  isMonthFilterOpen: boolean = false;
 
   // Anos disponíveis para seleção
   availableYears: number[] = [];
@@ -179,7 +182,7 @@ export class TransactionsPage implements OnInit {
     addIcons({
       search, arrowUp, arrowDown, cashOutline, cardOutline, add, close,
       calendarOutline, filterOutline, chevronBack, chevronForward,
-      walletOutline, trendingUp, trendingDown, trash, pencil
+      chevronDown, chevronUp, walletOutline, trendingUp, trendingDown, trash, pencil
     });
   }
 
@@ -354,6 +357,14 @@ export class TransactionsPage implements OnInit {
   }
 
   // Seleção de mês
+  toggleMonthFilter() {
+    this.isMonthFilterOpen = !this.isMonthFilterOpen;
+    if (!this.isMonthFilterOpen && this.selectedMonth !== null) {
+      this.selectedMonth = null;
+      this.applyFilters();
+    }
+  }
+
   selectMonth(month: number | null) {
     this.selectedMonth = this.selectedMonth === month ? null : month;
     this.applyFilters();

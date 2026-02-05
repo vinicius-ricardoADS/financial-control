@@ -14,11 +14,50 @@
 .months-toolbar {
   --background: var(--app-bg-secondary);
   --min-height: auto;
+
+  .month-filter-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+
+    .toggle-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      ion-icon { font-size: 18px; color: var(--ion-color-primary); }
+      span { font-size: 14px; font-weight: 600; color: var(--app-text-primary); }
+    }
+
+    .toggle-icon {
+      font-size: 18px;
+      color: var(--app-text-secondary);
+      transition: transform 0.3s ease;
+    }
+
+    &:active { opacity: 0.7; }
+  }
+
   .months-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 6px;
-    padding: 10px 12px;
+    padding: 0 12px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+
+    &.open {
+      max-height: 120px;
+      opacity: 1;
+      padding: 6px 12px 12px;
+    }
+
     .month-btn {
       position: relative;
       display: flex;
