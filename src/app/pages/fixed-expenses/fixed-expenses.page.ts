@@ -1,34 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-  IonContent,
-  IonHeader,
-  IonTitle,
-  IonToolbar,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonIcon,
-  IonFab,
-  IonFabButton,
-  IonBadge,
-  IonModal,
-  IonButton,
-  IonInput,
-  IonSelect,
-  IonSelectOption,
-  IonButtons,
-  IonDatetime,
-  IonDatetimeButton,
-  IonPopover,
-  IonSegment,
-  IonSegmentButton,
-  IonNote,
-  ToastController,
-  AlertController,
-  ActionSheetController,
-} from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonIcon, IonFab, IonFabButton, IonBadge, IonModal, IonButton, IonInput, IonSelect, IonSelectOption, IonButtons, IonDatetime, IonDatetimeButton, IonPopover, IonSegment, IonSegmentButton, IonNote, ToastController, AlertController, ActionSheetController, IonRefresherContent, IonRefresher } from '@ionic/angular/standalone';
 import { FixedExpenseService } from '../../../services/fixed-expense.service';
 import { CategoryService } from '../../../services/category.service';
 import { TransactionService } from '../../../services/transaction.service';
@@ -70,7 +43,9 @@ import moment from 'moment';
     IonSegment,
     IonSegmentButton,
     IonNote,
-  ],
+    IonRefresherContent,
+    IonRefresher
+],
 })
 export class FixedExpensesPage implements OnInit {
   expenses: Release[] = [];
@@ -373,6 +348,12 @@ export class FixedExpensesPage implements OnInit {
 
     // Verificar se já existe uma transação correspondente no mês
     return this.hasMatchingTransaction(expense);
+  }
+
+  async handleRefresh(event: any) {
+    await this.transactionService.refreshTransactions();
+    await this.loadData();
+    event.target.complete();
   }
 
   getDayOfMonthLabel(day: number): string {

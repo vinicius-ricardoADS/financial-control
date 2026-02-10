@@ -34,9 +34,6 @@ export class FixedExpenseService {
   ) {}
 
   async getAllExpenses(): Promise<Release[]> {
-    if (this.expensesLoaded && this.expensesSubject.value.length > 0) {
-      return this.expensesSubject.value;
-    }
 
     const expenses = await firstValueFrom(
       this.http.get<Release[]>(this.apiUrl).pipe(

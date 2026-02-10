@@ -13,6 +13,7 @@
     "ng": "ng",
     "start": "ng serve",
     "start:local": "ng serve --configuration local",
+    "start:prd": "ng serve --configuration production",
     "open:android": "ng build && npx cap open android",
     "start:android": "ng build && npx cap run android",
     "sync:android": "ng build && npx cap sync android",
