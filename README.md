@@ -20,12 +20,10 @@
 
 Em um mundo onde suas informações financeiras são constantemente compartilhadas com servidores na nuvem, **Financial Control** oferece uma alternativa revolucionária:
 
-- ✅ **100% Offline** - Seus dados nunca saem do seu dispositivo
 - ✅ **Sem Assinaturas** - Instale uma vez, use para sempre
 - ✅ **Segurança Biométrica** - Protegido por impressão digital ou reconhecimento facial
 - ✅ **Relatórios Profissionais** - Exporte para PDF, Excel ou imagens
 - ✅ **Alertas Inteligentes** - Nunca mais esqueça uma conta
-- ✅ **Privacidade Garantida** - Nenhum servidor, nenhum rastreamento, nenhum anúncio
 
 ---
 
