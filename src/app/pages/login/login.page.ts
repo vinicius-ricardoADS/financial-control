@@ -18,7 +18,7 @@ import {
   IonSpinner,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { mail, lockClosed, personAdd, wallet } from 'ionicons/icons';
+import { mail, lockClosed, personAdd, wallet, eye, eyeOff } from 'ionicons/icons';
 import { UserService } from '../../../services/user.service';
 import { AuthService } from '../../../services/auth.service';
 import { LoginCredentials } from '../../../models/user.model';
@@ -52,6 +52,7 @@ export class LoginPage {
   };
 
   isLoading = false;
+  showPassword = false;
 
   constructor(
     private userService: UserService,
@@ -59,7 +60,12 @@ export class LoginPage {
     private toastCtrl: ToastController,
     private router: Router
   ) {
-    addIcons({ mail, lockClosed, personAdd, wallet });
+    addIcons({ mail, lockClosed, personAdd, wallet, eye, eyeOff });
+
+    // Se já está logado, redireciona direto para home
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/home'], { replaceUrl: true });
+    }
   }
 
   async login() {
@@ -91,10 +97,12 @@ export class LoginPage {
     this.isLoading = true;
 
     try {
-      const token = await this.userService.login(this.credentials);
+      const { token, refreshToken } = await this.userService.login(this.credentials);
+      console.log('Login bem-sucedido, token recebido:', token);
+      console.log('Refresh token recebido:', refreshToken);
 
-      // Salvar token
-      await this.authService.saveToken(token);
+      // Salvar tokens
+      this.authService.saveTokens(token, refreshToken);
 
       const toast = await this.toastCtrl.create({
         message: 'Login realizado com sucesso!',
@@ -104,8 +112,8 @@ export class LoginPage {
       });
       await toast.present();
 
-      // Redirecionar para a home
-      await this.router.navigate(['/home']);
+      // Redirecionar para a home (replaceUrl remove /login do histórico)
+      await this.router.navigate(['/home'], { replaceUrl: true });
     } catch (error: any) {
       console.error('Erro ao fazer login:', error);
 
@@ -136,5 +144,15 @@ export class LoginPage {
 
   goToRegister() {
     this.router.navigate(['/register']);
+  }
+
+  goToForgotPassword() {
+    this.router.navigate(['/forgot-password']);
+  }
+
+  togglePassword(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showPassword = !this.showPassword;
   }
 }

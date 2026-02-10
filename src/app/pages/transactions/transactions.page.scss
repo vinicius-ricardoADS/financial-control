@@ -1,72 +1,175 @@
-.transactions-container {
-  min-height: 100%;
-  padding: 8px 0 80px 0;
+// Header Toolbars
+.year-toolbar {
+  --background: var(--ion-color-primary);
+  .year-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    .year-label { font-size: 18px; font-weight: 700; color: #fff; min-width: 60px; text-align: center; }
+    ion-button { --color: #fff; margin: 0; }
+  }
 }
 
-ion-list {
-  background: transparent;
+.months-toolbar {
+  --background: var(--app-bg-secondary);
+  --min-height: auto;
 
-  ion-item-sliding {
-    margin-bottom: 8px;
+  .month-filter-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
 
-    ion-item {
-      --padding-start: 16px;
-      --inner-padding-end: 16px;
-      --background: var(--app-bg-secondary);
-      --border-color: var(--app-border);
-      margin: 0 12px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-
-      ion-label {
-        h2,
-        h3 {
-          font-weight: 600;
-          color: var(--app-text-primary);
-          margin-bottom: 6px;
-          font-size: 16px;
-        }
-
-        p {
-          font-size: 14px;
-          color: var(--app-text-secondary);
-          margin-top: 4px;
-          font-weight: 500;
-
-          &.notes {
-            font-style: italic;
-            color: var(--app-text-tertiary);
-            font-size: 13px;
-            margin-top: 6px;
-          }
-        }
-      }
-
-      .amount-label {
-        text-align: right;
-
-        h2 {
-          font-weight: 700;
-          font-size: 18px;
-
-          &.income {
-            color: var(--app-success);
-          }
-
-          &.expense {
-            color: var(--app-danger);
-          }
-        }
-      }
-
-      ion-icon[slot="start"] {
-        font-size: 32px;
-      }
+    .toggle-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      ion-icon { font-size: 18px; color: var(--ion-color-primary); }
+      span { font-size: 14px; font-weight: 600; color: var(--app-text-primary); }
     }
 
-    ion-item-options {
-      ion-item-option {
-        min-height: 64px;
+    .toggle-icon {
+      font-size: 18px;
+      color: var(--app-text-secondary);
+      transition: transform 0.3s ease;
+    }
+
+    &:active { opacity: 0.7; }
+  }
+
+  .months-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    padding: 0 12px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+
+    &.open {
+      max-height: 120px;
+      opacity: 1;
+      padding: 6px 12px 12px;
+    }
+
+    .month-btn {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 4px;
+      border: none;
+      border-radius: 10px;
+      background: var(--app-bg-tertiary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 44px;
+      .month-label { font-size: 12px; font-weight: 600; color: var(--app-text-secondary); }
+      .month-indicator { position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--ion-color-primary); }
+      &.has-data .month-label { color: var(--app-text-primary); }
+      &.current { border: 1px solid var(--ion-color-primary); .month-label { color: var(--ion-color-primary); } }
+      &.selected { background: var(--ion-color-primary); transform: scale(1.05); box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.4); .month-label { color: #fff; font-weight: 700; } .month-indicator { background: #fff; } }
+      &:active { transform: scale(0.95); }
+    }
+  }
+}
+
+.segment-toolbar {
+  --background: var(--app-bg-secondary);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+
+  ion-segment {
+    --background: var(--app-bg-tertiary);
+    border-radius: 10px;
+    min-height: 40px;
+    width: 100%;
+    margin: 0 auto;
+
+    ion-segment-button {
+      --indicator-color: var(--ion-color-primary);
+      --color: var(--app-text-secondary);
+      --color-checked: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      min-height: 36px;
+      text-transform: none;
+      flex: 1;
+      min-width: 0;
+
+      ion-label {
+        margin: 0;
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
+.transactions-container { min-height: 100%; padding: 0 0 80px 0; }
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px;
+  .summary-card {
+    background: var(--app-bg-secondary);
+    border-radius: 12px;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--app-border);
+    .summary-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; ion-icon { font-size: 18px; } }
+    .summary-info { text-align: center; .summary-label { display: block; font-size: 10px; color: var(--app-text-tertiary); text-transform: uppercase; font-weight: 600; } .summary-value { display: block; font-size: 13px; font-weight: 700; } }
+    &.income { .summary-icon { background: rgba(16, 185, 129, 0.15); ion-icon { color: var(--app-success); } } .summary-value { color: var(--app-success); } }
+    &.expense { .summary-icon { background: rgba(239, 68, 68, 0.15); ion-icon { color: var(--app-danger); } } .summary-value { color: var(--app-danger); } }
+    &.balance { .summary-icon { background: rgba(99, 102, 241, 0.15); ion-icon { color: var(--ion-color-primary); } } &.positive .summary-value { color: var(--app-success); } &.negative .summary-value { color: var(--app-danger); } }
+  }
+}
+
+.month-groups {
+  padding: 0 12px;
+  .month-group {
+    margin-bottom: 20px;
+    .month-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 4px;
+      border-bottom: 1px solid var(--app-border);
+      margin-bottom: 8px;
+      .month-title { display: flex; align-items: center; gap: 8px; ion-icon { font-size: 18px; color: var(--ion-color-primary); } span { font-size: 15px; font-weight: 700; color: var(--app-text-primary); } }
+      .month-summary { display: flex; gap: 12px; font-size: 12px; font-weight: 600; .month-income { color: var(--app-success); } .month-expense { color: var(--app-danger); } }
+    }
+    ion-list {
+      background: transparent;
+      padding: 0;
+      .transaction-item {
+        margin-bottom: 8px;
+        --padding-start: 12px;
+        --inner-padding-end: 12px;
+        --background: var(--app-bg-secondary);
+        --border-color: var(--app-border);
+        border-radius: 12px;
+        transition: transform 0.2s ease;
+        &:active { transform: scale(0.98); }
+        .transaction-icon { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: var(--app-bg-tertiary); margin-right: 10px; .category-icon { font-size: 20px; } }
+        ion-label {
+          h2 { font-weight: 600; color: var(--app-text-primary); margin-bottom: 2px; font-size: 15px; }
+          p { font-size: 12px; color: var(--app-text-secondary); margin-top: 2px; &.transaction-meta { display: flex; gap: 6px; margin-top: 4px; .recurrence-badge, .status-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; } .recurrence-badge { background: var(--app-bg-tertiary); color: var(--app-text-secondary); } .status-badge.paid { background: rgba(16, 185, 129, 0.2); color: var(--app-success); } .status-badge.pending { background: rgba(245, 158, 11, 0.2); color: var(--app-warning); } .due-date-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; background: rgba(99, 102, 241, 0.15); color: var(--ion-color-primary); } } }
+        }
+        .amount-label { text-align: right; h2 { font-weight: 700; font-size: 14px; &.income { color: var(--app-success); } &.expense { color: var(--app-danger); } } p.payment-method { font-size: 10px; color: var(--app-text-tertiary); } }
       }
     }
   }
@@ -77,145 +180,41 @@ ion-list {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
+  min-height: 50vh;
   text-align: center;
   padding: 40px 20px;
   background: var(--app-bg-secondary);
   border-radius: 16px;
   border: 1px solid var(--app-border);
   margin: 16px;
+  ion-icon { font-size: 64px; color: var(--app-text-tertiary); margin-bottom: 16px; }
+  p { margin: 8px 0; color: var(--app-text-primary); font-size: 16px; font-weight: 600; &.empty-subtitle { font-size: 14px; color: var(--app-text-secondary); font-weight: 500; } }
+  ion-button { margin-top: 16px; }
+}
 
-  ion-icon {
-    font-size: 80px;
-    color: var(--app-text-tertiary);
+ion-fab { margin-bottom: 16px; margin-right: 16px; ion-fab-button { --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); width: 56px; height: 56px; } }
+
+ion-modal form {
+  .type-selector {
+    margin-bottom: 24px;
+    padding: 0 16px;
+    ion-segment {
+      border-radius: 12px;
+      background: var(--app-bg-tertiary);
+      border: 1px solid var(--app-border);
+      ion-segment-button { min-height: 64px; display: flex; flex-direction: column; gap: 6px; ion-icon { font-size: 28px; margin: 0; } ion-label { margin: 0; font-weight: 700; } &.segment-button-checked { ion-label, ion-icon { color: #fff; } } }
+      ion-segment-button[value="2"].segment-button-checked { background: var(--app-danger); }
+      ion-segment-button[value="1"].segment-button-checked { background: var(--app-success); }
+    }
+  }
+  ion-item {
     margin-bottom: 16px;
+    --border-radius: 12px;
+    --background: var(--app-bg-secondary);
+    --border-color: var(--app-border);
+    ion-label[position="stacked"] { font-weight: 700; margin-bottom: 8px; color: var(--app-text-primary); font-size: 15px; }
+    ion-input, ion-select, ion-textarea { --padding-start: 12px; font-size: 16px; color: var(--app-text-primary); font-weight: 500; --placeholder-color: var(--app-text-tertiary); }
+    &.date-item .date-button-wrapper { width: 100%; display: flex; align-items: center; padding: 8px 0; ion-datetime-button::part(native) { background: var(--app-bg-tertiary); color: var(--app-text-primary); border-radius: 8px; padding: 10px 16px; } }
   }
-
-  p {
-    margin: 8px 0;
-    color: var(--app-text-primary);
-    font-size: 16px;
-    font-weight: 600;
-
-    &.empty-subtitle {
-      font-size: 14px;
-      color: var(--app-text-secondary);
-      font-weight: 500;
-    }
-  }
-}
-
-ion-fab {
-  margin-bottom: 16px;
-  margin-right: 16px;
-
-  ion-fab-button {
-    --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-    width: 60px;
-    height: 60px;
-  }
-
-  ion-fab-button[data-desc]::before {
-    position: absolute;
-    content: attr(data-desc);
-    right: 70px;
-    background: var(--app-bg-tertiary);
-    color: var(--app-text-primary);
-    padding: 10px 16px;
-    border-radius: 8px;
-    white-space: nowrap;
-    font-size: 14px;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    pointer-events: none;
-    border: 1px solid var(--app-border);
-  }
-}
-
-// Modal Styles
-ion-modal {
-  form {
-    .type-selector {
-      margin-bottom: 24px;
-      padding: 0 16px;
-
-      ion-segment {
-        border-radius: 12px;
-        background: var(--app-bg-tertiary);
-        border: 1px solid var(--app-border);
-
-        ion-segment-button {
-          min-height: 64px;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          font-size: 14px;
-          font-weight: 600;
-
-          ion-icon {
-            font-size: 28px;
-            margin: 0;
-          }
-
-          ion-label {
-            margin: 0;
-            font-weight: 700;
-          }
-
-          &.segment-button-checked {
-            ion-label,
-            ion-icon {
-              color: #ffffff;
-            }
-          }
-        }
-
-        ion-segment-button[value="2"].segment-button-checked {
-          background: var(--app-danger);
-        }
-
-        ion-segment-button[value="1"].segment-button-checked {
-          background: var(--app-success);
-        }
-      }
-    }
-
-    ion-item {
-      margin-bottom: 16px;
-      --border-radius: 12px;
-      --background: var(--app-bg-secondary);
-      --border-color: var(--app-border);
-      --border-width: 1px;
-
-      ion-label[position="stacked"] {
-        font-weight: 700;
-        margin-bottom: 8px;
-        color: var(--app-text-primary);
-        font-size: 15px;
-      }
-
-      ion-input,
-      ion-select,
-      ion-textarea {
-        --padding-start: 12px;
-        font-size: 16px;
-        color: var(--app-text-primary);
-        font-weight: 500;
-        --placeholder-color: var(--app-text-tertiary);
-      }
-    }
-
-    .form-buttons {
-      margin-top: 24px;
-      padding: 0 16px;
-
-      ion-button {
-        margin: 0;
-        --border-radius: 12px;
-        font-weight: 700;
-        font-size: 16px;
-        height: 48px;
-      }
-    }
-  }
+  .form-buttons { margin-top: 24px; padding: 0 16px; ion-button { margin: 0; --border-radius: 12px; font-weight: 700; font-size: 16px; height: 48px; } }
 }

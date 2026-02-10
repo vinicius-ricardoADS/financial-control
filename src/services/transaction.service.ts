@@ -1,142 +1,83 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import {
   Transaction,
   TransactionCreate,
   TransactionFilter,
 } from '../models/transaction.model';
 import { ReleaseTypes } from '../models/fixed-expense.model';
-import { StorageService } from './storage.service';
-import { CategoryService } from './category.service';
-import { NotificationService } from './notification.service';
-import moment from 'moment';
-
-const STORAGE_KEY = 'transactions';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TransactionService {
+  private readonly apiUrl = `${environment.api}`;
   private transactionsSubject = new BehaviorSubject<Transaction[]>([]);
   public transactions$: Observable<Transaction[]> =
     this.transactionsSubject.asObservable();
 
-  constructor(
-    private storage: StorageService,
-    private categoryService: CategoryService,
-    private notificationService: NotificationService,
-  ) {
-    this.loadTransactions();
-  }
+  private transactionsLoaded = false;
 
-  private async loadTransactions(): Promise<void> {
-    const transactions = (await this.storage.get<Transaction[]>(STORAGE_KEY)) || [];
-
-    // Preencher categorias
-    const withCategories = await Promise.all(
-      transactions.map(async (t) => ({
-        ...t,
-        category: await this.categoryService.getCategoryById(t.categoryId),
-      })),
-    );
-
-    this.transactionsSubject.next(withCategories);
-  }
+  constructor(private http: HttpClient) {}
 
   async getAllTransactions(): Promise<Transaction[]> {
-    return this.transactionsSubject.value;
-  }
+    if (this.transactionsLoaded && this.transactionsSubject.value.length > 0) {
+      return this.transactionsSubject.value;
+    }
 
-  async getTransactionById(id: string): Promise<Transaction | undefined> {
-    return this.transactionsSubject.value.find((t) => t.id === id);
-  }
-
-  async addTransaction(data: TransactionCreate): Promise<Transaction> {
-    const transactions = [...this.transactionsSubject.value];
-    const category = await this.categoryService.getCategoryById(data.categoryId);
-
-    const newTransaction: Transaction = {
-      id: this.generateId(),
-      release_type: data.release_type,
-      value: data.value,
-      categoryId: data.categoryId,
-      category,
-      description: data.description,
-      date: data.date || new Date().toISOString(),
-      isRecurring: data.isRecurring || false,
-      recurringDay: data.recurringDay,
-      notes: data.notes,
-      tags: data.tags || [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    transactions.push(newTransaction);
-    await this.saveTransactions(transactions);
-
-    // Enviar notificação
-    await this.notificationService.notifyTransactionAdded(
-      newTransaction.release_type,
-      newTransaction.description,
-      newTransaction.value,
+    const transactions = await firstValueFrom(
+      this.http.get<Transaction[]>(`${this.apiUrl}/release`).pipe(
+        tap((data) => {
+          this.transactionsSubject.next(data);
+          this.transactionsLoaded = true;
+        })
+      )
     );
-
-    return newTransaction;
+    return transactions;
   }
 
-  async updateTransaction(
-    id: string,
-    updates: Partial<TransactionCreate>,
-  ): Promise<void> {
-    let transactions = [...this.transactionsSubject.value];
-    const index = transactions.findIndex((t) => t.id === id);
+  async getTransactionById(id: number): Promise<Transaction | undefined> {
+    if (this.transactionsLoaded) {
+      const cached = this.transactionsSubject.value.find((t) => t.id === id);
+      if (cached) return cached;
+    }
 
-    if (index === -1) return;
-
-    const category = updates.categoryId
-      ? await this.categoryService.getCategoryById(updates.categoryId)
-      : transactions[index].category;
-
-    transactions[index] = {
-      ...transactions[index],
-      ...updates,
-      category,
-      updatedAt: new Date().toISOString(),
-    };
-
-    await this.saveTransactions(transactions);
+    try {
+      const transaction = await firstValueFrom(
+        this.http.get<Transaction>(`${this.apiUrl}/${id}`)
+      );
+      return transaction;
+    } catch {
+      return undefined;
+    }
   }
 
-  async deleteTransaction(id: string): Promise<void> {
-    const transactions = this.transactionsSubject.value.filter((t) => t.id !== id);
-    await this.saveTransactions(transactions);
+  async getTransactionsByMonth(month: number, year: number): Promise<Transaction[]> {
+    const transactions = await firstValueFrom(
+      this.http.post<Transaction[]>(`${this.apiUrl}/releaseformonth`, { month, year }).pipe(
+        tap((data) => {
+          console.log('Fetched transactions for', month, year);
+          this.transactionsSubject.next(data);
+        })
+      )
+    );
+    return transactions;
   }
 
-  async getFilteredTransactions(
-    filter: TransactionFilter,
-  ): Promise<Transaction[]> {
-    let transactions = [...this.transactionsSubject.value];
+  async getFilteredTransactions(filter: TransactionFilter): Promise<Transaction[]> {
+    let transactions: Transaction[];
+
+    if (filter.month && filter.year) {
+      transactions = await this.getTransactionsByMonth(filter.month, filter.year);
+    } else {
+      transactions = await this.getAllTransactions();
+    }
 
     if (filter.type) {
       transactions = transactions.filter((t) => t.release_type === filter.type);
-    }
-
-    if (filter.categoryId) {
-      transactions = transactions.filter((t) => t.categoryId === filter.categoryId);
-    }
-
-    if (filter.startDate) {
-      const startDate = moment(filter.startDate).startOf('day');
-      transactions = transactions.filter((t) =>
-        moment(t.date).isSameOrAfter(startDate),
-      );
-    }
-
-    if (filter.endDate) {
-      const endDate = moment(filter.endDate).endOf('day');
-      transactions = transactions.filter((t) =>
-        moment(t.date).isSameOrBefore(endDate),
-      );
     }
 
     if (filter.search) {
@@ -145,7 +86,7 @@ export class TransactionService {
         (t) =>
           t.description.toLowerCase().includes(search) ||
           t.notes?.toLowerCase().includes(search) ||
-          t.category?.category.toLowerCase().includes(search),
+          t.category_name?.toLowerCase().includes(search),
       );
     }
 
@@ -154,39 +95,80 @@ export class TransactionService {
     );
   }
 
-  async getTransactionsByMonth(month: number, year: number): Promise<Transaction[]> {
-    const startDate = moment({ year, month: month - 1, day: 1 }).startOf('month');
-    const endDate = moment({ year, month: month - 1, day: 1 }).endOf('month');
-
-    return this.getFilteredTransactions({
-      startDate: startDate.toDate(),
-      endDate: endDate.toDate(),
-    });
-  }
-
   async getTotalByType(
-    type: ReleaseTypes,
+    type: ReleaseTypes | string,
     month?: number,
     year?: number,
   ): Promise<number> {
-    let transactions = this.transactionsSubject.value.filter((t) => t.release_type === type);
+    let transactions: Transaction[];
 
     if (month && year) {
-      const monthTransactions = await this.getTransactionsByMonth(month, year);
-      transactions = monthTransactions.filter((t) => t.release_type === type);
+      transactions = await this.getTransactionsByMonth(month, year);
+    } else {
+      transactions = await this.getAllTransactions();
     }
 
-    return transactions.reduce((sum, t) => sum + t.value, 0);
+    transactions = transactions.filter((t) => t.release_type === type);
+    return transactions.reduce((sum, t) => sum + parseFloat(t.value), 0);
   }
 
-  private async saveTransactions(transactions: Transaction[]): Promise<void> {
-    // Remove categoria antes de salvar (circular reference)
-    const toSave = transactions.map(({ category, ...rest }) => rest);
-    await this.storage.set(STORAGE_KEY, toSave);
-    this.transactionsSubject.next(transactions);
+  /**
+   * Força recarregar as transações do servidor
+   */
+  async refreshTransactions(): Promise<Transaction[]> {
+    this.transactionsLoaded = false;
+    return this.getAllTransactions();
   }
 
-  private generateId(): string {
-    return `txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  /**
+   * Recarrega transações de um mês específico
+   */
+  async refreshTransactionsByMonth(month: number, year: number): Promise<Transaction[]> {
+    return this.getTransactionsByMonth(month, year);
+  }
+
+  /**
+   * Cria uma nova transação/release
+   */
+  async createTransaction(data: TransactionCreate): Promise<Transaction> {
+    const transaction = await firstValueFrom(
+      this.http.post<Transaction>(`${this.apiUrl}/release`, data)
+    );
+
+    // Atualiza o cache local
+    const currentTransactions = this.transactionsSubject.value;
+    this.transactionsSubject.next([transaction, ...currentTransactions]);
+
+    return transaction;
+  }
+
+  /**
+   * Deleta uma transação/release
+   */
+  async deleteTransaction(id: number): Promise<void> {
+    await firstValueFrom(
+      this.http.delete(`${this.apiUrl}/release/${id}`)
+    );
+
+    // Remove do cache local
+    const currentTransactions = this.transactionsSubject.value;
+    this.transactionsSubject.next(currentTransactions.filter(t => t.id !== id));
+  }
+
+  /**
+   * Atualiza uma transação/release
+   */
+  async updateTransaction(id: number, data: TransactionCreate): Promise<Transaction> {
+    const transaction = await firstValueFrom(
+      this.http.put<Transaction>(`${this.apiUrl}/release/${id}`, data)
+    );
+
+    // Atualiza o cache local
+    const currentTransactions = this.transactionsSubject.value;
+    this.transactionsSubject.next(
+      currentTransactions.map(t => t.id === id ? transaction : t)
+    );
+
+    return transaction;
   }
 }

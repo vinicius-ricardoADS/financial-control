@@ -352,7 +352,7 @@ export class NotificationService {
   /**
    * Envia notificação instantânea quando um pagamento de despesa fixa é marcado
    */
-  async notifyPaymentMarked(name: string, amount: number): Promise<boolean> {
+  async notifyPaymentMarked(name: string, amount: number, releaseType?: string): Promise<boolean> {
     if (!this.permissionsGranted) {
       await this.checkPermissions();
     }
@@ -366,8 +366,10 @@ export class NotificationService {
         notifications: [
           {
             id: this.generateRandomId(),
-            title: '✅ Pagamento Registrado',
-            body: `${name} - ${this.formatCurrency(amount)} foi pago`,
+            title: releaseType === 'entrada' ? '✅ Recebimento Registrado' : '✅ Pagamento Registrado',
+            body: releaseType === 'entrada'
+              ? `${name} - ${this.formatCurrency(amount)} foi recebido`
+              : `${name} - ${this.formatCurrency(amount)} foi pago`,
             schedule: {
               at: new Date(Date.now() + 500),
             },

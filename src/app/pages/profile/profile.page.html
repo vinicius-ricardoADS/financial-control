@@ -6,13 +6,138 @@
 
 <ion-content [fullscreen]="true">
   <div class="container">
-    <div class="profile-header">
-      <div class="profile-icon">
-        <ion-icon name="person"></ion-icon>
+    <!-- User Profile Card -->
+    <div class="profile-card" *ngIf="user">
+      <!-- Loading indicator -->
+      <div class="loading-overlay" *ngIf="isLoading">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
       </div>
-      <h2 class="profile-title">Configurações</h2>
+
+      <!-- View Mode -->
+      <div class="profile-view" *ngIf="!isEditing">
+        <div class="avatar-container">
+          <div class="avatar" [style.background-color]="getAvatarColor()">
+            <span class="avatar-initials">{{ getInitials() }}</span>
+          </div>
+          <button class="edit-button" (click)="startEditing()" aria-label="Editar perfil">
+            <ion-icon name="create-outline"></ion-icon>
+          </button>
+        </div>
+
+        <div class="user-info">
+          <h2 class="user-name">{{ user.name }}</h2>
+          <div class="user-detail">
+            <ion-icon name="mail-outline"></ion-icon>
+            <span>{{ user.email }}</span>
+          </div>
+        </div>
+
+        <div class="edit-hint">
+          <span>Toque no</span>
+          <ion-icon name="create-outline"></ion-icon>
+          <span>para editar seus dados</span>
+        </div>
+      </div>
+
+      <!-- Edit Mode -->
+      <div class="profile-edit" *ngIf="isEditing">
+        <div class="edit-header">
+          <h3>Editar Perfil</h3>
+          <p>Atualize suas informações pessoais</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="person-outline"></ion-icon>
+            Nome
+          </label>
+          <div class="input-wrapper">
+            <ion-input
+              type="text"
+              [(ngModel)]="editForm.name"
+              placeholder="Seu nome completo"
+              [disabled]="isSaving"
+              class="custom-input"
+            ></ion-input>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="mail-outline"></ion-icon>
+            E-mail
+          </label>
+          <div class="input-wrapper">
+            <ion-input
+              type="email"
+              [(ngModel)]="editForm.email"
+              placeholder="seu@email.com"
+              [disabled]="isSaving"
+              class="custom-input"
+            ></ion-input>
+          </div>
+        </div>
+
+        <div class="password-section">
+          <h4 class="section-divider">
+            <span>Alterar Senha</span>
+            <small>(opcional)</small>
+          </h4>
+
+          <div class="form-group">
+            <label class="form-label">
+              <ion-icon name="lock-closed-outline"></ion-icon>
+              Senha Atual
+            </label>
+            <div class="input-wrapper password-input">
+              <ion-input
+                [type]="showPassword ? 'text' : 'password'"
+                [(ngModel)]="editForm.currentPassword"
+                placeholder="Digite sua senha atual"
+                [disabled]="isSaving"
+                class="custom-input"
+              ></ion-input>
+              <button class="toggle-password" (click)="togglePasswordVisibility($event)" type="button">
+                <ion-icon [name]="showPassword ? 'eye-off' : 'eye'"></ion-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <ion-icon name="lock-closed-outline"></ion-icon>
+              Nova Senha
+            </label>
+            <div class="input-wrapper password-input">
+              <ion-input
+                [type]="showNewPassword ? 'text' : 'password'"
+                [(ngModel)]="editForm.newPassword"
+                placeholder="Digite a nova senha"
+                [disabled]="isSaving"
+                class="custom-input"
+              ></ion-input>
+              <button class="toggle-password" (click)="toggleNewPasswordVisibility($event)" type="button">
+                <ion-icon [name]="showNewPassword ? 'eye-off' : 'eye'"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="edit-actions">
+          <button class="btn btn-cancel" (click)="cancelEditing()" [disabled]="isSaving">
+            <ion-icon name="close-outline"></ion-icon>
+            Cancelar
+          </button>
+          <button class="btn btn-save" (click)="saveChanges()" [disabled]="isSaving">
+            <ion-spinner *ngIf="isSaving" name="crescent"></ion-spinner>
+            <ion-icon *ngIf="!isSaving" name="checkmark-outline"></ion-icon>
+            {{ isSaving ? 'Salvando...' : 'Salvar' }}
+          </button>
+        </div>
+      </div>
     </div>
 
+    <!-- Options List -->
     <ion-list class="options-list">
       <div class="list-section">
         <h3 class="section-title">Conta</h3>
@@ -33,7 +158,7 @@
           <ion-icon name="trash" slot="start" color="danger"></ion-icon>
           <ion-label>
             <h2>Limpar todos os dados</h2>
-            <p>Apagar todas as transações e configurações</p>
+            <p>Apagar todas as transacoes e configuracoes</p>
           </ion-label>
         </ion-item>
       </div>

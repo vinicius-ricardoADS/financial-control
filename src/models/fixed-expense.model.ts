@@ -15,13 +15,23 @@ export enum ActiveStatus {
 }
 
 export enum PaymentStatus {
+  PENDING = 'pendente',
+  PAID = 'pago',
+}
+
+export enum PaymentStatusId {
   PENDING = 1,
   PAID = 2,
 }
 
 export enum ReleaseTypes {
-  INCOME = '1',
-  EXPENSE = '2',
+  INCOME = 'entrada',
+  EXPENSE = 'saida',
+}
+
+export enum ReleaseTypesId {
+  INCOME = 1,
+  EXPENSE = 2,
 }
 
 export interface Release {
@@ -46,6 +56,8 @@ export interface Release {
   notifications: boolean;
   notifyDaysBefore: number;
   paymentHistory: PaymentRecord[];
+  start_date?: string | null;
+  end_date?: string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -64,4 +76,6 @@ export interface ReleasesCreate {
   is_active?: boolean;
   notifyDaysBefore?: number;
   status?: PaymentStatus;
+  start_date?: string | null;
+  end_date?: string | null;
 }

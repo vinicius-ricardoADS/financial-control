@@ -5,75 +5,212 @@
 </ion-header>
 
 <ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
   <div class="reports-container">
-    <!-- Comparação Mensal -->
-    <ion-card *ngIf="monthlyComparison">
-      <ion-card-header>
-        <ion-card-title>Comparação Mensal</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="comparison-grid">
-          <div class="comparison-item">
-            <p class="label">Receitas</p>
-            <h3 class="value income">{{ formatCurrency(monthlyComparison.currentMonth.totalIncome) }}</h3>
-            <span class="change" [class.positive]="monthlyComparison.incomeChange >= 0">
-              {{ formatPercentage(monthlyComparison.incomeChange) }}
-            </span>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <ion-card>
+        <ion-card-content>
+          <ion-skeleton-text [animated]="true" style="width: 60%; height: 20px;"></ion-skeleton-text>
+          <ion-skeleton-text [animated]="true" style="width: 100%; height: 100px; margin-top: 16px;"></ion-skeleton-text>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <ng-container *ngIf="!isLoading && comparative">
+
+      <!-- SEÇÃO 1: Resumo Rápido do Mês -->
+      <section class="quick-summary">
+        <h2 class="section-title">Resumo de {{ getCurrentMonthName() }}</h2>
+
+        <div class="metrics-grid">
+          <!-- Taxa de Poupança -->
+          <div class="metric-card savings" [ngClass]="getSavingsRateClass()">
+            <div class="metric-icon">
+              <ion-icon [name]="savingsRate >= 0 ? 'trending-up' : 'trending-down'"></ion-icon>
+            </div>
+            <div class="metric-content">
+              <span class="metric-label">Taxa de Poupança</span>
+              <span class="metric-value">{{ formatPercentage(savingsRate) }}</span>
+              <span class="metric-status">{{ getSavingsRateLabel() }}</span>
+            </div>
           </div>
-          <div class="comparison-item">
-            <p class="label">Despesas</p>
-            <h3 class="value expense">{{ formatCurrency(monthlyComparison.currentMonth.totalExpense) }}</h3>
-            <span class="change" [class.negative]="monthlyComparison.expenseChange >= 0">
-              {{ formatPercentage(monthlyComparison.expenseChange) }}
+
+          <!-- Saldo do Mês -->
+          <div class="metric-card balance" [ngClass]="getBalance(comparative.current_month) >= 0 ? 'positive' : 'negative'">
+            <div class="metric-icon">
+              <ion-icon name="wallet"></ion-icon>
+            </div>
+            <div class="metric-content">
+              <span class="metric-label">Saldo do Mês</span>
+              <span class="metric-value">{{ formatCurrency(getBalance(comparative.current_month)) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparação com Mês Anterior -->
+        <div class="comparison-alert" *ngIf="expenseDifference !== 0">
+          <ion-icon [name]="expenseDifference > 0 ? 'arrow-up' : 'arrow-down'"
+                    [color]="expenseDifference > 0 ? 'danger' : 'success'"></ion-icon>
+          <span>
+            Você gastou
+            <strong [class.danger]="expenseDifference > 0" [class.success]="expenseDifference < 0">
+              {{ formatDifference(Math.abs(expenseDifference)) }}
+            </strong>
+            {{ expenseDifference > 0 ? 'a mais' : 'a menos' }} que em {{ getPreviousMonthName() }}
+          </span>
+        </div>
+
+        <!-- Maior Categoria de Gasto -->
+        <div class="top-category" *ngIf="topExpenseCategory">
+          <span class="category-icon">{{ topExpenseCategory.icon }}</span>
+          <div class="category-info">
+            <span class="category-label">Maior gasto</span>
+            <span class="category-name">{{ topExpenseCategory.name }}</span>
+          </div>
+          <div class="category-value">
+            <span class="value">{{ formatCurrency(topExpenseCategory.total) }}</span>
+            <span class="percentage">{{ formatPercentage(topExpenseCategory.percentage) }} dos gastos</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEÇÃO 2: Comparativo Mês a Mês -->
+      <section class="monthly-comparison">
+        <h2 class="section-title">Comparativo</h2>
+
+        <div class="comparison-cards">
+          <!-- Mês Anterior -->
+          <div class="month-card previous">
+            <div class="month-header">
+              <span class="month-name">{{ getPreviousMonthName() }}</span>
+              <span class="month-badge">Anterior</span>
+            </div>
+            <div class="month-stats">
+              <div class="stat income">
+                <ion-icon name="arrow-up"></ion-icon>
+                <span class="stat-value">{{ formatCurrency(comparative.previous_month.total_incomes) }}</span>
+              </div>
+              <div class="stat expense">
+                <ion-icon name="arrow-down"></ion-icon>
+                <span class="stat-value">{{ formatCurrency(comparative.previous_month.total_expenses) }}</span>
+              </div>
+              <div class="stat balance" [class.positive]="getBalance(comparative.previous_month) >= 0"
+                                        [class.negative]="getBalance(comparative.previous_month) < 0">
+                <ion-icon name="wallet"></ion-icon>
+                <span class="stat-value">{{ formatCurrency(getBalance(comparative.previous_month)) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mês Atual -->
+          <div class="month-card current">
+            <div class="month-header">
+              <span class="month-name">{{ getCurrentMonthName() }}</span>
+              <span class="month-badge">Atual</span>
+            </div>
+            <div class="month-stats">
+              <div class="stat income">
+                <ion-icon name="arrow-up"></ion-icon>
+                <span class="stat-value">{{ formatCurrency(comparative.current_month.total_incomes) }}</span>
+                <span class="stat-diff" *ngIf="incomeDifference !== 0"
+                      [class.positive]="incomeDifference > 0"
+                      [class.negative]="incomeDifference < 0">
+                  {{ incomeDifference > 0 ? '+' : '' }}{{ formatCurrency(incomeDifference) }}
+                </span>
+              </div>
+              <div class="stat expense">
+                <ion-icon name="arrow-down"></ion-icon>
+                <span class="stat-value">{{ formatCurrency(comparative.current_month.total_expenses) }}</span>
+                <span class="stat-diff" *ngIf="expenseDifference !== 0"
+                      [class.positive]="expenseDifference < 0"
+                      [class.negative]="expenseDifference > 0">
+                  {{ expenseDifference > 0 ? '+' : '' }}{{ formatCurrency(expenseDifference) }}
+                </span>
+              </div>
+              <div class="stat balance" [class.positive]="getBalance(comparative.current_month) >= 0"
+                                        [class.negative]="getBalance(comparative.current_month) < 0">
+                <ion-icon name="wallet"></ion-icon>
+                <span class="stat-value">{{ formatCurrency(getBalance(comparative.current_month)) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEÇÃO 3: Gastos por Categoria -->
+      <section class="category-breakdown" *ngIf="expensesByCategory.length > 0">
+        <h2 class="section-title">Gastos por Categoria</h2>
+
+        <div class="category-list">
+          <div class="category-item" *ngFor="let category of expensesByCategory">
+            <div class="category-left">
+              <span class="category-icon">{{ category.icon }}</span>
+              <span class="category-name">{{ category.name }}</span>
+            </div>
+            <div class="category-right">
+              <span class="category-value">{{ formatCurrency(category.total) }}</span>
+              <div class="category-bar">
+                <div class="category-bar-fill" [style.width.%]="category.percentage"></div>
+              </div>
+              <span class="category-percentage">{{ formatPercentage(category.percentage) }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEÇÃO 4: Evolução Anual -->
+      <section class="yearly-evolution" *ngIf="yearEvolution">
+        <h2 class="section-title">Evolução {{ yearEvolution.year }}</h2>
+
+        <div class="chart-container">
+          <canvas #evolutionChart></canvas>
+        </div>
+
+        <!-- Resumo Anual -->
+        <div class="year-summary" *ngIf="monthlyComparison">
+          <div class="summary-item">
+            <span class="summary-label">Total Receitas</span>
+            <span class="summary-value income">{{ formatCurrency(monthlyComparison.summary.total_incomes) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Total Despesas</span>
+            <span class="summary-value expense">{{ formatCurrency(monthlyComparison.summary.total_expenses) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Média Mensal</span>
+            <span class="summary-value">
+              <span class="income">+{{ formatCurrency(monthlyComparison.summary.average_incomes) }}</span>
+              <span class="expense">-{{ formatCurrency(monthlyComparison.summary.average_expenses) }}</span>
             </span>
           </div>
         </div>
-      </ion-card-content>
-    </ion-card>
+      </section>
 
-    <!-- Gráfico de Linha - Evolução Anual -->
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Evolução {{ selectedYear }}</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <canvas #lineChart></canvas>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Gráfico de Barras - Comparativo -->
-    <ion-card *ngIf="monthlyComparison">
-      <ion-card-header>
-        <ion-card-title>Comparativo</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <canvas #barChart></canvas>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Gráfico de Pizza - Despesas por Categoria -->
-    <ion-card *ngIf="monthlyComparison">
-      <ion-card-header>
-        <ion-card-title>Despesas por Categoria (Atual)</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <canvas #pieChartReport></canvas>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Botões de Exportação -->
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Exportar Relatório</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="export-buttons">
-          <ion-button expand="block" (click)="exportPDF()">
-            <ion-icon name="document" slot="start"></ion-icon>
-            Exportar PDF
+      <!-- SEÇÃO 5: Exportar Relatório -->
+      <section class="export-section">
+        <div class="export-card">
+          <div class="export-icon">
+            <ion-icon name="document-text"></ion-icon>
+          </div>
+          <div class="export-content">
+            <h3>Exportar Relatório</h3>
+            <p>Gere um PDF completo com resumo financeiro, comparativos, categorias e análises personalizadas.</p>
+          </div>
+          <ion-button
+            expand="block"
+            (click)="exportPDF()"
+            [disabled]="isExporting || isLoading">
+            <ion-icon name="download" slot="start" *ngIf="!isExporting"></ion-icon>
+            <span *ngIf="!isExporting">Gerar PDF</span>
+            <span *ngIf="isExporting">Gerando...</span>
           </ion-button>
         </div>
-      </ion-card-content>
-    </ion-card>
+      </section>
+    </ng-container>
   </div>
 </ion-content>

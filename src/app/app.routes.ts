@@ -1,12 +1,27 @@
 import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { HomePage } from './pages/home/home.page';
 import { AuthGuard } from 'src/guards/auth.guard';
+import { AuthService } from 'src/services/auth.service';
+
+const redirectBasedOnAuth = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.isAuthenticated()) {
+    return router.createUrlTree(['/home']);
+  }
+  return router.createUrlTree(['/login']);
+};
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'login',
     pathMatch: 'full',
+    canActivate: [redirectBasedOnAuth],
+    // Componente nunca renderiza — o guard sempre redireciona
+    loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
   },
   {
     path: 'login',
@@ -17,6 +32,11 @@ export const routes: Routes = [
     path: 'register',
     loadComponent: () =>
       import('./pages/register/register.page').then((m) => m.RegisterPage),
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./pages/forgot-password/forgot-password.page').then((m) => m.ForgotPasswordPage),
   },
   {
     path: 'home',

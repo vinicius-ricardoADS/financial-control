@@ -6,13 +6,13 @@ import {
   Release,
   ReleasesCreate,
   ReleaseTypes,
+  ReleaseTypesId,
   ActiveStatus,
   PaymentStatus,
+  PaymentStatusId,
 } from '../models/fixed-expense.model';
 import { CategoryService } from './category.service';
 import { NotificationService } from './notification.service';
-import { TransactionService } from './transaction.service';
-import { TransactionCreate } from '../models/transaction.model';
 import { environment } from '../environments/environment';
 import moment from 'moment';
 
@@ -31,13 +31,9 @@ export class FixedExpenseService {
     private http: HttpClient,
     private categoryService: CategoryService,
     private notificationService: NotificationService,
-    private transactionService: TransactionService,
   ) {}
 
   async getAllExpenses(): Promise<Release[]> {
-    if (this.expensesLoaded && this.expensesSubject.value.length > 0) {
-      return this.expensesSubject.value;
-    }
 
     const expenses = await firstValueFrom(
       this.http.get<Release[]>(this.apiUrl).pipe(
@@ -82,29 +78,30 @@ export class FixedExpenseService {
     // Agendar notificação de lembrete
     await this.notificationService.scheduleExpenseNotification(newExpense);
 
-    // Notificação instantânea de despesa adicionada
-    await this.notificationService.notifyFixedExpenseAdded(
-      newExpense.description,
-      newExpense.value,
-    );
-
     return newExpense;
   }
 
   async updateExpense(id: string, updates: Partial<ReleasesCreate>): Promise<void> {
-    const updatedExpense = await firstValueFrom(
+    const response = await firstValueFrom(
       this.http.put<any>(`${this.apiUrl}/${id}`, updates)
     );
 
-    const expense: Release = updatedExpense?.data
+    // A API pode retornar { data: Release } ou Release diretamente
+    const updatedExpense: Release = response?.data || response;
 
-    const expenses = this.expensesSubject.value.map((e) =>
-      e.id === id ? expense : e
-    );
-    this.expensesSubject.next(expenses);
+    if (updatedExpense && updatedExpense.id) {
+      // Atualizar o cache local com o item atualizado
+      const expenses = this.expensesSubject.value.map((e) =>
+        e.id === id ? updatedExpense : e
+      );
+      this.expensesSubject.next(expenses);
 
-    // Reagendar notificação com novos dados
-    await this.notificationService.scheduleExpenseNotification(updatedExpense);
+      // Reagendar notificação com novos dados
+      await this.notificationService.scheduleExpenseNotification(updatedExpense);
+    } else {
+      // Se não conseguiu obter dados válidos, força refresh do servidor
+      await this.refreshExpenses();
+    }
   }
 
   async deleteExpense(id: string): Promise<void> {
@@ -128,21 +125,28 @@ export class FixedExpenseService {
     const categoryId = expense.category_id
       || await this.getCategoryIdByName(expense.category_name);
 
-    const releaseTypeId = expense.release_type_id
-      || (expense.release_type === 'entrada' ? ReleaseTypes.INCOME : ReleaseTypes.EXPENSE);
+    // Determinar o ID numérico do tipo de lançamento
+    const releaseTypeId = expense.release_type === 'entrada' || expense.release_type_id === ReleaseTypes.INCOME
+      ? ReleaseTypesId.INCOME
+      : ReleaseTypesId.EXPENSE;
 
-    const updateData: ReleasesCreate = {
+    const updateData = {
       release_type_id: releaseTypeId,
-      category_id: categoryId,
+      category_id: Number(categoryId),
       description: expense.description,
       value: expense.value,
       payment_day: expense.payment_day,
       payment_method: expense.payment_method || '',
       notes: expense.notes || '',
       is_active: newActiveState,
+      start_date: expense.start_date || moment().format('YYYY-MM-DD'),
+      end_date: expense.end_date || '',
     };
 
-    await this.updateExpense(id, updateData);
+    await this.updateExpense(id, updateData as any);
+
+    // Forçar refresh para garantir dados atualizados
+    await this.refreshExpenses();
 
     // Se desativou, cancelar notificações. Se ativou, reagendar
     if (!newActiveState) {
@@ -173,22 +177,10 @@ export class FixedExpenseService {
     const expense = await this.getExpenseById(expenseId);
     if (!expense) return;
 
-    const categoryId = expense.category_id
-      || await this.getCategoryIdByName(expense.category_name);
-
-    const releaseTypeId = expense.release_type_id
-      || (expense.release_type === 'entrada' ? ReleaseTypes.INCOME : ReleaseTypes.EXPENSE);
-
-    const paymentData: ReleasesCreate = {
-      release_type_id: releaseTypeId,
-      category_id: categoryId,
-      description: expense.description,
-      value: expense.value,
-      payment_day: expense.payment_day,
-      payment_method: expense.payment_method || '',
-      notes: expense.notes || '',
-      is_active: expense.is_active === ActiveStatus.ACTIVE,
-      status: PaymentStatus.PAID,
+    const paymentData = {
+      id: expenseId,
+      payment_day: new Date().getDate(), // Dia real do pagamento
+      status: PaymentStatusId.PAID
     };
 
     await firstValueFrom(
@@ -200,8 +192,8 @@ export class FixedExpenseService {
   }
 
   async getUpcomingExpenses(daysAhead: number = 7): Promise<Release[]> {
-    const today = moment();
-    const futureDate = moment().add(daysAhead, 'days');
+    const today = moment().startOf('day');
+    const futureDate = moment().startOf('day').add(daysAhead, 'days');
     const activeExpenses = await this.getActiveExpenses();
 
     return activeExpenses.filter((expense) => {
@@ -211,10 +203,10 @@ export class FixedExpenseService {
         year: currentYear,
         month: currentMonth,
         day: expense.payment_day,
-      });
+      }).startOf('day');
 
-      // Se a data de vencimento já passou, verifica o próximo mês
-      if (dueDate.isBefore(today)) {
+      // Se a data de vencimento já passou (comparando apenas por dia), verifica o próximo mês
+      if (dueDate.isBefore(today, 'day')) {
         dueDate.add(1, 'month');
       }
 
@@ -228,7 +220,7 @@ export class FixedExpenseService {
   }
 
   /**
-   * Marca uma despesa como paga E cria automaticamente uma transação
+   * Marca uma despesa como paga
    */
   async markAsPaidAndCreateTransaction(
     expenseId: string,
@@ -239,34 +231,17 @@ export class FixedExpenseService {
       throw new Error('Despesa não encontrada');
     }
 
-    // 1. Marcar como paga via PATCH com status = 2
+    // Marcar como paga via PATCH
     await this.markAsPaid(expenseId);
-
-    // 2. Criar transação automaticamente
-    const now = moment();
-    const transactionData: TransactionCreate = {
-      release_type: ReleaseTypes.EXPENSE,
-      value: expense.value,
-      categoryId: expense.category_id,
-      description: expense.description,
-      date: moment({ year: now.year(), month: now.month(), day: expense.payment_day }).format('YYYY-MM-DD'),
-      notes: notes || `Pagamento automático de despesa fixa`,
-    };
-
-    await this.transactionService.addTransaction(transactionData);
-
-    // 3. Notificar pagamento marcado
-    await this.notificationService.notifyPaymentMarked(
-      expense.description,
-      expense.value,
-    );
   }
 
   /**
-   * Verifica se uma despesa está paga
+   * Verifica se uma despesa está paga no mês atual
    */
   isExpensePaid(expense: Release): boolean {
-    return expense.status === PaymentStatus.PAID;
+    // Verificar pelo status do mês atual ou se já existe uma transação associada
+    return expense.current_month_payment_status === PaymentStatus.PAID
+      || !!expense.current_month_release_id;
   }
 
   /**
@@ -294,7 +269,11 @@ export class FixedExpenseService {
         day: expense.payment_day,
       });
 
-      const daysUntilDue = dueDate.diff(now, 'days');
+      // Comparar apenas as datas (sem hora) para calcular dias até o vencimento
+      // Isso garante que no dia do vencimento, daysUntilDue = 0 (não negativo)
+      const today = moment().startOf('day');
+      const dueDateStart = dueDate.startOf('day');
+      const daysUntilDue = dueDateStart.diff(today, 'days');
       const isOverdue = !isPaid && daysUntilDue < 0;
 
       return {

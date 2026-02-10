@@ -26,8 +26,6 @@ import { routes } from './app/app.routes';
 import { setAssetPath } from '@stencil/core';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
-import { IonicStorageModule } from '@ionic/storage-angular';
-import { Drivers } from '@ionic/storage';
 
 setAssetPath(`${window.location.origin}/`);
 
@@ -47,10 +45,6 @@ bootstrapApplication(AppComponent, {
     importProvidersFrom(
       NgxSkeletonLoaderModule.forRoot(),
       MatNativeDateModule,
-      IonicStorageModule.forRoot({
-        name: '__financedb',
-        driverOrder: [Drivers.IndexedDB, Drivers.LocalStorage],
-      }),
     ),
     provideIonicAngular(),
     provideRouter(

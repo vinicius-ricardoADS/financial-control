@@ -1,39 +1,42 @@
-import { Category } from './category.model';
-import { ReleaseTypes } from './fixed-expense.model';
+import { ReleaseTypes, PaymentStatus } from './fixed-expense.model';
+import { RecurrenceTypes } from './transactions.model';
 
 export interface Transaction {
-  id: string;
-  release_type: ReleaseTypes;
-  value: number;
-  categoryId: string;
-  category?: Category; // será preenchido ao carregar
+  id: number;
+  user_id: number;
+  user_name: string;
+  release_type: ReleaseTypes | string;
+  value: string;
+  category_name: string;
+  category_icon: string;
+  recurrence_type: RecurrenceTypes | string;
+  payment_status: PaymentStatus | string;
+  payment_method: string;
   description: string;
-  date: Date | string; // ISO string para storage
-  isRecurring: boolean;
-  recurringDay?: number; // dia do mês para recorrência
-  attachments?: string[]; // URLs de fotos/comprovantes
-  tags?: string[];
+  date: string;
+  payment_date?: string;
   notes?: string;
-  createdAt: Date | string;
-  updatedAt: Date | string;
+  created_at: string;
+  due_date?: string;
 }
 
 export interface TransactionCreate {
-  release_type: ReleaseTypes;
-  value: number;
-  categoryId: string;
+  release_type_id: number;
+  category_id: number;
+  recurrence_type_id?: number;
+  payment_status_id: number;
   description: string;
-  date?: Date | string;
-  isRecurring?: boolean;
-  recurringDay?: number;
+  value: number;
+  date: string;
+  payment_method: string;
   notes?: string;
-  tags?: string[];
+  created_at?: string;
+  payment_date?: string;
 }
 
 export interface TransactionFilter {
+  month?: number;
+  year?: number;
   type?: ReleaseTypes;
-  categoryId?: string;
-  startDate?: Date | string;
-  endDate?: Date | string;
   search?: string;
 }

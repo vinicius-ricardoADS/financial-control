@@ -22,7 +22,7 @@ import {
   IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { person, mail, lockClosed, arrowBack } from 'ionicons/icons';
+import { person, mail, lockClosed, arrowBack, eye, eyeOff } from 'ionicons/icons';
 import { UserService } from '../../../services/user.service';
 import { UserCreate } from '../../../models/user.model';
 
@@ -61,13 +61,15 @@ export class RegisterPage {
 
   confirmPassword = '';
   isLoading = false;
+  showPassword = false;
+  showConfirmPassword = false;
 
   constructor(
     private userService: UserService,
     private toastCtrl: ToastController,
     private router: Router
   ) {
-    addIcons({ person, mail, lockClosed, arrowBack });
+    addIcons({ person, mail, lockClosed, arrowBack, eye, eyeOff });
   }
 
   async register() {
@@ -169,5 +171,17 @@ export class RegisterPage {
 
   goBack() {
     this.router.navigate(['/login']);
+  }
+
+  togglePassword(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPassword(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showConfirmPassword = !this.showConfirmPassword;
   }
 }

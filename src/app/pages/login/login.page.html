@@ -27,16 +27,29 @@
             ></ion-input>
           </ion-item>
 
-          <ion-item class="form-item">
-            <ion-label position="stacked">Senha</ion-label>
-            <ion-input
-              [(ngModel)]="credentials.password"
-              name="password"
-              type="password"
-              placeholder="Digite sua senha"
-              autocomplete="current-password"
-            ></ion-input>
-          </ion-item>
+          <div class="form-group">
+            <label class="form-label">Senha</label>
+            <div class="input-wrapper">
+              <ion-input
+                [(ngModel)]="credentials.password"
+                name="password"
+                [type]="showPassword ? 'text' : 'password'"
+                placeholder="Digite sua senha"
+                autocomplete="current-password"
+                class="custom-input"
+              ></ion-input>
+              <button
+                type="button"
+                class="toggle-password"
+                (click)="togglePassword($event)"
+              >
+                <ion-icon [name]="showPassword ? 'eye-off' : 'eye'"></ion-icon>
+              </button>
+            </div>
+            <a class="forgot-password-link" (click)="goToForgotPassword()">
+              Esqueci minha senha
+            </a>
+          </div>
 
           <div class="form-buttons">
             <ion-button
