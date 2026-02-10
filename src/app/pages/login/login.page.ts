@@ -61,6 +61,11 @@ export class LoginPage {
     private router: Router
   ) {
     addIcons({ mail, lockClosed, personAdd, wallet, eye, eyeOff });
+
+    // Se já está logado, redireciona direto para home
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/home'], { replaceUrl: true });
+    }
   }
 
   async login() {
@@ -107,8 +112,8 @@ export class LoginPage {
       });
       await toast.present();
 
-      // Redirecionar para a home
-      await this.router.navigate(['/home']);
+      // Redirecionar para a home (replaceUrl remove /login do histórico)
+      await this.router.navigate(['/home'], { replaceUrl: true });
     } catch (error: any) {
       console.error('Erro ao fazer login:', error);
 
