@@ -92,10 +92,12 @@ export class LoginPage {
     this.isLoading = true;
 
     try {
-      const token = await this.userService.login(this.credentials);
+      const { token, refreshToken } = await this.userService.login(this.credentials);
+      console.log('Login bem-sucedido, token recebido:', token);
+      console.log('Refresh token recebido:', refreshToken);
 
-      // Salvar token
-      await this.authService.saveToken(token);
+      // Salvar tokens
+      this.authService.saveTokens(token, refreshToken);
 
       const toast = await this.toastCtrl.create({
         message: 'Login realizado com sucesso!',

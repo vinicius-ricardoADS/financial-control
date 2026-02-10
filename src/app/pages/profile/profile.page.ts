@@ -306,7 +306,13 @@ export class ProfilePage implements OnInit {
   }
 
   async logout() {
-    await this.authService.logout();
+    // Invalida o refresh token no servidor antes de limpar localmente
+    const refreshToken = this.authService.getRefreshToken();
+    if (refreshToken) {
+      await this.userService.logoutFromServer(refreshToken);
+    }
+
+    this.authService.logout();
 
     const toast = await this.toastCtrl.create({
       message: 'Você saiu da sua conta',
@@ -343,7 +349,12 @@ export class ProfilePage implements OnInit {
   }
 
   async clearAllData() {
-    await this.authService.clearAllData();
+    const refreshToken = this.authService.getRefreshToken();
+    if (refreshToken) {
+      await this.userService.logoutFromServer(refreshToken);
+    }
+
+    this.authService.clearAllData();
 
     const toast = await this.toastCtrl.create({
       message: 'Todos os dados foram apagados',

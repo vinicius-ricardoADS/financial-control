@@ -7,6 +7,7 @@ import {
   UserRegisterResponse,
   LoginCredentials,
   LoginResponse,
+  RefreshTokenResponse,
   UserUpdate,
   UserUpdateResponse,
 } from '../models/user.model';
@@ -31,15 +32,33 @@ export class UserService {
     }
   }
 
-  async login(credentials: LoginCredentials): Promise<string> {
+  async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
       const response = await firstValueFrom(
         this.http.post<LoginResponse>(`${environment.api}/login`, credentials)
       );
-      return response.token;
+      return response;
     } catch (error) {
       console.error('Erro ao fazer login:', error);
       throw error;
+    }
+  }
+
+  async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
+    const response = await firstValueFrom(
+      this.http.post<RefreshTokenResponse>(`${environment.api}/refresh-token`, { refreshToken })
+    );
+    return response;
+  }
+
+  async logoutFromServer(refreshToken: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.api}/logout`, { refreshToken })
+      );
+    } catch (error) {
+      console.error('Erro ao fazer logout no servidor:', error);
+      // Não relança o erro — o logout local deve acontecer mesmo que o servidor falhe
     }
   }
 
